@@ -100,6 +100,8 @@ public class EventManager : MonoBehaviour
 //Class used in EventManager to hold data that's being transferred though events
 public class EVTData
 {
+
+
     //Constructor for this class
     public EVTData()
     {
