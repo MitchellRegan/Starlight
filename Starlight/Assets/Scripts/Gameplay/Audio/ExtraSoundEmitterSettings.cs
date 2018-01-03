@@ -5,53 +5,44 @@ using UnityEngine;
 public class ExtraSoundEmitterSettings : MonoBehaviour
 {
     //Reference to this object's Audio Source component
-    private AudioSource OwnerAudio;
+    [HideInInspector]
+    public AudioSource ownerAudio;
 
     //Type of sound this emitter plays
     public enum SoundType { Music, Dialogue, SFX}
-    public SoundType SoundEmitterType = SoundType.SFX;
-
-    //Slider for the Headphone volume, going from mute to the max
-    [Range(0.0f, 1.0f)]
-    public float HeadphoneVol = 1.0f;
-    //Slider for the Computer speaker volume, going from mute to the max
-    [Range(0.0f, 1.0f)]
-    public float CompSpeakerVol = 1.0f;
-    //Slider for the  Room speaker volume, going from mute to the max
-    [Range(0.0f, 1.0f)]
-    public float RoomspeakerVol = 1.0f;
+    public SoundType soundEmitterType = SoundType.SFX;
 
     //Event that listens to the event manager to see if the sound settings changed
-    private DelegateEvent<EVTData> SoundChangeListener;
+    private DelegateEvent<EVTData> soundChangeListener;
 
 
 
     //Function called when this object is created
     private void Awake()
     {
-        SoundChangeListener = new DelegateEvent<EVTData>(SettingsChanged);
+        this.soundChangeListener = new DelegateEvent<EVTData>(SettingsChanged);
     }
 
 
     //Starts listening for the sound change event
     private void OnEnable()
     {
-        EventManager.StartListening("SoundSettingsChanged", SoundChangeListener);
+        EventManager.StartListening("SoundSettingsChanged", this.soundChangeListener);
     }
 
 
     //Stops listening for the sound change event 
     private void OnDisable()
     {
-        EventManager.StopListening("SoundSettingsChanged", SoundChangeListener);
+        EventManager.StopListening("SoundSettingsChanged", this.soundChangeListener);
     }
 
 
     // Use this for initialization
     private void Start()
     {
-        OwnerAudio = gameObject.GetComponent<AudioSource>();
-        SettingsChanged(new EVTData());
+        this.ownerAudio = gameObject.GetComponent<AudioSource>();
+        this.SettingsChanged(new EVTData());
     }
 
 
@@ -61,7 +52,7 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
         float emitterTypeVol = 1.0f;
 
         //Finds the volume of the emitter type based on what kind of sound it emits
-        switch (SoundEmitterType)
+        switch (this.soundEmitterType)
         {
             case SoundType.Dialogue:
                 if (AudioSettings.globalReference.muteDialogue)
@@ -107,6 +98,6 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
         }
 
         //Sets this owner's sound emitter volume based on the settings
-        OwnerAudio.volume = emitterTypeVol;
+        this.ownerAudio.volume = emitterTypeVol;
     }
 }

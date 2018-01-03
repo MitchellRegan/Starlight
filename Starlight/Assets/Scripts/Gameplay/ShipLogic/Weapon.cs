@@ -10,8 +10,15 @@ public class Weapon : MonoBehaviour
     //The cooldown after this weapon fires the main projectile
     public float weaponCooldown = 0.5f;
 
+    //The maximum amount of ammo this weapon starts with
+    public int maxAmmo = 5;
+    //The current amount of ammo this weapon has
+    public int currentAmmo = 0;
+    //If true, this weapon has unlimited ammo
+    public bool unlimitedAmmo = false;
+
     //The audio emitter that is played when this weapon is fired
-    public AudioSource muzzleAudio;
+    public ExtraSoundEmitterSettings muzzleAudio;
 
     //The current amount of time we're waiting for cooldowns
     private float currentCooldownTime = 0;
@@ -30,10 +37,10 @@ public class Weapon : MonoBehaviour
 
 
     //Function called externally to perform the main fire
-    public virtual void FireMainWeapon()
+    public virtual void FireWeapon(bool pressed_, bool held_, bool released_)
     {
-        //If our current cooldown time is above 0, we can't fire
-        if(this.currentCooldownTime > 0)
+        //If our current cooldown time is above 0 or there's no ammo, we can't fire
+        if(this.currentCooldownTime > 0 || this.currentAmmo <= 0)
         {
             return;
         }
@@ -45,6 +52,26 @@ public class Weapon : MonoBehaviour
         this.currentCooldownTime = this.weaponCooldown;
 
         //Playing the muzzle's audio source
-        this.muzzleAudio.Play();
+        this.muzzleAudio.ownerAudio.Play();
+
+        //Subtracting from our current ammo supply (if it's not unlimited)
+        if(!this.unlimitedAmmo)
+        {
+            this.currentAmmo -= 1;
+        }
+    }
+
+    
+    //Function called externally to add ammo to this weapon
+    public void RefillAmmo(int amountToAdd_)
+    {
+        //Adding the amount to our current ammo supply
+        this.currentAmmo += amountToAdd_;
+
+        //If we have more ammo than our max allows, we set it to the max
+        if(this.currentAmmo > this.maxAmmo)
+        {
+            this.currentAmmo = this.maxAmmo;
+        }
     }
 }
