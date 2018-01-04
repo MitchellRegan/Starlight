@@ -6,7 +6,7 @@ public class FreeMovementFlight : MonoBehaviour
 {
     //The player controller that gives us input
     [HideInInspector]
-    public PlayerShipController ourController;
+    public PlayerShipController ourShip;
 
 
 

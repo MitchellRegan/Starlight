@@ -12,6 +12,10 @@ public class PlayerShipController : MonoBehaviour
     [HideInInspector]
     public ControllerInput ourController;
 
+    //The input settings for this player
+    [HideInInspector]
+    public PlayerInputs ourCustomInputs;
+
     //The camera that follows this ship
     public Camera ourCamera;
 
@@ -25,18 +29,6 @@ public class PlayerShipController : MonoBehaviour
     public Weapon mainWeapon;
     //The secondary weapon for this ship
     public Weapon secondaryWeapon;
-
-    //The controller button used to fire the main weapon
-    public ControllerButtons mainFireButton_Controller = ControllerButtons.A_Button;
-    //The keyboard/mouse button used to fire the main weapon
-    public KeyCode mainFireButton_Keyboard = KeyCode.Mouse0;
-
-    [Space(8)]
-
-    //The controller button used to fire the secondary weapon
-    public ControllerButtons secondaryFireButton_Controller = ControllerButtons.B_Button;
-    //The keyboard/mouse button used to fire the secondary weapon
-    public KeyCode secondaryFireButton_Keyboard = KeyCode.Mouse1;
 
     [Space(8)]
 
@@ -63,24 +55,23 @@ public class PlayerShipController : MonoBehaviour
         {
             case Players.P1:
                 this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
                 break;
 
             case Players.P2:
                 this.ourController = ControllerInputManager.P2Controller;
+                this.ourCustomInputs = CustomInputSettings.globalReference.p2Inputs;
                 break;
 
-            case Players.P3:
-                this.ourController = ControllerInputManager.P3Controller;
-                break;
-
-            case Players.P4:
-                this.ourController = ControllerInputManager.P4Controller;
+            default:
+                this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
                 break;
         }
 
         //Passing our controller input to our movement mechanic scripts
-        this.ourFreeMovement.ourController = this;
-        this.ourRailMovement.ourController = this;
+        this.ourFreeMovement.ourShip = this;
+        this.ourRailMovement.ourShip = this;
     }
 
 
@@ -90,25 +81,25 @@ public class PlayerShipController : MonoBehaviour
 		//If we have a main weapon, we pass it the controller input and keyboard input for the main fire
         if(this.mainWeapon != null)
         {
-            this.mainWeapon.FireWeapon(this.ourController.CheckButtonPressed(this.mainFireButton_Controller),
-                                        this.ourController.CheckButtonDown(this.mainFireButton_Controller),
-                                        this.ourController.CheckButtonReleased(this.mainFireButton_Controller));
+            this.mainWeapon.FireWeapon(this.ourController.CheckButtonPressed(this.ourCustomInputs.mainFireButton_Controller),
+                                        this.ourController.CheckButtonDown(this.ourCustomInputs.mainFireButton_Controller),
+                                        this.ourController.CheckButtonReleased(this.ourCustomInputs.mainFireButton_Controller));
 
-            this.mainWeapon.FireWeapon(Input.GetKeyDown(this.mainFireButton_Keyboard),
-                                        Input.GetKey(this.mainFireButton_Keyboard),
-                                        Input.GetKeyUp(this.mainFireButton_Keyboard));
+            this.mainWeapon.FireWeapon(Input.GetKeyDown(this.ourCustomInputs.mainFireButton_Keyboard),
+                                        Input.GetKey(this.ourCustomInputs.mainFireButton_Keyboard),
+                                        Input.GetKeyUp(this.ourCustomInputs.mainFireButton_Keyboard));
         }
 
         //If we have a secondary weapon, we pass it the controller input for the secondary fire
         if(this.secondaryWeapon != null)
         {
-            this.secondaryWeapon.FireWeapon(this.ourController.CheckButtonPressed(this.secondaryFireButton_Controller),
-                                        this.ourController.CheckButtonDown(this.secondaryFireButton_Controller),
-                                        this.ourController.CheckButtonReleased(this.secondaryFireButton_Controller));
+            this.secondaryWeapon.FireWeapon(this.ourController.CheckButtonPressed(this.ourCustomInputs.secondaryFireButton_Controller),
+                                        this.ourController.CheckButtonDown(this.ourCustomInputs.secondaryFireButton_Controller),
+                                        this.ourController.CheckButtonReleased(this.ourCustomInputs.secondaryFireButton_Controller));
 
-            this.secondaryWeapon.FireWeapon(Input.GetKeyDown(this.secondaryFireButton_Keyboard),
-                                        Input.GetKey(this.secondaryFireButton_Keyboard),
-                                        Input.GetKeyUp(this.secondaryFireButton_Keyboard));
+            this.secondaryWeapon.FireWeapon(Input.GetKeyDown(this.ourCustomInputs.secondaryFireButton_Keyboard),
+                                        Input.GetKey(this.ourCustomInputs.secondaryFireButton_Keyboard),
+                                        Input.GetKeyUp(this.ourCustomInputs.secondaryFireButton_Keyboard));
         }
 	}
 

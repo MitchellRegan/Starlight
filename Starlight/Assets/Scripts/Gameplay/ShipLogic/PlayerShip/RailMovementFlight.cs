@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class RailMovementFlight : MonoBehaviour
 {
     //The player controller that gives us input
     [HideInInspector]
-    public PlayerShipController ourController;
+    public PlayerShipController ourShip;
 
     //The position of the collider in space so we can get this ship's relative position
     private Vector3 colliderPosition;
@@ -19,42 +20,7 @@ public class RailMovementFlight : MonoBehaviour
     private Vector2 flightBoundingBox;
 
 
-    //The controller stick for moving left and right
-    public ControllerSticks moveLeftRight_Controller = ControllerSticks.Left_Stick_X;
-    //The controller stick for moving up and down
-    public ControllerSticks moveUpDown_Controller = ControllerSticks.Left_Stick_Y;
-    //The keyboard input for moving left
-    public KeyCode moveLeft_Keyboard = KeyCode.A;
-    //The keyboard input for moving right
-    public KeyCode moveRight_Keyboard = KeyCode.D;
-    //The keyboard input for moving up
-    public KeyCode moveUp_Keyboard = KeyCode.W;
-    //The keyboard input for moving down
-    public KeyCode moveDown_Keyboard = KeyCode.S;
-
-    [Space(8)]
-
-    //The controller stick for aiming left and right
-    public ControllerSticks aimLeftRightStick = ControllerSticks.Right_Stick_X;
-    //The controller stick for aiming up and down
-    public ControllerSticks aimUpDownStick = ControllerSticks.Right_Stick_Y;
-
-    [Space(8)]
-
-    //The controller button used to boost forward
-    public ControllerButtons boostButton_Controller = ControllerButtons.Right_Trigger;
-    //The keyboard/mouse button used to boost forward
-    public KeyCode boostButton_Keyboard = KeyCode.Space;
-
-    [Space(8)]
-
-    //The controller button used to break
-    public ControllerButtons breakButton_Controller = ControllerButtons.Left_Trigger;
-    //The keyboard/mouse button used to break
-    public KeyCode breakButton_Keyboard = KeyCode.LeftShift;
-
-
-
+    
     //Function called from PlayerShipController.OnTriggerEnter to change our movement to match the new region
     public void SetNewRailDirection(Collider newRegionCollider_)
     {
@@ -127,6 +93,77 @@ public class RailMovementFlight : MonoBehaviour
     //Function called from Update to handle player input
     private void MoveShip()
     {
+        Vector2 stickInput = new Vector2(0,0);
 
+        //Getting the controller input for our movement if the controller exists
+        if (this.ourShip.ourController != null)
+        {
+            stickInput.x = this.ourShip.ourController.CheckStickValue(this.ourShip.ourCustomInputs.moveLeftRight_Controller);
+            stickInput.y = this.ourShip.ourController.CheckStickValue(this.ourShip.ourCustomInputs.moveUpDown_Controller);
+        }
+
+        //Getting the keyboard input for our movement
+        Vector2 keyboardInput = new Vector2(0,0);
+
+        //If the left keyboard button is held, we move left
+        if(Input.GetKey(this.ourShip.ourCustomInputs.moveLeft_Keyboard))
+        {
+            //If there's no left/right input from our controller, this is the only input taken
+            if (stickInput.x > -0.1 && stickInput.x < 0.1)
+            {
+                keyboardInput.x = -1;
+            }
+            //If there's already stick input from our controller, we average them
+            else
+            {
+                keyboardInput.x = (-1 + stickInput.x) / 2;
+            }
+        }
+        //If the right keyboard button is held, we move right
+        else if(Input.GetKey(this.ourShip.ourCustomInputs.moveRight_Keyboard))
+        {
+            //If there's no left/right input from our controller, this is the only input taken
+            if (stickInput.x > -0.1 && stickInput.x < 0.1)
+            {
+                keyboardInput.x = 1;
+            }
+            //If there's already stick input from our controller, we average them
+            else
+            {
+                keyboardInput.x = (1 + stickInput.x) / 2;
+            }
+        }
+
+        //If the up keyboard button is held, we move up
+        if(Input.GetKey(this.ourShip.ourCustomInputs.moveUp_Keyboard))
+        {
+            //If there's no up/down input from our controller, this is the only input taken
+            if (stickInput.y > -0.1 && stickInput.y < 0.1)
+            {
+                keyboardInput.y = 1;
+            }
+            //If there's already stick input from our controller, we average them
+            else
+            {
+                keyboardInput.y = (1 + stickInput.y) / 2;
+            }
+        }
+        //If the down keyboard button is held, we move down
+        else if(Input.GetKey(this.ourShip.ourCustomInputs.moveDown_Keyboard))
+        {
+            //If there's no up/down input from our controller, this is the only input taken
+            if (stickInput.y > -0.1 && stickInput.y < 0.1)
+            {
+                keyboardInput.y = -1;
+            }
+            //If there's already stick input from our controller, we average them
+            else
+            {
+                keyboardInput.y = (-1 + stickInput.y) / 2;
+            }
+        }
+
+
+        //
     }
 }
