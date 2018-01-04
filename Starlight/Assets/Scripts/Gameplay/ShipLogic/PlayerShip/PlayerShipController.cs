@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(FreeMovementFlight))]
 [RequireComponent(typeof(RailMovementFlight))]
 public class PlayerShipController : MonoBehaviour
@@ -12,6 +11,11 @@ public class PlayerShipController : MonoBehaviour
     //The controller input that we use for this ship
     [HideInInspector]
     public ControllerInput ourController;
+
+    //The camera that follows this ship
+    public Camera ourCamera;
+
+    [Space(8)]
 
     //References to this ship's different movement mechanic scripts
     private FreeMovementFlight ourFreeMovement;

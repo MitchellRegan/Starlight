@@ -33,13 +33,15 @@ public class ShipWingLogic : HealthAndArmor
 
     [Space(8)]
 
+    //The amount this wing drifts when damaged
+    public Vector2 minMaxDriftStrength = new Vector2();
     //The direction that this wing drifts when damaged
     public Vector2 damagedDriftDirection = new Vector2();
     //The curve that determines how quickly the drift sets in based on health %
     public AnimationCurve driftDamageCurve;
     //The current drift amount
     [HideInInspector]
-    public Vector2 currentDrift = new Vector2();
+    public float currentDrift = 1;
 
 
 
@@ -95,6 +97,6 @@ public class ShipWingLogic : HealthAndArmor
         //Finding the position on the drift curve
         float driftCurveValue = this.driftDamageCurve.Evaluate(healthPercent);
         //Setting our current XY drift using the curve value
-        this.currentDrift = this.damagedDriftDirection * driftCurveValue;
+        this.currentDrift = this.minMaxDriftStrength.x + ((this.minMaxDriftStrength.y - this.minMaxDriftStrength.x) * driftCurveValue);
     }
 }

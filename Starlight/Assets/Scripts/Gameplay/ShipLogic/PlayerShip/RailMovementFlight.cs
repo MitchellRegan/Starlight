@@ -20,9 +20,17 @@ public class RailMovementFlight : MonoBehaviour
 
 
     //The controller stick for moving left and right
-    public ControllerSticks moveLeftRightStick = ControllerSticks.Left_Stick_X;
+    public ControllerSticks moveLeftRight_Controller = ControllerSticks.Left_Stick_X;
     //The controller stick for moving up and down
-    public ControllerSticks moveUpDownStick = ControllerSticks.Left_Stick_Y;
+    public ControllerSticks moveUpDown_Controller = ControllerSticks.Left_Stick_Y;
+    //The keyboard input for moving left
+    public KeyCode moveLeft_Keyboard = KeyCode.A;
+    //The keyboard input for moving right
+    public KeyCode moveRight_Keyboard = KeyCode.D;
+    //The keyboard input for moving up
+    public KeyCode moveUp_Keyboard = KeyCode.W;
+    //The keyboard input for moving down
+    public KeyCode moveDown_Keyboard = KeyCode.S;
 
     [Space(8)]
 
@@ -70,18 +78,28 @@ public class RailMovementFlight : MonoBehaviour
     //Function called every frame
     private void Update()
     {
+        //Making sure we're not going outside the bounding box of the zone
+        this.StayWithinBoundingBox();
+        //Moving the ship with the player inputs
+        this.MoveShip();
+    }
+
+
+    //Function called from Update to make sure this ship is within the rail zone's bounding box
+    private void StayWithinBoundingBox()
+    {
         //Getting our position in space relative to the rail zone collider
         Vector3 ourRelativePos = this.transform.InverseTransformPoint(this.colliderPosition);
 
         //If our relative X position is to the right of the bounding box
-        if(ourRelativePos.x > this.colliderPosition.x + (this.flightBoundingBox.x / 2))
+        if (ourRelativePos.x > this.colliderPosition.x + (this.flightBoundingBox.x / 2))
         {
             ourRelativePos = new Vector3(this.colliderPosition.x + (this.flightBoundingBox.x / 2),
                                         ourRelativePos.y,
                                         ourRelativePos.z);
         }
         //If our relative X position is to the left of the bounding box
-        else if(ourRelativePos.x < this.colliderPosition.x - (this.flightBoundingBox.x / 2))
+        else if (ourRelativePos.x < this.colliderPosition.x - (this.flightBoundingBox.x / 2))
         {
             ourRelativePos = new Vector3(this.colliderPosition.x - (this.flightBoundingBox.x / 2),
                                         ourRelativePos.y,
@@ -90,18 +108,25 @@ public class RailMovementFlight : MonoBehaviour
 
 
         //If our relative Y position is above the bounding box
-        if(ourRelativePos.y > this.colliderPosition.y + (this.flightBoundingBox.y / 2))
+        if (ourRelativePos.y > this.colliderPosition.y + (this.flightBoundingBox.y / 2))
         {
             ourRelativePos = new Vector3(ourRelativePos.x,
                                         this.colliderPosition.y + (this.flightBoundingBox.y / 2),
                                         ourRelativePos.z);
         }
         //If our relative Y position is below the bounding box
-        else if(ourRelativePos.y < this.colliderPosition.y - (this.flightBoundingBox.y / 2))
+        else if (ourRelativePos.y < this.colliderPosition.y - (this.flightBoundingBox.y / 2))
         {
             ourRelativePos = new Vector3(ourRelativePos.x,
                                         this.colliderPosition.y - (this.flightBoundingBox.y / 2),
                                         ourRelativePos.z);
         }
+    }
+
+
+    //Function called from Update to handle player input
+    private void MoveShip()
+    {
+
     }
 }
