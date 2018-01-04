@@ -10,7 +10,8 @@ public class PlayerShipController : MonoBehaviour
     //Enum to determine which player controls this ship
     public Players playerController = Players.P1;
     //The controller input that we use for this ship
-    private ControllerInput ourController;
+    [HideInInspector]
+    public ControllerInput ourController;
 
     //References to this ship's different movement mechanic scripts
     private FreeMovementFlight ourFreeMovement;
@@ -35,17 +36,14 @@ public class PlayerShipController : MonoBehaviour
 
     [Space(8)]
 
-    //The controller button used to boost forward
-    public ControllerButtons boostButton_Controller = ControllerButtons.Right_Trigger;
-    //The keyboard/mouse button used to boost forward
-    public KeyCode boostButton_Keyboard = KeyCode.Space;
+    //The list of all wing objects that are attached to this ship
+    public List<ShipWingLogic> shipWings;
 
     [Space(8)]
 
-    //The controller button used to break
-    public ControllerButtons breakButton_Controller = ControllerButtons.Left_Trigger;
-    //The keyboard/mouse button used to break
-    public KeyCode breakButton_Keyboard = KeyCode.LeftShift;
+    //The list of all engine objects that are attached to this ship
+    public List<ShipEngineLogic> shipEngines;
+
 
 
 
@@ -75,6 +73,10 @@ public class PlayerShipController : MonoBehaviour
                 this.ourController = ControllerInputManager.P4Controller;
                 break;
         }
+
+        //Passing our controller input to our movement mechanic scripts
+        this.ourFreeMovement.ourController = this;
+        this.ourRailMovement.ourController = this;
     }
 
 
@@ -113,19 +115,26 @@ public class PlayerShipController : MonoBehaviour
         //If the object hit has a RegionZone.cs component, we change our movement behaviors
         if(collider_.gameObject.GetComponent<RegionZone>())
         {
-            //If the region has rail movement
-            if(collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Rail)
+            //If the region zone effects this player
+            if (collider_.gameObject.GetComponent<RegionZone>().effectedPlayer == this.playerController)
             {
-                //We disable our free movement controls and enable our rail movement controls
-                this.ourFreeMovement.enabled = false;
-                this.ourRailMovement.enabled = true;
-            }
-            //If the region has free movement
-            else if(collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
-            {
-                //We disable our rail movement controls and enable our free movement controls
-                this.ourRailMovement.enabled = false;
-                this.ourFreeMovement.enabled = true;
+                //If the region has rail movement
+                if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Rail)
+                {
+                    //We disable our free movement controls and enable our rail movement controls
+                    this.ourFreeMovement.enabled = false;
+                    this.ourRailMovement.enabled = true;
+
+                    //Setting the new direction for our rail movement
+                    this.ourRailMovement.SetNewRailDirection(collider_);
+                }
+                //If the region has free movement
+                else if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
+                {
+                    //We disable our rail movement controls and enable our free movement controls
+                    this.ourRailMovement.enabled = false;
+                    this.ourFreeMovement.enabled = true;
+                }
             }
         }
     }

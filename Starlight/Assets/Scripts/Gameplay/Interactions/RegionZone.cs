@@ -8,6 +8,10 @@ public class RegionZone : MonoBehaviour
     public enum RegionMovement { Free, Rail };
     public RegionMovement movementType = RegionMovement.Rail;
 
+    //Enum for which player this region effects
+    public Players effectedPlayer = Players.P1;
+
+
 
 	// Use this for initialization
 	void Start ()
