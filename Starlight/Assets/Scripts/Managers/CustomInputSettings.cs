@@ -37,6 +37,9 @@ public class CustomInputSettings : MonoBehaviour
 [System.Serializable]
 public class PlayerInputs
 {
+    //Bool that determines if the Y movement is inverted or not
+    public bool invertYMovement = true;
+
     //~~~~~~~~~~~~~~~~~~~~~~~CONTROLLER INPUT~~~~~~~~~~~~~~~~~~~~~~~~~
     //The controller stick for moving left and right
     public ControllerSticks moveLeftRight_Controller = ControllerSticks.Left_Stick_X;

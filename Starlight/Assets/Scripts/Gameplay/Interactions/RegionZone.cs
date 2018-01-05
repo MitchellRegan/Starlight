@@ -8,9 +8,13 @@ public class RegionZone : MonoBehaviour
     public enum RegionMovement { Free, Rail };
     public RegionMovement movementType = RegionMovement.Rail;
 
-    //Enum for which player this region effects
-    public Players effectedPlayer = Players.P1;
+    //Bools for which player this region effects
+    public bool effectPlayer1 = true;
+    public bool effectPlayer2 = true;
 
+    //The multiplier to forward thrust that player ships move at in this zone
+    [Range(0.1f, 2)]
+    public float thrustMultiplier = 1;
 
 
 	// Use this for initialization
