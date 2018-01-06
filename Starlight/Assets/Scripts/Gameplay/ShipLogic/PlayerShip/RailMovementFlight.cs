@@ -11,6 +11,9 @@ public class RailMovementFlight : MonoBehaviour
     //Reference to our rigidbody component
     private Rigidbody ourRigidbody;
 
+    //Reference to our rail parent object's rigid body component
+    public Rigidbody railParentObj;
+
     //The position of the collider in space so we can get this ship's relative position
     private Vector3 colliderPosition;
     //The forward direction that we're moving along
@@ -40,11 +43,50 @@ public class RailMovementFlight : MonoBehaviour
     }
 
 
+    //Function called when this component is enabled
+    private void OnEnable()
+    {
+        //Enabling our rail parent object
+        this.railParentObj.gameObject.SetActive(true);
+        //Unparenting our rail parent object from this ship
+        this.railParentObj.transform.SetParent(this.transform.parent);
+        //Setting our rail parent object's position and rotation to match our ships
+        this.railParentObj.transform.position = this.transform.position;
+        this.railParentObj.transform.rotation = this.transform.rotation;
+        //Parenting our ship to be parented to our rail parent object
+        this.transform.SetParent(this.railParentObj.transform);
+    }
+
+
+    //Function called from PlayerShipController.OnTriggerEnter before this component is disabled
+    public void BeforeDisable()
+    {
+        //Unparenting our ship from the rail parent object
+        this.transform.SetParent(this.railParentObj.transform.parent);
+        //Parenting the rail parent object to our ship
+        this.railParentObj.transform.SetParent(this.transform);
+        //Disabling our rail parent object
+        this.railParentObj.gameObject.SetActive(false);
+    }
+
+
     //Function called from PlayerShipController.OnTriggerEnter to change our movement to match the new region
     public void SetNewRailDirection(Collider newRegionCollider_)
     {
         //Disabling the collider's component so we can't accidentally hit it multiple times
         newRegionCollider_.enabled = false;
+
+        //Converting our transform to the relative position on the collider
+        //this.transform.localPosition = this.transform.InverseTransformPoint(newRegionCollider_.transform.position);
+
+        //Unparenting our ship from our rail parent object
+        this.transform.SetParent(this.transform.parent.parent);
+        //Finding the center XY position in relative space of the new region collider that's at the beginning of the collision Z distance
+        this.railParentObj.transform.SetParent(newRegionCollider_.transform.parent);
+        this.railParentObj.transform.localPosition = new Vector3(0, 0, -newRegionCollider_.transform.localScale.z / 2);
+        this.railParentObj.transform.SetParent(this.transform.parent);
+        //Parenting our ship to the newly centered rail parent's position
+        this.transform.SetParent(this.railParentObj.transform);
 
         //Setting our collider position
         this.colliderPosition = newRegionCollider_.transform.position;
@@ -64,10 +106,10 @@ public class RailMovementFlight : MonoBehaviour
         //Setting the minimum forward thrust that this rail zone requires
         this.zoneThrustMultiplier = newRegionCollider_.GetComponent<RegionZone>().thrustMultiplier;
 
-        //Rotating this object to face the forward direction
+        //Rotating our rail parent object to face the forward direction
         Quaternion lookDirection = new Quaternion();
         lookDirection.SetLookRotation(this.railForwardDirection, this.railUpDirection);
-        this.transform.rotation = lookDirection;
+        this.railParentObj.transform.rotation = lookDirection;
     }
 
 
@@ -85,54 +127,42 @@ public class RailMovementFlight : MonoBehaviour
     private void StayWithinBoundingBox()
     {
         //Getting our position in space relative to the rail zone collider
-        Vector3 ourRelativePos = this.transform.InverseTransformPoint(this.colliderPosition);
-        //Bool to determine if we're out of bounds
-        bool isOutOfBounds = false;
+        Vector3 ourRelativePos = new Vector3(this.transform.localPosition.x, this.transform.localPosition.y, 0);
 
         //If our relative X position is to the right of the bounding box
-        if (ourRelativePos.x > this.colliderPosition.x + (this.flightBoundingBox.x / 2))
+        if (ourRelativePos.x > this.flightBoundingBox.x / 2)
         {
-            Debug.Log("Left");
-            isOutOfBounds = true;
-            ourRelativePos = new Vector3(this.colliderPosition.x + (this.flightBoundingBox.x / 2),
+            ourRelativePos = new Vector3(this.flightBoundingBox.x / 2,
                                         ourRelativePos.y,
                                         ourRelativePos.z);
         }
         //If our relative X position is to the left of the bounding box
-        else if (ourRelativePos.x < this.colliderPosition.x - (this.flightBoundingBox.x / 2))
+        else if (ourRelativePos.x < -this.flightBoundingBox.x / 2)
         {
-            Debug.Log("Right");
-            isOutOfBounds = true;
-            ourRelativePos = new Vector3(this.colliderPosition.x - (this.flightBoundingBox.x / 2),
+            ourRelativePos = new Vector3(-this.flightBoundingBox.x / 2,
                                         ourRelativePos.y,
                                         ourRelativePos.z);
         }
 
 
         //If our relative Y position is above the bounding box
-        if (ourRelativePos.y > this.colliderPosition.y + (this.flightBoundingBox.y / 2))
+        if (ourRelativePos.y > this.flightBoundingBox.y / 2)
         {
-            Debug.Log("Up");
-            isOutOfBounds = true;
             ourRelativePos = new Vector3(ourRelativePos.x,
-                                        this.colliderPosition.y + (this.flightBoundingBox.y / 2),
+                                        this.flightBoundingBox.y / 2,
                                         ourRelativePos.z);
         }
         //If our relative Y position is below the bounding box
-        else if (ourRelativePos.y < this.colliderPosition.y - (this.flightBoundingBox.y / 2))
+        else if (ourRelativePos.y < -this.flightBoundingBox.y / 2)
         {
-            Debug.Log("Down");
-            isOutOfBounds = true;
             ourRelativePos = new Vector3(ourRelativePos.x,
-                                        this.colliderPosition.y - (this.flightBoundingBox.y / 2),
+                                        -this.flightBoundingBox.y / 2,
                                         ourRelativePos.z);
         }
 
         //Setting our transform to the corrected relative pos is we're out of bounds
-        if (isOutOfBounds)
-        {
-            this.transform.position = ourRelativePos;
-        }
+        //Debug.Log("Current Pos: " + this.transform.InverseTransformPoint(this.colliderPosition) + ",      Relative Pos: " + ourRelativePos);
+        this.transform.localPosition = ourRelativePos;
     }
 
 
@@ -201,14 +231,20 @@ public class RailMovementFlight : MonoBehaviour
         //Multiplying our forward velocity by the zone's velocity multiplier
         velocities.z = velocities.z * this.zoneThrustMultiplier;
 
-        //Vector 3 to hold our velocities in the correct orientations based on our region
-        Vector3 orientationVelocities = new Vector3();
-        orientationVelocities += velocities.x * this.railRightDirection;
-        orientationVelocities += velocities.y * this.railUpDirection;
-        orientationVelocities += velocities.z * this.railForwardDirection;
+        //Vector 3 to hold our XY velocities in the correct orientations based on our region
+        Vector3 XYorientationVelocities = new Vector3();
+        XYorientationVelocities += velocities.x * this.railRightDirection;
+        XYorientationVelocities += velocities.y * this.railUpDirection;
+        //XYorientationVelocities += velocities.z * this.railForwardDirection;
+
+        //Vector 3 to hold our Z velocity in the correct orientation based on our region
+        Vector3 ZorientationVelocity = new Vector3();
+        ZorientationVelocity += velocities.z * this.railForwardDirection;
 
         //Setting the movement and thrust velocities based on our relative direction
-        this.ourRigidbody.velocity = orientationVelocities;
+        this.ourRigidbody.velocity = XYorientationVelocities;
+        //Applying the forward thrust velocity to our rail parent object's rigid body
+        this.railParentObj.velocity = ZorientationVelocity;
     }
 
 

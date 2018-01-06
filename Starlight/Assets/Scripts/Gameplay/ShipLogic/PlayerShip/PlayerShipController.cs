@@ -128,6 +128,7 @@ public class PlayerShipController : MonoBehaviour
                 else if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
                 {
                     //We disable our rail movement controls and enable our free movement controls
+                    this.ourRailMovement.BeforeDisable();
                     this.ourRailMovement.enabled = false;
                     this.ourFreeMovement.enabled = true;
                 }
