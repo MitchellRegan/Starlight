@@ -16,17 +16,38 @@ public class RailMovementFlight : MonoBehaviour
 
     //The position of the collider in space so we can get this ship's relative position
     private Vector3 colliderPosition;
-    //The forward direction that we're moving along
-    private Vector3 railForwardDirection;
-    //The up and right directions for the rail so we can have an orientation
-    private Vector3 railUpDirection;
-    private Vector3 railRightDirection;
+
+    //The forward, up, and right directions that we're moving along
+    private Vector3 railForwardDirection = Vector3.forward;
+    private Vector3 railUpDirection = Vector3.up;
+    private Vector3 railRightDirection = Vector3.right;
 
     //The width and height of the designated flight zone of our current region
     private Vector2 flightBoundingBox;
 
     //The forward thrust multiplier for this rail zone
     private float zoneThrustMultiplier = 0;
+
+    //The interpolator that we use to rotate this ship when changing zones
+    private Interpolator ourInterp;
+    //The length of time that it takes to interpolate when changing zones
+    private float interpTime = 0.5f;
+    //Bool that determines if we're currently interpolating
+    private bool areWeInterping = false;
+
+    //The forward, up, and right directions that we were moving along in our previous rail zone
+    private Vector3 prevRailForward = new Vector3();
+    private Vector3 prevRailUp = new Vector3();
+    private Vector3 prevRailRight = new Vector3();
+    //The rotation that we were facing in our previous rail zone
+    private Quaternion prevRotation = new Quaternion();
+
+    //The forward, up, and right directions that we will be moving along in our next rail zone
+    private Vector3 nextRailForward = new Vector3();
+    private Vector3 nextRailUp = new Vector3();
+    private Vector3 nextRailRight = new Vector3();
+    //The rotation that we will be facing in our next rail zone
+    private Quaternion nextRotation = new Quaternion();
 
 
     
@@ -40,6 +61,11 @@ public class RailMovementFlight : MonoBehaviour
         this.railUpDirection = this.transform.up;
         this.railForwardDirection = this.transform.forward;
         this.railRightDirection = this.transform.right;
+
+        //Initializing a new interpolator class for us to use
+        this.ourInterp = new Interpolator(EaseType.Linear);
+        this.ourInterp.SetDuration(this.interpTime);
+        this.areWeInterping = false;
     }
 
 
@@ -67,6 +93,9 @@ public class RailMovementFlight : MonoBehaviour
         this.railParentObj.transform.SetParent(this.transform);
         //Disabling our rail parent object
         this.railParentObj.gameObject.SetActive(false);
+        //Resetting our interpolator just in case
+        this.ourInterp.ResetTime();
+        this.areWeInterping = false;
     }
 
 
@@ -75,9 +104,6 @@ public class RailMovementFlight : MonoBehaviour
     {
         //Disabling the collider's component so we can't accidentally hit it multiple times
         newRegionCollider_.enabled = false;
-
-        //Converting our transform to the relative position on the collider
-        //this.transform.localPosition = this.transform.InverseTransformPoint(newRegionCollider_.transform.position);
 
         //Unparenting our ship from our rail parent object
         this.transform.SetParent(this.transform.parent.parent);
@@ -91,14 +117,17 @@ public class RailMovementFlight : MonoBehaviour
         //Setting our collider position
         this.colliderPosition = newRegionCollider_.transform.position;
 
-        //Setting our forward direction to that of the collider's game object
-        this.railForwardDirection = newRegionCollider_.transform.forward;
+        //Setting our forward, up, and right directions for the previous directions that we are currently using but need to change from
+        this.prevRailForward = this.railForwardDirection;
+        this.prevRailUp = this.railUpDirection;
+        this.prevRailRight = this.railRightDirection;
+        this.prevRotation = this.transform.rotation;
 
-        //Setting our upward direction to that of the collider's game object
-        this.railUpDirection = newRegionCollider_.transform.up;
-
-        //Setting our right direction to that of the collider's game object
-        this.railRightDirection = newRegionCollider_.transform.right;
+        //Setting our forward, up, and right directions for the next directions to that of the collider's game object
+        this.nextRailForward = newRegionCollider_.transform.forward;
+        this.nextRailUp = newRegionCollider_.transform.up;
+        this.nextRailRight = newRegionCollider_.transform.right;
+        this.nextRotation = ;
 
         //Setting our flight bounding box based on the width and height of the collider
         this.flightBoundingBox = new Vector2(newRegionCollider_.transform.localScale.x, newRegionCollider_.transform.localScale.y);
@@ -110,12 +139,40 @@ public class RailMovementFlight : MonoBehaviour
         Quaternion lookDirection = new Quaternion();
         lookDirection.SetLookRotation(this.railForwardDirection, this.railUpDirection);
         this.railParentObj.transform.rotation = lookDirection;
+
+        //Starting our interpolation
+        this.ourInterp.ResetTime();
+        this.areWeInterping = true;
     }
 
 
     //Function called every frame
     private void Update()
     {
+        //If our interpolator is still interpolating, we change the direction we're facing
+        if(this.areWeInterping)
+        {
+            //Adding time to our interpolator
+            this.ourInterp.AddTime(Time.deltaTime);
+
+            //Setting our current forward, up, and right directions to an interpolated version between the previous and next directions
+            this.railForwardDirection = this.prevRailForward + ((this.nextRailForward - this.prevRailForward) * this.ourInterp.GetProgress());
+            this.railUpDirection = this.prevRailUp + ((this.nextRailUp - this.prevRailUp) * this.ourInterp.GetProgress());
+            this.railRightDirection = this.prevRailRight + ((this.nextRailRight - this.prevRailRight) * this.ourInterp.GetProgress());
+
+            //If our interp's progress is done we signal that we're done
+            if (this.ourInterp.GetPercent() >= 1)
+            {
+                Debug.Log("Done Interp");
+                this.areWeInterping = false;
+
+                //Making sure all of our directions are exactly equal to our current zone's directions
+                this.railForwardDirection = this.nextRailForward;
+                this.railUpDirection = this.nextRailUp;
+                this.railRightDirection = this.nextRailRight;
+            }
+        }
+
         //Moving the ship with the player inputs
         this.MoveShip();
         //Making sure we're not going outside the bounding box of the zone
