@@ -27,13 +27,13 @@ public class RailMovementFlight : MonoBehaviour
 
     //The forward thrust multiplier for this rail zone
     private float zoneThrustMultiplier = 0;
-
-    //The interpolator that we use to rotate this ship when changing zones
-    private Interpolator ourInterp;
-    //The length of time that it takes to interpolate when changing zones
-    private float interpTime = 0.5f;
+    
     //Bool that determines if we're currently interpolating
     private bool areWeInterping = false;
+    //Float that determines how fast we interp positions
+    private float interpSpeed = 0.8f;
+    //The transform of the region we're entering
+    private Transform nextRegionTransform;
 
     //The forward, up, and right directions that we were moving along in our previous rail zone
     private Vector3 prevRailForward = new Vector3();
@@ -61,10 +61,7 @@ public class RailMovementFlight : MonoBehaviour
         this.railUpDirection = this.transform.up;
         this.railForwardDirection = this.transform.forward;
         this.railRightDirection = this.transform.right;
-
-        //Initializing a new interpolator class for us to use
-        this.ourInterp = new Interpolator(EaseType.Linear);
-        this.ourInterp.SetDuration(this.interpTime);
+        
         this.areWeInterping = false;
     }
 
@@ -93,8 +90,6 @@ public class RailMovementFlight : MonoBehaviour
         this.railParentObj.transform.SetParent(this.transform);
         //Disabling our rail parent object
         this.railParentObj.gameObject.SetActive(false);
-        //Resetting our interpolator just in case
-        this.ourInterp.ResetTime();
         this.areWeInterping = false;
     }
 
@@ -102,6 +97,9 @@ public class RailMovementFlight : MonoBehaviour
     //Function called from PlayerShipController.OnTriggerEnter to change our movement to match the new region
     public void SetNewRailDirection(Collider newRegionCollider_)
     {
+        //Saving this region's transform for interpolation
+        this.nextRegionTransform = newRegionCollider_.transform;
+
         //Disabling the collider's component so we can't accidentally hit it multiple times
         newRegionCollider_.enabled = false;
 
@@ -117,17 +115,8 @@ public class RailMovementFlight : MonoBehaviour
         //Setting our collider position
         this.colliderPosition = newRegionCollider_.transform.position;
 
-        //Setting our forward, up, and right directions for the previous directions that we are currently using but need to change from
-        this.prevRailForward = this.railForwardDirection;
-        this.prevRailUp = this.railUpDirection;
-        this.prevRailRight = this.railRightDirection;
-        this.prevRotation = this.transform.rotation;
-
-        //Setting our forward, up, and right directions for the next directions to that of the collider's game object
-        this.nextRailForward = newRegionCollider_.transform.forward;
-        this.nextRailUp = newRegionCollider_.transform.up;
-        this.nextRailRight = newRegionCollider_.transform.right;
-        this.nextRotation = ;
+        //The rotation for the next zone we're entering so we can interp to match it
+        this.nextRotation = newRegionCollider_.transform.rotation;
 
         //Setting our flight bounding box based on the width and height of the collider
         this.flightBoundingBox = new Vector2(newRegionCollider_.transform.localScale.x, newRegionCollider_.transform.localScale.y);
@@ -141,7 +130,6 @@ public class RailMovementFlight : MonoBehaviour
         this.railParentObj.transform.rotation = lookDirection;
 
         //Starting our interpolation
-        this.ourInterp.ResetTime();
         this.areWeInterping = true;
     }
 
@@ -152,24 +140,69 @@ public class RailMovementFlight : MonoBehaviour
         //If our interpolator is still interpolating, we change the direction we're facing
         if(this.areWeInterping)
         {
-            //Adding time to our interpolator
-            this.ourInterp.AddTime(Time.deltaTime);
+            //Speed to rotatefor our slerp
+            float rotationSpeed = 0;
 
-            //Setting our current forward, up, and right directions to an interpolated version between the previous and next directions
-            this.railForwardDirection = this.prevRailForward + ((this.nextRailForward - this.prevRailForward) * this.ourInterp.GetProgress());
-            this.railUpDirection = this.prevRailUp + ((this.nextRailUp - this.prevRailUp) * this.ourInterp.GetProgress());
-            this.railRightDirection = this.prevRailRight + ((this.nextRailRight - this.prevRailRight) * this.ourInterp.GetProgress());
+            //If we're accelerating and not breaking, our rotation speed is increased
+            if(this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) || Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard) &&
+                !this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) && !Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+            {
+                //Variables to hold the sum of our ship engines normal speed and boost speed
+                float sumNormalSpeed = 0;
+                float sumBoostSpeed = 0;
+
+                //Looping through all of our ship's engines
+                foreach(ShipEngineLogic engine in this.ourShip.shipEngines)
+                {
+                    sumNormalSpeed += engine.currentRailVelocity.y;
+                    sumBoostSpeed += engine.currentRailVelocity.z;
+                }
+
+                rotationSpeed = rotationSpeed * (sumBoostSpeed / sumNormalSpeed);
+                Debug.Log(rotationSpeed);
+            }
+            //If we're breaking and not accelerating, our rotation speed is reduced
+            else if (!this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) && !Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard) &&
+                this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) || Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+            {
+                //Variables to hold the sum of our ship engines normal speed and break speed
+                float sumNormalSpeed = 0;
+                float sumBreakSpeed = 0;
+
+                //Looping through all of our ship's engines
+                foreach (ShipEngineLogic engine in this.ourShip.shipEngines)
+                {
+                    sumNormalSpeed += engine.currentRailVelocity.y;
+                    sumBreakSpeed += engine.currentRailVelocity.x;
+                }
+
+                rotationSpeed = rotationSpeed * (sumBreakSpeed / sumNormalSpeed);
+                Debug.Log(rotationSpeed);
+            }
+
+            //Interpolating our rail parent's rotation to match the rotation of the zone we're entering
+            this.railParentObj.transform.rotation = Quaternion.Slerp(this.railParentObj.transform.rotation, this.nextRotation, Time.time * 0.05f);
+
+            //Setting our directions based on the rail parent's current rotation
+            this.railForwardDirection = this.railParentObj.transform.forward;
+            this.railUpDirection = this.railParentObj.transform.up;
+            this.railRightDirection = this.railParentObj.transform.right;
+
+            //Unparenting our ship from our rail parent object
+            this.transform.SetParent(this.transform.parent.parent);
+            //Finding the center XY position in relative space of the new region collider that's at the beginning of the collision Z distance
+            this.railParentObj.transform.SetParent(this.nextRegionTransform.parent);
+            this.railParentObj.transform.localPosition = new Vector3(this.railParentObj.transform.localPosition.x * this.interpSpeed, 
+                                                                     this.railParentObj.transform.localPosition.y * this.interpSpeed,
+                                                                     this.railParentObj.transform.localPosition.z);
+            this.railParentObj.transform.SetParent(this.transform.parent);
+            //Parenting our ship to the newly centered rail parent's position
+            this.transform.SetParent(this.railParentObj.transform);
 
             //If our interp's progress is done we signal that we're done
-            if (this.ourInterp.GetPercent() >= 1)
+            if (this.railParentObj.transform.rotation == this.nextRotation)
             {
-                Debug.Log("Done Interp");
                 this.areWeInterping = false;
-
-                //Making sure all of our directions are exactly equal to our current zone's directions
-                this.railForwardDirection = this.nextRailForward;
-                this.railUpDirection = this.nextRailUp;
-                this.railRightDirection = this.nextRailRight;
             }
         }
 
@@ -189,14 +222,14 @@ public class RailMovementFlight : MonoBehaviour
         //If our relative X position is to the right of the bounding box
         if (ourRelativePos.x > this.flightBoundingBox.x / 2)
         {
-            ourRelativePos = new Vector3(this.flightBoundingBox.x / 2,
+            ourRelativePos = new Vector3((this.flightBoundingBox.x / 2) + ((ourRelativePos.x - (this.flightBoundingBox.x / 2)) * this.interpSpeed),
                                         ourRelativePos.y,
                                         ourRelativePos.z);
         }
         //If our relative X position is to the left of the bounding box
         else if (ourRelativePos.x < -this.flightBoundingBox.x / 2)
         {
-            ourRelativePos = new Vector3(-this.flightBoundingBox.x / 2,
+            ourRelativePos = new Vector3((-this.flightBoundingBox.x / 2) + ((ourRelativePos.x - (-this.flightBoundingBox.x / 2)) * this.interpSpeed),
                                         ourRelativePos.y,
                                         ourRelativePos.z);
         }
@@ -206,14 +239,14 @@ public class RailMovementFlight : MonoBehaviour
         if (ourRelativePos.y > this.flightBoundingBox.y / 2)
         {
             ourRelativePos = new Vector3(ourRelativePos.x,
-                                        this.flightBoundingBox.y / 2,
+                                        (this.flightBoundingBox.y / 2) + ((ourRelativePos.y - (this.flightBoundingBox.y / 2)) * this.interpSpeed),
                                         ourRelativePos.z);
         }
         //If our relative Y position is below the bounding box
         else if (ourRelativePos.y < -this.flightBoundingBox.y / 2)
         {
             ourRelativePos = new Vector3(ourRelativePos.x,
-                                        -this.flightBoundingBox.y / 2,
+                                        (-this.flightBoundingBox.y / 2) + ((ourRelativePos.y - (-this.flightBoundingBox.y / 2)) * this.interpSpeed),
                                         ourRelativePos.z);
         }
 

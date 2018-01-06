@@ -22,8 +22,10 @@ public class PlayerShipController : MonoBehaviour
     [Space(8)]
 
     //References to this ship's different movement mechanic scripts
-    private FreeMovementFlight ourFreeMovement;
-    private RailMovementFlight ourRailMovement;
+    [HideInInspector]
+    public FreeMovementFlight ourFreeMovement;
+    [HideInInspector]
+    public RailMovementFlight ourRailMovement;
 
     //The main weapon for this ship
     public Weapon mainWeapon;
