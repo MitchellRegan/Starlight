@@ -31,13 +31,13 @@ public class RailParentCollisionLogic : MonoBehaviour
                     this.ourShipController.ourRailMovement.SetNewRailDirection(collider_);
                 }
                 //If the region has free movement
-                else if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
+                /*else if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
                 {
                     //We disable our rail movement controls and enable our free movement controls
                     this.ourShipController.ourRailMovement.BeforeDisable();
                     this.ourShipController.ourRailMovement.enabled = false;
                     this.ourShipController.ourFreeMovement.enabled = true;
-                }
+                }*/
             }
         }
     }

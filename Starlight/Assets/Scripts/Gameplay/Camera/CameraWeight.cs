@@ -7,6 +7,9 @@ public class CameraWeight : MonoBehaviour
     //Determines if the distance between objects tracks the Z plane
     public bool track2D = true;
 
+    //The player camera that can track this weight
+    public Players playerThatCanFollow = Players.AllPlayers;
+
     //If this is on, player1's camera will always follow it regardless of the Add or Drop distance
     public bool alwaysRemainOnCam = false;
 
@@ -19,7 +22,7 @@ public class CameraWeight : MonoBehaviour
     public float dropDistance = 11f;
 
     //References to the FollowCameraWeights.cs camera and if this object is currently on the camera's screen
-    private GameObject cameraRef;
+    private FollowCameraWeights cameraRef;
     private bool isOnScreen = false;
 
 
@@ -27,13 +30,23 @@ public class CameraWeight : MonoBehaviour
     // Use this for initialization
     private void Start()
     {
-        //Finds the static references of all cameras
-        this.cameraRef = FollowCameraWeights.globalReference.gameObject;
+        //If this camera weight affects player 2
+        if (this.playerThatCanFollow == Players.P2)
+        {
+            //Finds the static reference for the player 2 camera
+            this.cameraRef = FollowCameraWeights.p2GlobalReference;
+        }
+        //If this camera weight affects anyone else
+        else
+        {
+            //Finds the static reference for the player 1 camera
+            this.cameraRef = FollowCameraWeights.p1GlobalReference;
+        }
 
         //If this object always needs to be tracked by a player, adds their weight to the designated camera
         if (this.alwaysRemainOnCam && this.cameraRef != null)
         {
-            FollowCameraWeights.AddWeightedObject(this);
+            FollowCameraWeights.AddWeightedObject(this, this.playerThatCanFollow);
         }
 
         //Makes sure the Drop Distance is greater than the Add Distance to prevent errors with the weight system
@@ -48,7 +61,7 @@ public class CameraWeight : MonoBehaviour
     private void FixedUpdate()
     {
         //Determines if this object should be added to each of the cameras. We don't care if they're null, because HandleCamera handles that for us
-        this.isOnScreen = HandleCamera(this.cameraRef, this.isOnScreen);
+        this.isOnScreen = this.HandleCamera(this.cameraRef.gameObject, this.isOnScreen);
     }
 
 
@@ -76,7 +89,7 @@ public class CameraWeight : MonoBehaviour
                 //If the distance is greater than the drop distance, it won't be tracked anymore
                 if (dist >= this.dropDistance)
                 {
-                    FollowCameraWeights.DropWeightedObject(this);
+                    FollowCameraWeights.DropWeightedObject(this, this.playerThatCanFollow);
                     isOnScreen = false;
                 }
             }
@@ -88,7 +101,7 @@ public class CameraWeight : MonoBehaviour
                 //If the distance is greater than the drop distance it won't be tracked anymore
                 if (dist >= this.dropDistance)
                 {
-                    FollowCameraWeights.DropWeightedObject(this);
+                    FollowCameraWeights.DropWeightedObject(this, this.playerThatCanFollow);
                     isOnScreen = false;
                 }
             }
@@ -106,7 +119,7 @@ public class CameraWeight : MonoBehaviour
                 //If the distance is less than the add distance, it will be tracked
                 if (dist <= this.addDistance)
                 {
-                    FollowCameraWeights.AddWeightedObject(this);
+                    FollowCameraWeights.AddWeightedObject(this, this.playerThatCanFollow);
                     isOnScreen = true;
                 }
             }
@@ -118,7 +131,7 @@ public class CameraWeight : MonoBehaviour
                 //If the distance is less than the add distance it will be tracked 
                 if (dist <= this.addDistance)
                 {
-                    FollowCameraWeights.AddWeightedObject(this);
+                    FollowCameraWeights.AddWeightedObject(this, this.playerThatCanFollow);
                     isOnScreen = true;
                 }
             }

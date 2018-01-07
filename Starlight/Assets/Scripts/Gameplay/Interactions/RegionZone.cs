@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class RegionZone : MonoBehaviour
 {
@@ -16,16 +17,6 @@ public class RegionZone : MonoBehaviour
     [Range(0.1f, 2)]
     public float thrustMultiplier = 1;
 
-
-	// Use this for initialization
-	void Start ()
-    {
-		
-	}
-	
-	// Update is called once per frame
-	void Update ()
-    {
-		
-	}
+    //UnityEvent called when the player hits this zone's collider
+    public UnityEvent onCollisionEvent;
 }

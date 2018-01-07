@@ -8,6 +8,11 @@ public class PlayerShipController : MonoBehaviour
 {
     //Enum to determine which player controls this ship
     public Players playerController = Players.P1;
+
+    //References to the public static ship controllers for each ship
+    public static PlayerShipController p1ShipRef;
+    public static PlayerShipController p2ShipRef;
+
     //The controller input that we use for this ship
     [HideInInspector]
     public ControllerInput ourController;
@@ -15,9 +20,6 @@ public class PlayerShipController : MonoBehaviour
     //The input settings for this player
     [HideInInspector]
     public PlayerInputs ourCustomInputs;
-
-    //The camera that follows this ship
-    public Camera ourCamera;
 
     [Space(8)]
 
@@ -56,18 +58,48 @@ public class PlayerShipController : MonoBehaviour
         switch(this.playerController)
         {
             case Players.P1:
-                this.ourController = ControllerInputManager.P1Controller;
-                this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
+                //Making sure there's not already a static reference to the p1 ship
+                if (p1ShipRef == null)
+                {
+                    p1ShipRef = this;
+                    this.ourController = ControllerInputManager.P1Controller;
+                    this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
+                }
+                //If there's already a static reference for the p1 ship, we disable this object
+                else
+                {
+                    this.gameObject.SetActive(false);
+                }
                 break;
 
             case Players.P2:
-                this.ourController = ControllerInputManager.P2Controller;
-                this.ourCustomInputs = CustomInputSettings.globalReference.p2Inputs;
+                //Making sure there's not already a static reference to the p2 ship
+                if (p2ShipRef == null)
+                {
+                    p2ShipRef = this;
+                    this.ourController = ControllerInputManager.P2Controller;
+                    this.ourCustomInputs = CustomInputSettings.globalReference.p2Inputs;
+                }
+                //If there's already a static reference for the p2 ship, we disable this object
+                else
+                {
+                    this.gameObject.SetActive(false);
+                }
                 break;
 
             default:
-                this.ourController = ControllerInputManager.P1Controller;
-                this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
+                //Making sure there's not already a static reference to the p1 ship
+                if (p1ShipRef == null)
+                {
+                    p1ShipRef = this;
+                    this.ourController = ControllerInputManager.P1Controller;
+                    this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
+                }
+                //If there's already a static reference for the p1 ship, we disable this object
+                else
+                {
+                    this.gameObject.SetActive(false);
+                }
                 break;
         }
 
@@ -117,7 +149,7 @@ public class PlayerShipController : MonoBehaviour
                 (collider_.gameObject.GetComponent<RegionZone>().effectPlayer2 && this.playerController == Players.P2))
             {
                 //If the region has rail movement
-                if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Rail)
+                /*if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Rail)
                 {
                     //We disable our free movement controls and enable our rail movement controls
                     this.ourFreeMovement.enabled = false;
@@ -125,9 +157,9 @@ public class PlayerShipController : MonoBehaviour
 
                     //Setting the new direction for our rail movement
                     this.ourRailMovement.SetNewRailDirection(collider_);
-                }
+                }*/
                 //If the region has free movement
-                else if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
+                if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
                 {
                     //We disable our rail movement controls and enable our free movement controls
                     this.ourRailMovement.BeforeDisable();

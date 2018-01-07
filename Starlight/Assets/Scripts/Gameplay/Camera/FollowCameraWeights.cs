@@ -2,10 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Camera))]
 public class FollowCameraWeights : MonoBehaviour
 {
-    //Static ref to the main camera (this camera)
-    public static FollowCameraWeights globalReference;
+    //Static ref to the cameras for each player
+    public static FollowCameraWeights p1GlobalReference;
+    public static FollowCameraWeights p2GlobalReference;
+
+    //The player that this camera follows weights for
+    public Players playerToFollow = Players.P1;
+
+    //The game object that's moved to follow
+    public GameObject rootPosObj;
+
+    //The game object that our root pos object rotates to match
+    private GameObject rotationFollowObj;
+    //The amount that we rotate each frame to match the rotation follow obj
+    public float rotationSpeed = 0.05f;
 
     //An array to hold all of the objects that have the Camera_Weight component on them
     private List<GameObject> weightObjects;
@@ -31,56 +44,151 @@ public class FollowCameraWeights : MonoBehaviour
     // Use this for initialization
     private void Awake()
     {
-        //Sets the static reference to this camera if one doesn't already exist
-        if (globalReference == null)
+        //If this camera follows player 2
+        if (this.playerToFollow == Players.P2)
         {
-            globalReference = this;
-        }
-        //If there's already a static reference
-        else
-        {
-            //If the static reference is disabled, this camera becomes the static reference
-            if(!globalReference.gameObject.activeInHierarchy)
+            //Sets the static reference to this camera if one doesn't already exist
+            if (p2GlobalReference == null)
             {
-                globalReference = this;
+                p2GlobalReference = this;
+                //Setting our rotation object to follow as the p2 ship
+                if (PlayerShipController.p1ShipRef != null)
+                {
+                    this.rotationFollowObj = PlayerShipController.p2ShipRef.gameObject;
+                }
+                //If the p2 ship is null, we disable this obj
+                else
+                {
+                    this.enabled = false;
+                }
             }
-            //If the static reference is still awake, this camera becomes disabled
+            //If there's already a static reference
             else
             {
-                this.enabled = false;
+                //If the static reference is disabled, this camera becomes the static reference
+                if (!p2GlobalReference.gameObject.activeInHierarchy)
+                {
+                    p2GlobalReference = this;
+                    //Setting our rotation object to follow as the p2 ship
+                    if (PlayerShipController.p1ShipRef != null)
+                    {
+                        this.rotationFollowObj = PlayerShipController.p2ShipRef.gameObject;
+                    }
+                    //If the p2 ship is null, we disable this obj
+                    else
+                    {
+                        this.enabled = false;
+                    }
+                }
+                //If the static reference is still awake, this camera becomes disabled
+                else
+                {
+                    this.enabled = false;
+                }
+            }
+        }
+        //If this camera follows anything but player 2, it's set to player 1
+        else
+        {
+            //Sets the static reference to this camera if one doesn't already exist
+            if(p1GlobalReference == null)
+            {
+                p1GlobalReference = this;
+                //Setting our rotation object to follow as the p1 ship
+                if (PlayerShipController.p1ShipRef != null)
+                {
+                    this.rotationFollowObj = PlayerShipController.p1ShipRef.gameObject;
+                }
+                //If the p1 ship is null, we disable this obj
+                else
+                {
+                    this.enabled = false;
+                }
+            }
+            //If there's already a static reference
+            else
+            {
+                //If the static reference is disabled, this camera becomes the static reference
+                if(!p1GlobalReference.gameObject.activeInHierarchy)
+                {
+                    p1GlobalReference = this;
+                    //Setting our rotation object to follow as the p1 ship
+                    if(PlayerShipController.p1ShipRef != null)
+                    {
+                        this.rotationFollowObj = PlayerShipController.p1ShipRef.gameObject;
+                    }
+                    //If the p1 ship is null, we disable this obj
+                    else
+                    {
+                        this.enabled = false;
+                    }
+                }
+                //If the static reference is still awake, this camera becomes disabled
+                else
+                {
+                    this.enabled = false;
+                }
             }
         }
 
         //Initializes the list to hold weighted objects
-        globalReference.weightObjects = new List<GameObject>();
+        this.weightObjects = new List<GameObject>();
         //Makes sure the sum of weights starts at 0
-        globalReference.weightSum = 0;
+        this.weightSum = 0;
 
         //Stores the reference to this object's camera component
-        globalReference.weightCamera = GetComponent<Camera>();
+        this.weightCamera = GetComponent<Camera>();
     }
 
 
     //Function called by objects with the Camera_Weight component when they come into range
-    public static void AddWeightedObject(CameraWeight objToAdd_)
+    public static void AddWeightedObject(CameraWeight objToAdd_, Players playerToFollow_)
     {
-        //Adds the weighted object to the list of game objects
-        globalReference.weightObjects.Add(objToAdd_.gameObject);
-        //Adds the weighted object's weight to the sum of all of them
-        globalReference.weightSum += objToAdd_.weight;
+        //If the player to follow is p1
+        if (playerToFollow_ == Players.P1)
+        {
+            //Adds the weighted object to the list of game objects
+            p1GlobalReference.weightObjects.Add(objToAdd_.gameObject);
+            //Adds the weighted object's weight to the sum of all of them
+            p1GlobalReference.weightSum += objToAdd_.weight;
+        }
+        //If the player to follow is p2
+        else if(playerToFollow_ == Players.P2)
+        {
+            //Adds the weighted object to the list of game objects
+            p2GlobalReference.weightObjects.Add(objToAdd_.gameObject);
+            //Adds the weighted object's weight to the sum of all of them
+            p2GlobalReference.weightSum += objToAdd_.weight;
+        }
     }
 
 
     //Function called by objects with Camera_Weight component when they drop out of range
-    public static void DropWeightedObject(CameraWeight objToDrop_)
+    public static void DropWeightedObject(CameraWeight objToDrop_, Players playerToDrop_)
     {
-        //makes sure the object being dropped is in the list of game objects in the first place
-        if (globalReference.weightObjects.Contains(objToDrop_.gameObject))
+        //If the player to drop is p1
+        if (playerToDrop_ == Players.P1)
         {
-            //Removes the weighted object from the list of game objects
-            globalReference.weightObjects.Remove(objToDrop_.gameObject);
-            //Subtracts the weighted object's weight from the sum of all of them
-            globalReference.weightSum -= objToDrop_.weight;
+            //makes sure the object being dropped is in the list of game objects in the first place
+            if (p1GlobalReference.weightObjects.Contains(objToDrop_.gameObject))
+            {
+                //Removes the weighted object from the list of game objects
+                p1GlobalReference.weightObjects.Remove(objToDrop_.gameObject);
+                //Subtracts the weighted object's weight from the sum of all of them
+                p1GlobalReference.weightSum -= objToDrop_.weight;
+            }
+        }
+        //If the player to drop is p2
+        else if(playerToDrop_ == Players.P2)
+        {
+            //makes sure the object being dropped is in the list of game objects in the first place
+            if (p2GlobalReference.weightObjects.Contains(objToDrop_.gameObject))
+            {
+                //Removes the weighted object from the list of game objects
+                p2GlobalReference.weightObjects.Remove(objToDrop_.gameObject);
+                //Subtracts the weighted object's weight from the sum of all of them
+                p2GlobalReference.weightSum -= objToDrop_.weight;
+            }
         }
     }
 
@@ -89,7 +197,7 @@ public class FollowCameraWeights : MonoBehaviour
     private void FixedUpdate()
     {
         //Doesn't update unless there's an object to follow
-        if (globalReference.weightSum == 0)
+        if (this.weightSum == 0)
         {
             return;
         }
@@ -98,18 +206,20 @@ public class FollowCameraWeights : MonoBehaviour
         Vector3 interpPos = FindWeightPosition();
 
         //Finds the difference position
-        Vector2 diff = new Vector3(interpPos.x - globalReference.transform.position.x,
-                            interpPos.y - globalReference.transform.position.y);
+        Vector3 diff = new Vector3(interpPos.x - this.transform.position.x,
+                            interpPos.y - this.transform.position.y,
+                            interpPos.z - this.transform.position.z);
 
         //Sets this camera's position so that it moves in the direction of the interpPos
-        //thisCam.transform.position = thisCam.transform.position + (diff * thisCam.interpSpeed);
-
-        globalReference.transform.localPosition = new Vector3(globalReference.transform.localPosition.x + (diff.x * globalReference.interpSpeed),
-                                                                globalReference.transform.localPosition.y + (diff.y * globalReference.interpSpeed),
-                                                                globalReference.transform.localPosition.z);
+        this.rootPosObj.transform.position = new Vector3(this.transform.position.x + (diff.x * this.interpSpeed),
+                                                                        this.transform.position.y + (diff.y * this.interpSpeed),
+                                                                        this.transform.position.z + (diff.z * this.interpSpeed));
 
         //Sets the camera's field of view based on the furthest tracked object's distance
-        globalReference.weightCamera.orthographicSize += (this.FindZoom() - globalReference.weightCamera.orthographicSize) * globalReference.interpSpeed;
+        this.weightCamera.orthographicSize += (this.FindZoom() - this.weightCamera.orthographicSize) * this.interpSpeed;
+
+        //Sets the camera's rotation to match our rotation object
+        this.rootPosObj.transform.rotation = Quaternion.Slerp(this.rootPosObj.transform.rotation, this.rotationFollowObj.transform.rotation, Time.time * this.rotationSpeed);
     }
 
     
@@ -120,13 +230,13 @@ public class FollowCameraWeights : MonoBehaviour
         Vector3 returnPos = new Vector3(0, 0, 0);
 
         //Loops through each object in the list and adds its position to the returnPos a number of times equal to its weight
-        for (int o = 0; o < globalReference.weightObjects.Count; ++o)
+        for (int o = 0; o < this.weightObjects.Count; ++o)
         {
-            returnPos += (globalReference.weightObjects[o].transform.position * globalReference.weightObjects[o].GetComponent<CameraWeight>().weight);
+            returnPos += (this.weightObjects[o].transform.position * this.weightObjects[o].GetComponent<CameraWeight>().weight);
         }
 
         //Divides the position by the sum of weights
-        returnPos = returnPos / globalReference.weightSum;
+        returnPos = returnPos / this.weightSum;
 
         return returnPos;
     }
@@ -140,11 +250,11 @@ public class FollowCameraWeights : MonoBehaviour
         float currentDist = 0;
 
         //Loops through each tracked object to find the one furthest from this camera
-        for (int z = 0; z < globalReference.weightObjects.Count; ++z)
+        for (int z = 0; z < this.weightObjects.Count; ++z)
         {
             //Stores the distance between the camera and the current object in the list
-            currentDist = Vector2.Distance(new Vector2(globalReference.transform.position.x, globalReference.transform.position.y),
-                                            new Vector2(globalReference.weightObjects[z].transform.position.x, globalReference.weightObjects[z].transform.position.y));
+            currentDist = Vector2.Distance(new Vector2(this.transform.position.x, this.transform.position.y),
+                                            new Vector2(this.weightObjects[z].transform.position.x, this.weightObjects[z].transform.position.y));
 
             //If this current distance is the furthest away so far, we store it
             if (currentDist > furthestDist)
@@ -154,23 +264,23 @@ public class FollowCameraWeights : MonoBehaviour
         }
 
         //If the furthest object is at or beyond the max zoom distance, the zoom is set to the highest allowed
-        if (furthestDist >= globalReference.maxZoomDist)
+        if (furthestDist >= this.maxZoomDist)
         {
-            zoom = globalReference.maxZoom;
+            zoom = this.maxZoom;
         }
         //If the furthest object is at or closer than the min zoom distance, the zoom is set to the lowest allowed
-        else if (furthestDist <= globalReference.minZoomDist)
+        else if (furthestDist <= this.minZoomDist)
         {
-            zoom = globalReference.minZoom;
+            zoom = this.minZoom;
         }
         //If the furthest object is between the min and max zoom distance, we find the middleground based on the difference
         else
         {
-            float zoomDiff = globalReference.maxZoom - globalReference.minZoom;
-            float distDiff = globalReference.maxZoomDist - globalReference.minZoomDist;
-            float distPercent = (furthestDist / globalReference.minZoomDist) / distDiff;
+            float zoomDiff = this.maxZoom - this.minZoom;
+            float distDiff = this.maxZoomDist - this.minZoomDist;
+            float distPercent = (furthestDist / this.minZoomDist) / distDiff;
 
-            zoom = (distPercent * zoomDiff) + globalReference.minZoom;
+            zoom = (distPercent * zoomDiff) + this.minZoom;
         }
 
 

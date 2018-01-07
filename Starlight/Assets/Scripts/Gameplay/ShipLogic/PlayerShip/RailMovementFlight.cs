@@ -88,8 +88,8 @@ public class RailMovementFlight : MonoBehaviour
         this.transform.SetParent(this.railParentObj.transform.parent);
         //Parenting the rail parent object to our ship
         this.railParentObj.transform.SetParent(this.transform);
-        //Disabling our rail parent object
-        this.railParentObj.gameObject.SetActive(false);
+        //Setting our rail parent object's local position to be centered on our ship
+        this.railParentObj.transform.localPosition = new Vector3();
         this.areWeInterping = false;
     }
 
@@ -97,11 +97,11 @@ public class RailMovementFlight : MonoBehaviour
     //Function called from PlayerShipController.OnTriggerEnter to change our movement to match the new region
     public void SetNewRailDirection(Collider newRegionCollider_)
     {
+        //Disabling this region's collider so we don't hit it multiple times
+        newRegionCollider_.enabled = false;
+
         //Saving this region's transform for interpolation
         this.nextRegionTransform = newRegionCollider_.transform;
-
-        //Disabling the collider's component so we can't accidentally hit it multiple times
-        newRegionCollider_.enabled = false;
 
         //Unparenting our ship from our rail parent object
         this.transform.SetParent(this.transform.parent.parent);
@@ -159,7 +159,6 @@ public class RailMovementFlight : MonoBehaviour
                 }
 
                 rotationSpeed = rotationSpeed * (sumBoostSpeed / sumNormalSpeed);
-                Debug.Log(rotationSpeed);
             }
             //If we're breaking and not accelerating, our rotation speed is reduced
             else if (!this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) && !Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard) &&
@@ -181,7 +180,7 @@ public class RailMovementFlight : MonoBehaviour
             }
 
             //Interpolating our rail parent's rotation to match the rotation of the zone we're entering
-            this.railParentObj.transform.rotation = Quaternion.Slerp(this.railParentObj.transform.rotation, this.nextRotation, Time.time * 0.05f);
+            this.railParentObj.transform.rotation = Quaternion.Slerp(this.railParentObj.transform.rotation, this.nextRotation, Time.time * 0.025f);
 
             //Setting our directions based on the rail parent's current rotation
             this.railForwardDirection = this.railParentObj.transform.forward;
