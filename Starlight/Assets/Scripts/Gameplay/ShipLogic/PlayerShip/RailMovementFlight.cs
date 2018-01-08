@@ -14,9 +14,6 @@ public class RailMovementFlight : MonoBehaviour
     //Reference to our rail parent object's rigid body component
     public Rigidbody railParentObj;
 
-    //The position of the collider in space so we can get this ship's relative position
-    private Vector3 colliderPosition;
-
     //The forward, up, and right directions that we're moving along
     private Vector3 railForwardDirection = Vector3.forward;
     private Vector3 railUpDirection = Vector3.up;
@@ -94,26 +91,28 @@ public class RailMovementFlight : MonoBehaviour
     }
 
 
-    //Function called from PlayerShipController.OnTriggerEnter to change our movement to match the new region
+    //Function called from RailParentCollisionLogic.OnTriggerEnter to change our movement to match the new region
     public void SetNewRailDirection(Collider newRegionCollider_)
     {
         //Disabling this region's collider so we don't hit it multiple times
-        newRegionCollider_.enabled = false;
+       // newRegionCollider_.enabled = false;
 
         //Saving this region's transform for interpolation
         this.nextRegionTransform = newRegionCollider_.transform;
 
         //Unparenting our ship from our rail parent object
-        this.transform.SetParent(this.transform.parent.parent);
+        /*this.transform.SetParent(this.transform.parent.parent);
         //Finding the center XY position in relative space of the new region collider that's at the beginning of the collision Z distance
         this.railParentObj.transform.SetParent(newRegionCollider_.transform.parent);
         this.railParentObj.transform.localPosition = new Vector3(0, 0, -newRegionCollider_.transform.localScale.z / 2);
         this.railParentObj.transform.SetParent(this.transform.parent);
         //Parenting our ship to the newly centered rail parent's position
-        this.transform.SetParent(this.railParentObj.transform);
+        this.transform.SetParent(this.railParentObj.transform);*/
 
-        //Setting our collider position
-        this.colliderPosition = newRegionCollider_.transform.position;
+        //Finding the length of the region so we know how far back the collider is from the center point
+        float zDistFromCenter = (newRegionCollider_.transform.localScale.z / 2) * -1;
+        //Finding the position where our ship needs to meet up with the collider's center
+        this.railParentObj.transform.position = newRegionCollider_.transform.position + (zDistFromCenter * newRegionCollider_.transform.forward);
 
         //The rotation for the next zone we're entering so we can interp to match it
         this.nextRotation = newRegionCollider_.transform.rotation;
@@ -131,6 +130,54 @@ public class RailMovementFlight : MonoBehaviour
 
         //Starting our interpolation
         this.areWeInterping = true;
+    }
+
+
+    //Function called from RailParentCollisionLogic.OnTriggerExit to start interpolating our root object to the next region
+    public void InterpToNextRegion(Transform exitPointTransform_, RegionZone nextRegion_)
+    {
+        //Finding the length of the region so we know how far back the collider is from the center point
+        float zDistFromCenter = (nextRegion_.transform.localScale.z / 2) * -1;
+        //Finding the position where our ship needs to meet up with the next region
+        Vector3 entryPoint = nextRegion_.transform.position + (zDistFromCenter * nextRegion_.transform.forward);
+        Debug.Log("Entry point: " + entryPoint);
+
+        //Creating a bezier curve handle between the exit point for our current region and the entry point where we need to go
+        GameObject curveMidpoint = this.CreateBezierCurveHandle(exitPointTransform_.position, exitPointTransform_.rotation,
+                                                                entryPoint, nextRegion_.transform.rotation);
+    }
+
+
+    //Function called from InterpToNextRegion to create a bezier curve handle game object between 2 points
+    private GameObject CreateBezierCurveHandle(Vector3 startPoint_, Quaternion startRot_, Vector3 endPoint_, Quaternion endRot_)
+    {
+        //Need to use SohCahToa trig
+        //The side C (hypotenuse) is the distance from exit point to entry point
+        //The sides A and B are equidistant, so the angle between each of them and side C is 45 degrees
+        //Soh    -->    Sin(theta) = Side A / Side C    -->    Side C * Sin(theta) = Side A
+        //Sin(theta) = Sin(45 degrees) = Sin(pi/4)
+
+        //Finding the hypotenuse length between the points
+        float hypotLength = Vector3.Distance(startPoint_, endPoint_);
+        //Finding the length of the other sides of the triangle
+        float sideABLength = Mathf.Sin(Mathf.PI / 4) * hypotLength;
+
+        //Finding the midpoint between the start and end points
+        Vector3 hypotMidpoint = (startPoint_ + endPoint_) / 2;
+
+        //Getting the quaternion rotation halfway between the start and end point rotations
+        Quaternion midpointRot = Quaternion.Slerp(startRot_, endRot_, 0.5f);
+
+        //Creating a game object to hold the transform info
+        GameObject midpointHandleObj = new GameObject();
+        midpointHandleObj.transform.position = hypotMidpoint;
+        midpointHandleObj.transform.rotation = midpointRot;
+
+        //Setting the handle's position in space where it's extruded down from it's orientation
+        midpointHandleObj.transform.position = midpointHandleObj.transform.position + (-sideABLength * midpointHandleObj.transform.up);
+
+        //Returning the midpoint handle that we've created
+        return midpointHandleObj;
     }
 
 

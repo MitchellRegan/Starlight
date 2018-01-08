@@ -41,4 +41,22 @@ public class RailParentCollisionLogic : MonoBehaviour
             }
         }
     }
+
+
+    //Function called when we stop hitting a trigger collider
+    private void OnTriggerExit(Collider collider_)
+    {
+        //If the hit object is a Region Zone and that region zone wants us to interpolate to another region
+        if(collider_.gameObject.GetComponent<RegionZone>())
+        {
+            //if the region zone wants us to interpolate to another region, we tell our ship's RailMovementFlight.cs component
+            if (collider_.gameObject.GetComponent<RegionZone>().interpToRegion != null)
+            {
+                this.ourShipController.ourRailMovement.InterpToNextRegion(this.transform, collider_.GetComponent<RegionZone>().interpToRegion);
+            }
+
+            //Turning off the region's collider component so we don't hit it again
+            collider_.enabled = false;
+        }
+    }
 }

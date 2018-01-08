@@ -19,4 +19,7 @@ public class RegionZone : MonoBehaviour
 
     //UnityEvent called when the player hits this zone's collider
     public UnityEvent onCollisionEvent;
+
+    //The next Region Zone that the player will interpolate to after leaving this one. If null, nothing happens
+    public RegionZone interpToRegion;
 }
