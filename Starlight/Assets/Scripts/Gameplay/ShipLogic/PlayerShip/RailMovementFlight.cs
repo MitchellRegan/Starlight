@@ -20,6 +20,8 @@ public class RailMovementFlight : MonoBehaviour
     public Vector3 maxShipRotation = new Vector3();
     //The max amount of rotation change each frame
     public Vector3 maxRotationChange = new Vector3();
+    //The amount that the ship is rotated when no input for that axis is given
+    public Vector3 levelOutRotation = new Vector3();
 
     //The forward, up, and right directions that we're moving along
     private Vector3 railForwardDirection = Vector3.forward;
@@ -505,51 +507,240 @@ public class RailMovementFlight : MonoBehaviour
     {
         //   UNSTABLE AND TRYING TO BE PRETTY
         //Float to hold the player ship's X rotation (pitch)
-        float xRot = -this.maxRotationChange.x * playerInputs_.y;
+        float xRot = 0;
 
-        //If the ship's X rotation is above the max, we cap it off
-        if(this.ourShip.xGyroscope.localEulerAngles.x > this.maxShipRotation.x)
+        //Getting the angle of our x rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
+        float correctedXRotation = this.ourShip.xGyroscope.localEulerAngles.x;
+        if (correctedXRotation > 180)
         {
-            xRot = this.maxShipRotation.x - this.ourShip.xGyroscope.localEulerAngles.x;
+            correctedXRotation -= 360;
         }
-        //If the ship's X rotation is below the min, we cap it off
-        else if(this.ourShip.xGyroscope.localEulerAngles.x < -this.maxShipRotation.x)
+
+        //If our X input (Y stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
+        if (playerInputs_.y > 0.1f || playerInputs_.y < -0.1f)
         {
-            xRot = -this.maxShipRotation.x - this.ourShip.xGyroscope.localEulerAngles.x;
+            xRot = -this.maxRotationChange.x * playerInputs_.y;
+
+            //If the ship's X rotation is above the max, we cap it off
+            if (correctedXRotation >= this.maxShipRotation.x)
+            {
+                xRot = this.maxShipRotation.x - correctedXRotation;
+            }
+            //If the ship's X rotation is below the min, we cap it off
+            else if (correctedXRotation <= -this.maxShipRotation.x)
+            {
+                xRot = -this.maxShipRotation.x - correctedXRotation;
+            }
         }
+        //If our X input is inside the input deadzone and our gyroscope's x rotation isn't 0, we need to correct it
+        else if(correctedXRotation != 0)
+        {
+            //If our x rotation is above 0, we need to ease it down
+            if(correctedXRotation > 0)
+            {
+                //If the angle is greater than our level out rotation, we use all of the rotation we can
+                if (correctedXRotation > this.levelOutRotation.x)
+                {
+                    xRot = -this.levelOutRotation.x;
+                }
+                //If the angle is less than our level out rotation, we make sure not to over correct
+                else
+                {
+                    xRot = -correctedXRotation;
+                }
+            }
+            //If our x rotation is below 0, we need to ease it up
+            else
+            {
+                //If the angle is greater than our level out rotation, we use all of the rotation we can
+                if (correctedXRotation < this.levelOutRotation.x)
+                {
+                    xRot = this.levelOutRotation.x;
+                }
+                //If the angle is less than our level out rotation, we make sure not to over correct
+                else
+                {
+                    xRot = correctedXRotation;
+                }
+            }
+        }
+
+
 
         //Float to hold the player ship's Y rotation (yaw)
-        float yRot = this.maxRotationChange.y * playerInputs_.x;
+        float yRot = 0;
 
-        //If the ship's Y rotation is above the max, we cap it off
-        if (this.ourShip.yGyroscope.localEulerAngles.y > this.maxShipRotation.y)
+        //Getting the angle of our y rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
+        float correctedYRotation = this.ourShip.yGyroscope.localEulerAngles.y;
+        if (correctedYRotation > 180)
         {
-            yRot = this.maxShipRotation.y - this.ourShip.yGyroscope.localEulerAngles.y;
+            correctedYRotation -= 360;
         }
-        //If the ship's Y rotation is below the min, we cap it off
-        else if (this.ourShip.yGyroscope.localEulerAngles.y < -this.maxShipRotation.y)
+        
+        //If our Y input (X stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
+        if (playerInputs_.x > 0.1f || playerInputs_.x < -0.1f)
         {
-            yRot = -this.maxShipRotation.y - this.ourShip.yGyroscope.localEulerAngles.y;
+            yRot = -this.maxRotationChange.y * playerInputs_.x;
+
+            //If the ship's Y rotation is above the max, we cap it off
+            if (correctedYRotation >= this.maxShipRotation.y)
+            {
+                yRot = this.maxShipRotation.y - correctedYRotation;
+            }
+            //If the ship's Y rotation is below the min, we cap it off
+            else if (correctedYRotation <= -this.maxShipRotation.y)
+            {
+                yRot = -this.maxShipRotation.y - correctedYRotation;
+            }
         }
+        //If our Y input is inside the input deadzone and our gyroscope's y rotation isn't 0, we need to correct it
+        else if(correctedYRotation != 0)
+        {
+            //If our y rotation is above 0, we need to ease it down
+            if (correctedYRotation > 0)
+            {
+                //If the angle is greater than our level out rotation, we use all of the rotation we can
+                if (correctedYRotation > this.levelOutRotation.y)
+                {
+                    yRot = -this.levelOutRotation.y;
+                }
+                //If the angle is less than our level out rotation, we make sure not to over correct
+                else
+                {
+                    yRot = -correctedYRotation;
+                }
+            }
+            //If our y rotation is below 0, we need to ease it up
+            else
+            {
+                //If the angle is greater than our level out rotation, we use all of the rotation we can
+                if (correctedYRotation < this.levelOutRotation.y)
+                {
+                    yRot = this.levelOutRotation.y;
+                }
+                //If the angle is less than our level out rotation, we make sure not to over correct
+                else
+                {
+                    yRot = correctedYRotation;
+                }
+            }
+        }
+        
+
 
         //Float to hold the player ship's Z rotation (roll)
-        float zRot = -this.maxRotationChange.x * playerInputs_.x;
+        float zRot = 0;
 
-        //If the ship's Z rotation is above the max, we cap it off
-        if (this.ourShip.zGyroscope.localEulerAngles.z > this.maxShipRotation.z)
+        //Getting the angle of our z rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
+        float correctedZRotation = this.ourShip.zGyroscope.localEulerAngles.z;
+        if (correctedZRotation > 180)
         {
-            zRot = this.maxShipRotation.z - this.ourShip.zGyroscope.localEulerAngles.z;
+            correctedZRotation -= 360;
         }
-        //If the ship's Z rotation is below the min, we cap it off
-        else if (this.ourShip.zGyroscope.localEulerAngles.z < -this.maxShipRotation.z)
+        
+        //If our Z input (X stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
+        if (playerInputs_.x > 0.1f || playerInputs_.x < -0.1f)
         {
-            zRot = -this.maxShipRotation.z - this.ourShip.zGyroscope.localEulerAngles.z;
+            zRot = -this.maxRotationChange.z * playerInputs_.x;
+            
+            //If the ship's Z rotation is above the max, we cap it off
+            if (correctedZRotation >= this.maxShipRotation.z)
+            {
+                zRot = this.maxShipRotation.z - correctedZRotation;
+            }
+            //If the ship's Z rotation is below the min, we cap it off
+            else if (correctedZRotation <= -this.maxShipRotation.z)
+            {
+                zRot = -this.maxShipRotation.z - correctedZRotation;
+            }
         }
+        //If our Z input is inside the input deadzone and our gyroscope's z rotation isn't 0, we need to correct it
+        else if(correctedZRotation != 0)
+        {
+            //If our z rotation is above 0, we need to ease it down
+            if (correctedZRotation > 0)
+            {
+                //If the angle is greater than our level out rotation, we use all of the rotation we can
+                if (correctedZRotation > this.levelOutRotation.z)
+                {
+                    zRot = -this.levelOutRotation.z;
+                }
+                //If the angle is less than our level out rotation, we make sure not to over correct
+                else
+                {
+                    zRot = -correctedZRotation;
+                }
+            }
+            //If our z rotation is below 0, we need to ease it up
+            else
+            {
+                //If the angle is greater than our level out rotation, we use all of the rotation we can
+                if (correctedZRotation < this.levelOutRotation.z)
+                {
+                    zRot = this.levelOutRotation.z;
+                }
+                //If the angle is less than our level out rotation, we make sure not to over correct
+                else
+                {
+                    zRot = correctedZRotation;
+                }
+            }
+        }
+        
 
         //Adjusting our ship's gyroscope to rotate with these inputs
         this.ourShip.xGyroscope.localEulerAngles += new Vector3(xRot, 0, 0);
         this.ourShip.yGyroscope.localEulerAngles += new Vector3(0, yRot, 0);
         this.ourShip.zGyroscope.localEulerAngles += new Vector3(0, 0, zRot);
+
+
+        //Updating our corrected rotations
+        correctedXRotation = this.ourShip.xGyroscope.localEulerAngles.x;
+        if (correctedXRotation > 180)
+        {
+            correctedXRotation -= 360;
+        }
+        correctedYRotation = this.ourShip.yGyroscope.localEulerAngles.y;
+        if (correctedYRotation > 180)
+        {
+            correctedYRotation -= 360;
+        }
+        correctedZRotation = this.ourShip.zGyroscope.localEulerAngles.z;
+        if (correctedZRotation > 180)
+        {
+            correctedZRotation -= 360;
+        }
+
+
+        //Making sure our X rotation isn't past the max or min
+        if (correctedXRotation > this.maxShipRotation.x)
+        {
+            this.ourShip.xGyroscope.localEulerAngles = new Vector3(this.maxShipRotation.x, 0, 0);
+        }
+        else if(correctedXRotation < -this.maxShipRotation.x)
+        {
+            this.ourShip.xGyroscope.localEulerAngles = new Vector3(360 - this.maxShipRotation.x, 0, 0);
+        }
+
+        //Making sure our Y rotation isn't past the max or min
+        if(correctedYRotation > this.maxShipRotation.y)
+        {
+            this.ourShip.yGyroscope.localEulerAngles = new Vector3(0, this.maxShipRotation.y, 0);
+        }
+        else if(correctedYRotation < -this.maxShipRotation.y)
+        {
+            this.ourShip.yGyroscope.localEulerAngles = new Vector3(0, 360 - this.maxShipRotation.y, 0);
+        }
+
+        //Making sure our Z rotation isn't past the max or min
+        if(correctedZRotation > this.maxShipRotation.z)
+        {
+            this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, this.maxShipRotation.z);
+        }
+        else if(correctedZRotation < -this.maxShipRotation.z)
+        {
+            this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, 360 - this.maxShipRotation.z);
+        }
         /*/
 
 
