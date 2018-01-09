@@ -14,6 +14,13 @@ public class RailMovementFlight : MonoBehaviour
     //Reference to our rail parent object's rigid body component
     public Rigidbody railParentObj;
 
+    [Space(8)]
+
+    //Variables for the max of rotation the player ship turns based on player input
+    public Vector3 maxShipRotation = new Vector3();
+    //The max amount of rotation change each frame
+    public Vector3 maxRotationChange = new Vector3();
+
     //The forward, up, and right directions that we're moving along
     private Vector3 railForwardDirection = Vector3.forward;
     private Vector3 railUpDirection = Vector3.up;
@@ -268,14 +275,14 @@ public class RailMovementFlight : MonoBehaviour
         //If our relative X position is to the right of the bounding box
         if (ourRelativePos.x > this.flightBoundingBox.x / 2)
         {
-            ourRelativePos = new Vector3((this.flightBoundingBox.x / 2) + ((ourRelativePos.x - (this.flightBoundingBox.x / 2)) * this.interpSpeed),
+            ourRelativePos = new Vector3((this.flightBoundingBox.x / 2),
                                         ourRelativePos.y,
                                         ourRelativePos.z);
         }
         //If our relative X position is to the left of the bounding box
         else if (ourRelativePos.x < -this.flightBoundingBox.x / 2)
         {
-            ourRelativePos = new Vector3((-this.flightBoundingBox.x / 2) + ((ourRelativePos.x - (-this.flightBoundingBox.x / 2)) * this.interpSpeed),
+            ourRelativePos = new Vector3((-this.flightBoundingBox.x / 2),
                                         ourRelativePos.y,
                                         ourRelativePos.z);
         }
@@ -285,14 +292,14 @@ public class RailMovementFlight : MonoBehaviour
         if (ourRelativePos.y > this.flightBoundingBox.y / 2)
         {
             ourRelativePos = new Vector3(ourRelativePos.x,
-                                        (this.flightBoundingBox.y / 2) + ((ourRelativePos.y - (this.flightBoundingBox.y / 2)) * this.interpSpeed),
+                                        (this.flightBoundingBox.y / 2),
                                         ourRelativePos.z);
         }
         //If our relative Y position is below the bounding box
         else if (ourRelativePos.y < -this.flightBoundingBox.y / 2)
         {
             ourRelativePos = new Vector3(ourRelativePos.x,
-                                        (-this.flightBoundingBox.y / 2) + ((ourRelativePos.y - (-this.flightBoundingBox.y / 2)) * this.interpSpeed),
+                                        (-this.flightBoundingBox.y / 2),
                                         ourRelativePos.z);
         }
 
@@ -307,6 +314,9 @@ public class RailMovementFlight : MonoBehaviour
     {
         //Vector 2 to hold the XY movement input
         Vector2 movementInput = this.GetXYMoveInput();
+
+        //Rotating our ship's model to display the player inputs
+        this.RotateShipModel(movementInput);
 
         //Float to hold the forward thrust that the player wants to move at
         float thrustInput = this.GetZThrustInput();
@@ -454,15 +464,15 @@ public class RailMovementFlight : MonoBehaviour
                 movementInput.y = (-1 + movementInput.y) / 2;
             }
         }
-
+        
         //If our Y axis is inverted, we invert it
-        if(this.ourShip.ourCustomInputs.invertYMovement)
+        if (this.ourShip.ourCustomInputs.invertYMovement)
         {
             movementInput.y = movementInput.y * -1;
         }
 
         //Returning the normalized 
-        return movementInput.normalized;
+        return movementInput;
     }
 
 
@@ -487,5 +497,81 @@ public class RailMovementFlight : MonoBehaviour
         }
 
         return thrustInput;
+    }
+
+
+    //Function called from MoveShip to rotate the player ship's model
+    private void RotateShipModel(Vector2 playerInputs_)
+    {
+        //   UNSTABLE AND TRYING TO BE PRETTY
+        //Float to hold the player ship's X rotation (pitch)
+        float xRot = -this.maxRotationChange.x * playerInputs_.y;
+
+        //If the ship's X rotation is above the max, we cap it off
+        if(this.ourShip.xGyroscope.localEulerAngles.x > this.maxShipRotation.x)
+        {
+            xRot = this.maxShipRotation.x - this.ourShip.xGyroscope.localEulerAngles.x;
+        }
+        //If the ship's X rotation is below the min, we cap it off
+        else if(this.ourShip.xGyroscope.localEulerAngles.x < -this.maxShipRotation.x)
+        {
+            xRot = -this.maxShipRotation.x - this.ourShip.xGyroscope.localEulerAngles.x;
+        }
+
+        //Float to hold the player ship's Y rotation (yaw)
+        float yRot = this.maxRotationChange.y * playerInputs_.x;
+
+        //If the ship's Y rotation is above the max, we cap it off
+        if (this.ourShip.yGyroscope.localEulerAngles.y > this.maxShipRotation.y)
+        {
+            yRot = this.maxShipRotation.y - this.ourShip.yGyroscope.localEulerAngles.y;
+        }
+        //If the ship's Y rotation is below the min, we cap it off
+        else if (this.ourShip.yGyroscope.localEulerAngles.y < -this.maxShipRotation.y)
+        {
+            yRot = -this.maxShipRotation.y - this.ourShip.yGyroscope.localEulerAngles.y;
+        }
+
+        //Float to hold the player ship's Z rotation (roll)
+        float zRot = -this.maxRotationChange.x * playerInputs_.x;
+
+        //If the ship's Z rotation is above the max, we cap it off
+        if (this.ourShip.zGyroscope.localEulerAngles.z > this.maxShipRotation.z)
+        {
+            zRot = this.maxShipRotation.z - this.ourShip.zGyroscope.localEulerAngles.z;
+        }
+        //If the ship's Z rotation is below the min, we cap it off
+        else if (this.ourShip.zGyroscope.localEulerAngles.z < -this.maxShipRotation.z)
+        {
+            zRot = -this.maxShipRotation.z - this.ourShip.zGyroscope.localEulerAngles.z;
+        }
+
+        //Adjusting our ship's gyroscope to rotate with these inputs
+        this.ourShip.xGyroscope.localEulerAngles += new Vector3(xRot, 0, 0);
+        this.ourShip.yGyroscope.localEulerAngles += new Vector3(0, yRot, 0);
+        this.ourShip.zGyroscope.localEulerAngles += new Vector3(0, 0, zRot);
+        /*/
+
+
+
+
+
+
+
+        /*      STABLE BUT UGLY
+        //Float to hold the player ship's X rotation (pitch)
+        float xRot = -this.maxShipRotation.x * playerInputs_.y;
+
+        //Float to hold the player ship's Y rotation (yaw)
+        float yRot = this.maxShipRotation.y * playerInputs_.x;
+
+        //Float to hold the player ship's Z rotation (roll)
+        float zRot = -this.maxShipRotation.z * playerInputs_.x;
+
+        //Adjusting our ship's gyroscope to rotate with these inputs
+        this.ourShip.xGyroscope.localEulerAngles = new Vector3(xRot, 0, 0);
+        this.ourShip.yGyroscope.localEulerAngles = new Vector3(0, yRot, 0);
+        this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, zRot);
+        */
     }
 }

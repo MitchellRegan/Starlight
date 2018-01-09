@@ -36,6 +36,13 @@ public class PlayerShipController : MonoBehaviour
 
     [Space(8)]
 
+    //The game objects that are used as a gyroscope to pivot our ship model without having to deal with annoying rotation problems
+    public Transform xGyroscope;
+    public Transform yGyroscope;
+    public Transform zGyroscope;
+
+    [Space(8)]
+
     //The list of all wing objects that are attached to this ship
     public List<ShipWingLogic> shipWings;
 
