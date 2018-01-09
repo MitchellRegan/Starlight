@@ -26,10 +26,6 @@ public class CustomInputSettings : MonoBehaviour
         {
             Destroy(this);
         }
-
-        //Creating new inputs for the players
-        this.p1Inputs = new PlayerInputs();
-        this.p2Inputs = new PlayerInputs();
     }
 }
 

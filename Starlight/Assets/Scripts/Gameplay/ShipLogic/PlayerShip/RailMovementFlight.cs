@@ -488,7 +488,7 @@ public class RailMovementFlight : MonoBehaviour
         }
         
         //If our Y axis is inverted, we invert it
-        if (this.ourShip.ourCustomInputs.invertYMovement)
+        if (!this.ourShip.ourCustomInputs.invertYMovement)
         {
             movementInput.y = movementInput.y * -1;
         }
