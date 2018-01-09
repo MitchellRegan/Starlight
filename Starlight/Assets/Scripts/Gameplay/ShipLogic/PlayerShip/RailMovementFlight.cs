@@ -16,6 +16,14 @@ public class RailMovementFlight : MonoBehaviour
 
     [Space(8)]
 
+    //Float for how fast we change bounding box sizes when changing regions
+    public float changeBoundsTime = 1;
+    private float currentBoundChangeTime = 0;
+    private Vector2 prevBounds = new Vector2();
+    private Vector2 nextBounds = new Vector2();
+
+    [Space(8)]
+
     //Variables for the max of rotation the player ship turns based on player input
     public Vector3 maxShipRotation = new Vector3();
     //The max amount of rotation change each frame
@@ -103,20 +111,14 @@ public class RailMovementFlight : MonoBehaviour
     //Function called from RailParentCollisionLogic.OnTriggerEnter to change our movement to match the new region
     public void SetNewRailDirection(Collider newRegionCollider_)
     {
-        //Disabling this region's collider so we don't hit it multiple times
-       // newRegionCollider_.enabled = false;
+        //Setting the time for how long we'll be changing our bounding box
+        this.currentBoundChangeTime = this.changeBoundsTime;
+        //Saving the bounding size of the region we just left and the region we're entering
+        this.prevBounds = this.flightBoundingBox;
+        this.nextBounds = new Vector2(newRegionCollider_.transform.localScale.x, newRegionCollider_.transform.localScale.y);
 
         //Saving this region's transform for interpolation
         this.nextRegionTransform = newRegionCollider_.transform;
-
-        //Unparenting our ship from our rail parent object
-        /*this.transform.SetParent(this.transform.parent.parent);
-        //Finding the center XY position in relative space of the new region collider that's at the beginning of the collision Z distance
-        this.railParentObj.transform.SetParent(newRegionCollider_.transform.parent);
-        this.railParentObj.transform.localPosition = new Vector3(0, 0, -newRegionCollider_.transform.localScale.z / 2);
-        this.railParentObj.transform.SetParent(this.transform.parent);
-        //Parenting our ship to the newly centered rail parent's position
-        this.transform.SetParent(this.railParentObj.transform);*/
 
         //Finding the length of the region so we know how far back the collider is from the center point
         float zDistFromCenter = (newRegionCollider_.transform.localScale.z / 2) * -1;
@@ -125,9 +127,6 @@ public class RailMovementFlight : MonoBehaviour
 
         //The rotation for the next zone we're entering so we can interp to match it
         this.nextRotation = newRegionCollider_.transform.rotation;
-
-        //Setting our flight bounding box based on the width and height of the collider
-        this.flightBoundingBox = new Vector2(newRegionCollider_.transform.localScale.x, newRegionCollider_.transform.localScale.y);
 
         //Setting the minimum forward thrust that this rail zone requires
         this.zoneThrustMultiplier = newRegionCollider_.GetComponent<RegionZone>().thrustMultiplier;
@@ -193,6 +192,27 @@ public class RailMovementFlight : MonoBehaviour
     //Function called every frame
     private void Update()
     {
+        //If we're changing bounding box size, we adjust its scale
+        if(this.currentBoundChangeTime > 0)
+        {
+            //Subtracting from the time remaining
+            this.currentBoundChangeTime -= Time.deltaTime;
+
+            //Getting the percent that we are through the change
+            float changePercent = (this.changeBoundsTime - this.currentBoundChangeTime) / this.changeBoundsTime;
+
+            //If we're at or over 1 (100%) the change is finished
+            if(changePercent >= 1)
+            {
+                this.flightBoundingBox = this.nextBounds;
+            }
+            //If we're not finished, we keep updating the bounding box limits
+            else
+            {
+                this.flightBoundingBox = this.prevBounds + ((this.nextBounds - this.prevBounds) * changePercent);
+            }
+        }
+
         //If our interpolator is still interpolating, we change the direction we're facing
         if(this.areWeInterping)
         {
