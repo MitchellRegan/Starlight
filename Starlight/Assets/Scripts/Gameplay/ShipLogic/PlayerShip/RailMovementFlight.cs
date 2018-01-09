@@ -562,9 +562,8 @@ public class RailMovementFlight : MonoBehaviour
         {
             thrustInput += 1;
         }
-
         //Getting the input based on the break input
-        if(this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) ||
+        else if(this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) ||
             Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
         {
             thrustInput -= 1;
