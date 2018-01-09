@@ -33,8 +33,11 @@ public class RailMovementFlight : MonoBehaviour
 
     [Space(8)]
 
-    //The maximum velocities for each axis
-    public Vector2 maxXYVelocities = new Vector2();
+    //The Max velocities for Left and Right on the X axis
+    public float maxLeftRightVelocity = 10;
+    //The Max velocities for Up and Down on the Y axis
+    public Vector2 maxUpDownVelocities = new Vector2(10, 5);
+
     //The velocity drag multiplier for each axis when no input is given
     [Range(0.1f, 0.99f)]
     public float xVelocityDrag = 0.9f;
@@ -420,7 +423,8 @@ public class RailMovementFlight : MonoBehaviour
         ZorientationVelocity += velocities.z * this.railForwardDirection;
 
         //Setting the movement and thrust velocities based on our relative direction
-        this.ourRigidbody.velocity += XYorientationVelocities;
+        this.ourRigidbody.AddRelativeForce(XYorientationVelocities);
+        //this.ourRigidbody.velocity += XYorientationVelocities;
         //Applying the forward thrust velocity to our rail parent object's rigid body
         this.railParentObj.velocity = ZorientationVelocity;
 
@@ -440,29 +444,29 @@ public class RailMovementFlight : MonoBehaviour
         }
 
         //Making sure the X velocity is within the min/max
-        if(this.ourRigidbody.velocity.x > this.maxXYVelocities.x)
+        if(this.ourRigidbody.velocity.x > this.maxLeftRightVelocity)
         {
-            this.ourRigidbody.velocity = new Vector3(this.maxXYVelocities.x,
+            this.ourRigidbody.velocity = new Vector3(this.maxLeftRightVelocity,
                                                     this.ourRigidbody.velocity.y,
                                                     this.ourRigidbody.velocity.z);
         }
-        else if(this.ourRigidbody.velocity.x < -this.maxXYVelocities.x)
+        else if(this.ourRigidbody.velocity.x < -this.maxLeftRightVelocity)
         {
-            this.ourRigidbody.velocity = new Vector3(-this.maxXYVelocities.x,
+            this.ourRigidbody.velocity = new Vector3(-this.maxLeftRightVelocity,
                                                     this.ourRigidbody.velocity.y,
                                                     this.ourRigidbody.velocity.z);
         }
         //Making sure the Y velocity is within the min/max
-        if (this.ourRigidbody.velocity.y > this.maxXYVelocities.y)
+        if (this.ourRigidbody.velocity.y > this.maxUpDownVelocities.x)
         {
             this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
-                                                    this.maxXYVelocities.y,
+                                                    this.maxUpDownVelocities.x,
                                                     this.ourRigidbody.velocity.z);
         }
-        else if(this.ourRigidbody.velocity.y < -this.maxXYVelocities.y)
+        else if(this.ourRigidbody.velocity.y < -this.maxUpDownVelocities.y)
         {
             this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
-                                                    -this.maxXYVelocities.y,
+                                                    -this.maxUpDownVelocities.y,
                                                     this.ourRigidbody.velocity.z);
         }
     }
