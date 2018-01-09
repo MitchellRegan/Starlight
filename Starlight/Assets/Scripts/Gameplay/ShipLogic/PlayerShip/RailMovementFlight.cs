@@ -31,6 +31,16 @@ public class RailMovementFlight : MonoBehaviour
     //The amount that the ship is rotated when no input for that axis is given
     public Vector3 levelOutRotation = new Vector3();
 
+    [Space(8)]
+
+    //The maximum velocities for each axis
+    public Vector2 maxXYVelocities = new Vector2();
+    //The velocity drag multiplier for each axis when no input is given
+    [Range(0.1f, 0.99f)]
+    public float xVelocityDrag = 0.9f;
+    [Range(0.1f, 0.99f)]
+    public float yVelocityDrag = 0.9f;
+
     //The forward, up, and right directions that we're moving along
     private Vector3 railForwardDirection = Vector3.forward;
     private Vector3 railUpDirection = Vector3.up;
@@ -410,9 +420,51 @@ public class RailMovementFlight : MonoBehaviour
         ZorientationVelocity += velocities.z * this.railForwardDirection;
 
         //Setting the movement and thrust velocities based on our relative direction
-        this.ourRigidbody.velocity = XYorientationVelocities;
+        this.ourRigidbody.velocity += XYorientationVelocities;
         //Applying the forward thrust velocity to our rail parent object's rigid body
         this.railParentObj.velocity = ZorientationVelocity;
+
+        //If there's no X input, we apply drag to the X velocity
+        if(movementInput.x < 0.1f && movementInput.x > -0.1f)
+        {
+            this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x * this.xVelocityDrag,
+                                                    this.ourRigidbody.velocity.y,
+                                                    this.ourRigidbody.velocity.z);
+        }
+        //If there's no Y input, we apply drag to the Y velocity
+        if(movementInput.y < 0.1f && movementInput.y > -0.1f)
+        {
+            this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
+                                                    this.ourRigidbody.velocity.y * this.yVelocityDrag,
+                                                    this.ourRigidbody.velocity.z);
+        }
+
+        //Making sure the X velocity is within the min/max
+        if(this.ourRigidbody.velocity.x > this.maxXYVelocities.x)
+        {
+            this.ourRigidbody.velocity = new Vector3(this.maxXYVelocities.x,
+                                                    this.ourRigidbody.velocity.y,
+                                                    this.ourRigidbody.velocity.z);
+        }
+        else if(this.ourRigidbody.velocity.x < -this.maxXYVelocities.x)
+        {
+            this.ourRigidbody.velocity = new Vector3(-this.maxXYVelocities.x,
+                                                    this.ourRigidbody.velocity.y,
+                                                    this.ourRigidbody.velocity.z);
+        }
+        //Making sure the Y velocity is within the min/max
+        if (this.ourRigidbody.velocity.y > this.maxXYVelocities.y)
+        {
+            this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
+                                                    this.maxXYVelocities.y,
+                                                    this.ourRigidbody.velocity.z);
+        }
+        else if(this.ourRigidbody.velocity.y < -this.maxXYVelocities.y)
+        {
+            this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
+                                                    -this.maxXYVelocities.y,
+                                                    this.ourRigidbody.velocity.z);
+        }
     }
 
 
