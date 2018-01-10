@@ -24,6 +24,14 @@ public class RailMovementFlight : MonoBehaviour
 
     [Space(8)]
 
+    //The game object that we move to aim the player ship
+    public Transform targetRotationObj;
+    //The max XY distances the target rotation can move
+    public Vector2 targetRotObjMaxXY = new Vector2();
+    //The speed that we move the target rotation object
+    public float targetRotObjXSpeed = 1;
+    public Vector2 targetRotObjUpDownSpeed = new Vector2(1.3f, 0.7f);
+
     //Variables for the max of rotation the player ship turns based on player input
     public Vector3 maxShipRotation = new Vector3();
     //The max amount of rotation change each frame
@@ -580,8 +588,7 @@ public class RailMovementFlight : MonoBehaviour
     //Function called from MoveShip to rotate the player ship's model
     private void RotateShipModel(Vector2 playerInputs_)
     {
-        //   UNSTABLE AND TRYING TO BE PRETTY
-        //Float to hold the player ship's X rotation (pitch)
+        /*/Float to hold the player ship's X rotation (pitch)
         float xRot = 0;
 
         //Getting the angle of our x rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
@@ -700,7 +707,7 @@ public class RailMovementFlight : MonoBehaviour
                 }
             }
         }
-        
+        */
 
 
         //Float to hold the player ship's Z rotation (roll)
@@ -764,13 +771,13 @@ public class RailMovementFlight : MonoBehaviour
         
 
         //Adjusting our ship's gyroscope to rotate with these inputs
-        this.ourShip.xGyroscope.localEulerAngles += new Vector3(xRot, 0, 0);
-        this.ourShip.yGyroscope.localEulerAngles += new Vector3(0, yRot, 0);
+        //this.ourShip.xGyroscope.localEulerAngles += new Vector3(xRot, 0, 0);
+        //this.ourShip.yGyroscope.localEulerAngles += new Vector3(0, yRot, 0);
         this.ourShip.zGyroscope.localEulerAngles += new Vector3(0, 0, zRot);
 
 
         //Updating our corrected rotations
-        correctedXRotation = this.ourShip.xGyroscope.localEulerAngles.x;
+        /*correctedXRotation = this.ourShip.xGyroscope.localEulerAngles.x;
         if (correctedXRotation > 180)
         {
             correctedXRotation -= 360;
@@ -779,7 +786,7 @@ public class RailMovementFlight : MonoBehaviour
         if (correctedYRotation > 180)
         {
             correctedYRotation -= 360;
-        }
+        }*/
         correctedZRotation = this.ourShip.zGyroscope.localEulerAngles.z;
         if (correctedZRotation > 180)
         {
@@ -788,7 +795,7 @@ public class RailMovementFlight : MonoBehaviour
 
 
         //Making sure our X rotation isn't past the max or min
-        if (correctedXRotation > this.maxShipRotation.x)
+        /*if (correctedXRotation > this.maxShipRotation.x)
         {
             this.ourShip.xGyroscope.localEulerAngles = new Vector3(this.maxShipRotation.x, 0, 0);
         }
@@ -806,7 +813,7 @@ public class RailMovementFlight : MonoBehaviour
         {
             this.ourShip.yGyroscope.localEulerAngles = new Vector3(0, 360 - this.maxShipRotation.y, 0);
         }
-
+        */
         //Making sure our Z rotation isn't past the max or min
         if(correctedZRotation > this.maxShipRotation.z)
         {
@@ -816,28 +823,131 @@ public class RailMovementFlight : MonoBehaviour
         {
             this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, 360 - this.maxShipRotation.z);
         }
-        /*/
 
 
+        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+        //Variables to hold the change in position for the target rotation object
+        float xChange = 0;
+        float yChange = 0;
 
+        //If the X input is outside the deadzone
+        if(playerInputs_.x > 0.1f || playerInputs_.x < -0.1f)
+        {
+            xChange = playerInputs_.x * this.targetRotObjXSpeed;
+        }
+        //If the X input is in the deadzone, we need to level out toward the center
+        else
+        {
+            //If the target rotation object's x position is positive, we need to go negative
+            if(this.targetRotationObj.localPosition.x > 0)
+            {
+                //If the position's value is greater than the level-out value, we don't want to go over
+                if (this.targetRotationObj.localPosition.x < this.levelOutRotation.x)
+                {
+                    xChange = -this.targetRotationObj.localPosition.x;
+                }
+                else
+                {
+                    xChange = -this.levelOutRotation.x;
+                }
+            }
+            //If the target rotation object's x position is negative, we need to go positive
+            else if(this.targetRotationObj.localPosition.x < 0)
+            {
+                //If the position's value is greater than the level-out value, we don't want to go over
+                if (this.targetRotationObj.localPosition.x > -this.levelOutRotation.x)
+                {
+                    xChange = -this.targetRotationObj.localPosition.x;
+                }
+                else
+                {
+                    xChange = this.levelOutRotation.x;
+                }
+            }
+        }
 
+        //If the Y input is outside the positive deadzone
+        if(playerInputs_.y > 0.1f)
+        {
+            yChange = playerInputs_.y * this.targetRotObjUpDownSpeed.x;
+        }
+        //If the Y input is outside the negative deadzone
+        else if(playerInputs_.y < -0.1f)
+        {
+            yChange = playerInputs_.y * this.targetRotObjUpDownSpeed.y;
+        }
+        //If the Y input is in the deadzone, we need to level out toward the center
+        else
+        {
+            //If the target rotation object's y position is positive, we need to go negative
+            if (this.targetRotationObj.localPosition.y > 0)
+            {
+                //If the position's value is greater than the level-out value, we don't want to go over
+                if (this.targetRotationObj.localPosition.y < this.levelOutRotation.y)
+                {
+                    yChange = -this.targetRotationObj.localPosition.y;
+                }
+                else
+                {
+                    yChange = -this.levelOutRotation.y;
+                }
+            }
+            //If the target rotation object's y position is negative, we need to go positive
+            else if(this.targetRotationObj.localPosition.y < 0)
+            {
+                //If the position's value is greater than the level-out value, we don't want to go over
+                if (this.targetRotationObj.localPosition.y > -this.levelOutRotation.y)
+                {
+                    yChange = -this.targetRotationObj.localPosition.y;
+                }
+                else
+                {
+                    yChange = this.levelOutRotation.y;
+                }
+            }
+        }
 
+        //Setting the target rotation object's relative position based on inputs
+        this.targetRotationObj.localPosition += new Vector3(xChange, yChange, 0);
 
-        /*      STABLE BUT UGLY
-        //Float to hold the player ship's X rotation (pitch)
-        float xRot = -this.maxShipRotation.x * playerInputs_.y;
+        //Finding the angle that the movement joystick is making so we can constrain the target rotation object's max positions to be an oval
+        float joystickAngle = Mathf.Atan2(playerInputs_.y, playerInputs_.x);
 
-        //Float to hold the player ship's Y rotation (yaw)
-        float yRot = this.maxShipRotation.y * playerInputs_.x;
+        //Creating multipliers for the max XY positions for the target rotation obj so that it stays within a circle
+        float maxXRadial = this.targetRotObjMaxXY.x * Mathf.Cos(joystickAngle);
+        float maxYRadial = this.targetRotObjMaxXY.y * Mathf.Sin(joystickAngle);
 
-        //Float to hold the player ship's Z rotation (roll)
-        float zRot = -this.maxShipRotation.z * playerInputs_.x;
+        .//The rotation only snaps to radial limits once it goes past the square limits so it snaps back and forth
+        //Making sure the X positions aren't past their max positions
+        if(this.targetRotationObj.localPosition.x > targetRotObjMaxXY.x)
+        {
+            this.targetRotationObj.localPosition = new Vector3(maxXRadial, //used to be targetrotobjmaxxy.x
+                                                                this.targetRotationObj.localPosition.y,
+                                                                this.targetRotationObj.localPosition.z);
+        }
+        else if(this.targetRotationObj.localPosition.x < -targetRotObjMaxXY.x)
+        {
+            this.targetRotationObj.localPosition = new Vector3(maxXRadial, //used to be -targetrotobjmaxxy.x
+                                                                this.targetRotationObj.localPosition.y,
+                                                                this.targetRotationObj.localPosition.z);
+        }
+        //Making sure the Y positions aren't past their max positions
+        if (this.targetRotationObj.localPosition.y > targetRotObjMaxXY.y)
+        {
+            this.targetRotationObj.localPosition = new Vector3(this.targetRotationObj.localPosition.x,
+                                                                maxYRadial,//used to be targetrotobjmaxxy.y
+                                                                this.targetRotationObj.localPosition.z);
+        }
+        else if (this.targetRotationObj.localPosition.y < -targetRotObjMaxXY.y)
+        {
+            this.targetRotationObj.localPosition = new Vector3(this.targetRotationObj.localPosition.x,
+                                                                maxYRadial, //used to be targetrotobjmaxxy.y
+                                                                this.targetRotationObj.localPosition.z);
+        }
 
-        //Adjusting our ship's gyroscope to rotate with these inputs
-        this.ourShip.xGyroscope.localEulerAngles = new Vector3(xRot, 0, 0);
-        this.ourShip.yGyroscope.localEulerAngles = new Vector3(0, yRot, 0);
-        this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, zRot);
-        */
+        //Rotating our ship to face the target rotation object
+        Quaternion lookRotation = Quaternion.LookRotation(this.targetRotationObj.position - this.ourShip.xGyroscope.position);
+        this.ourShip.xGyroscope.transform.localRotation = Quaternion.Lerp(this.ourShip.xGyroscope.rotation, lookRotation, 1);
     }
 }
