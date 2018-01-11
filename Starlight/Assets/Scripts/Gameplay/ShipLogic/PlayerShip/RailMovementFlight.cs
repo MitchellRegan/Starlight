@@ -83,9 +83,12 @@ public class RailMovementFlight : MonoBehaviour
     private Vector3 nextRailRight = new Vector3();
     //The rotation that we will be facing in our next rail zone
     private Quaternion nextRotation = new Quaternion();
-
-
     
+    //Float to hold the area where the controller inputs no longer register movement
+    private float deadzone = 0.00f;
+
+
+
     //Function called when this object is created
     private void Awake()
     {
@@ -721,7 +724,7 @@ public class RailMovementFlight : MonoBehaviour
         }
         
         //If our Z input (X stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
-        if (playerInputs_.x > 0.1f || playerInputs_.x < -0.1f)
+        if (playerInputs_.x > this.deadzone || playerInputs_.x < -this.deadzone)
         {
             zRot = -this.maxRotationChange.z * playerInputs_.x;
             
@@ -828,11 +831,11 @@ public class RailMovementFlight : MonoBehaviour
         /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
         //Variables to hold the change in position for the target rotation object
-        float xChange = 0;
+        /*float xChange = 0;
         float yChange = 0;
 
         //If the X input is outside the deadzone
-        if(playerInputs_.x > 0.1f || playerInputs_.x < -0.1f)
+        if(playerInputs_.x > this.deadzone || playerInputs_.x < -this.deadzone)
         {
             xChange = playerInputs_.x * this.targetRotObjXSpeed;
         }
@@ -868,12 +871,19 @@ public class RailMovementFlight : MonoBehaviour
         }
 
         //If the Y input is outside the positive deadzone
-        if(playerInputs_.y > 0.1f)
+        if(playerInputs_.y > this.deadzone)
         {
             yChange = playerInputs_.y * this.targetRotObjUpDownSpeed.x;
+
+            //If the target rotation object's position is above 0, we need to ease down on the velocity
+            if(targetRotationObj.localPosition.y > 0)
+            {
+                //Calculating the maximum y change we can apply so that it's reduced based on how close we get to the cap
+                float maxYChangeMultiplier = 1 - ((this.targetRotObjMaxXY.y - targetRotationObj.localPosition.y) / this.targetRotObjMaxXY.y);
+            }
         }
         //If the Y input is outside the negative deadzone
-        else if(playerInputs_.y < -0.1f)
+        else if(playerInputs_.y < -this.deadzone)
         {
             yChange = playerInputs_.y * this.targetRotObjUpDownSpeed.y;
         }
@@ -913,39 +923,40 @@ public class RailMovementFlight : MonoBehaviour
 
         //Finding the angle that the movement joystick is making so we can constrain the target rotation object's max positions to be an oval
         float joystickAngle = Mathf.Atan2(playerInputs_.y, playerInputs_.x);
+        //Finding the magnitude of the joystick's input using the pythagorean theorum
+        float joystickMagnitude = Mathf.Sqrt((playerInputs_.x * playerInputs_.x) + (playerInputs_.y * playerInputs_.y));
 
         //Creating multipliers for the max XY positions for the target rotation obj so that it stays within a circle
         float maxXRadial = this.targetRotObjMaxXY.x * Mathf.Cos(joystickAngle);
         float maxYRadial = this.targetRotObjMaxXY.y * Mathf.Sin(joystickAngle);
-
-        .//The rotation only snaps to radial limits once it goes past the square limits so it snaps back and forth
+        
         //Making sure the X positions aren't past their max positions
-        if(this.targetRotationObj.localPosition.x > targetRotObjMaxXY.x)
+        if(this.targetRotationObj.localPosition.x > maxXRadial && playerInputs_.x > 0)
         {
             this.targetRotationObj.localPosition = new Vector3(maxXRadial, //used to be targetrotobjmaxxy.x
                                                                 this.targetRotationObj.localPosition.y,
                                                                 this.targetRotationObj.localPosition.z);
         }
-        else if(this.targetRotationObj.localPosition.x < -targetRotObjMaxXY.x)
+        else if(this.targetRotationObj.localPosition.x < maxXRadial && playerInputs_.x < 0)
         {
             this.targetRotationObj.localPosition = new Vector3(maxXRadial, //used to be -targetrotobjmaxxy.x
                                                                 this.targetRotationObj.localPosition.y,
                                                                 this.targetRotationObj.localPosition.z);
         }
         //Making sure the Y positions aren't past their max positions
-        if (this.targetRotationObj.localPosition.y > targetRotObjMaxXY.y)
+        if (this.targetRotationObj.localPosition.y > maxYRadial && playerInputs_.y > 0)
         {
             this.targetRotationObj.localPosition = new Vector3(this.targetRotationObj.localPosition.x,
                                                                 maxYRadial,//used to be targetrotobjmaxxy.y
                                                                 this.targetRotationObj.localPosition.z);
         }
-        else if (this.targetRotationObj.localPosition.y < -targetRotObjMaxXY.y)
+        else if (this.targetRotationObj.localPosition.y < maxYRadial && playerInputs_.y < 0)
         {
             this.targetRotationObj.localPosition = new Vector3(this.targetRotationObj.localPosition.x,
                                                                 maxYRadial, //used to be targetrotobjmaxxy.y
                                                                 this.targetRotationObj.localPosition.z);
         }
-
+        */
         //Rotating our ship to face the target rotation object
         Quaternion lookRotation = Quaternion.LookRotation(this.targetRotationObj.position - this.ourShip.xGyroscope.position);
         this.ourShip.xGyroscope.transform.localRotation = Quaternion.Lerp(this.ourShip.xGyroscope.rotation, lookRotation, 1);
