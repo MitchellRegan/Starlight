@@ -5,6 +5,10 @@ using UnityEngine.Events;
 
 public class HealthAndArmor : MonoBehaviour
 {
+    //This object's ID type so projectiles know if they're hitting a player or an enemy
+    [HideInInspector]
+    public AttackerID objectIDType = AttackerID.Enemy;
+
     //The maximum health that this object has
     public int maxHealth = 100;
     //The current amount of health this object has

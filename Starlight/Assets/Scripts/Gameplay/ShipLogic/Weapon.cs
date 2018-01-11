@@ -4,11 +4,17 @@ using UnityEngine;
 
 public class Weapon : MonoBehaviour
 {
+    //The attacker ID
+    [HideInInspector]
+    public AttackerID objectIDType = AttackerID.Enemy;
+
     //The projectile that's fired by this weapon's main fire
-    public GameObject firedProjectile;
+    public WeaponProjectile firedProjectile;
 
     //The cooldown after this weapon fires the main projectile
     public float weaponCooldown = 0.5f;
+    //The current amount of time we're waiting for cooldowns
+    private float currentCooldownTime = 0;
 
     //The maximum amount of ammo this weapon starts with
     public int maxAmmo = 5;
@@ -20,8 +26,6 @@ public class Weapon : MonoBehaviour
     //The audio emitter that is played when this weapon is fired
     public ExtraSoundEmitterSettings muzzleAudio;
 
-    //The current amount of time we're waiting for cooldowns
-    private float currentCooldownTime = 0;
 
 
 
@@ -39,14 +43,23 @@ public class Weapon : MonoBehaviour
     //Function called externally to perform the main fire
     public virtual void FireWeapon(bool pressed_, bool held_, bool released_)
     {
+        //If we're not pressing the fire button, nothing happens
+        if(!pressed_)
+        {
+            return;
+        }
+
         //If our current cooldown time is above 0 or there's no ammo, we can't fire
-        if(this.currentCooldownTime > 0 || this.currentAmmo <= 0)
+        if(this.currentCooldownTime > 0 || (this.currentAmmo <= 0 && !this.unlimitedAmmo))
         {
             return;
         }
 
         //Otherwise we create an instance of the fired projectile at our muzzle location
-        GameObject projectile = GameObject.Instantiate(this.firedProjectile, this.muzzleAudio.transform.position, this.muzzleAudio.transform.rotation);
+        GameObject projectile = GameObject.Instantiate(this.firedProjectile.gameObject, this.muzzleAudio.transform.position, this.muzzleAudio.transform.rotation);
+
+        //Setting the projectile's fire data
+        projectile.GetComponent<WeaponProjectile>().SetProjectileInfo(this.objectIDType);
 
         //Setting our weapon cooldown
         this.currentCooldownTime = this.weaponCooldown;

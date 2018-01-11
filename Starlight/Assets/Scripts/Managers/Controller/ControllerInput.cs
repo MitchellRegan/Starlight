@@ -687,11 +687,11 @@ public enum ControllerButtons
     X_Button,
     Y_Button,
 
-    Start_Button,
-    Back_Button,
-
     Left_Bumper,
     Right_Bumper,
+
+    Back_Button,
+    Start_Button,
 
     Left_Stick_Click,
     Right_Stick_Click,

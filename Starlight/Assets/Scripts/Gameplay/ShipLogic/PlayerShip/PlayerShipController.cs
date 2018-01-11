@@ -113,6 +113,40 @@ public class PlayerShipController : MonoBehaviour
         //Passing our controller input to our movement mechanic scripts
         this.ourFreeMovement.ourShip = this;
         this.ourRailMovement.ourShip = this;
+
+        //Looping through all of our weapons, wings and engines to tell them what player ID we are
+        if (this.playerController == Players.P1)
+        {
+            this.mainWeapon.objectIDType = AttackerID.Player1;
+            this.secondaryWeapon.objectIDType = AttackerID.Player1;
+        }
+        else
+        {
+            this.mainWeapon.objectIDType = AttackerID.Player2;
+            this.secondaryWeapon.objectIDType = AttackerID.Player2;
+        }
+        foreach (ShipWingLogic wing in this.shipWings)
+        {
+            if(this.playerController == Players.P1)
+            {
+                wing.objectIDType = AttackerID.Player1;
+            }
+            else if (this.playerController == Players.P2)
+            {
+                wing.objectIDType = AttackerID.Player2;
+            }
+        }
+        foreach(ShipEngineLogic engine in this.shipEngines)
+        {
+            if (this.playerController == Players.P1)
+            {
+                engine.objectIDType = AttackerID.Player1;
+            }
+            else if (this.playerController == Players.P2)
+            {
+                engine.objectIDType = AttackerID.Player2;
+            }
+        }
     }
 
 
@@ -141,6 +175,12 @@ public class PlayerShipController : MonoBehaviour
             this.secondaryWeapon.FireWeapon(Input.GetKeyDown(this.ourCustomInputs.secondaryFireButton_Keyboard),
                                         Input.GetKey(this.ourCustomInputs.secondaryFireButton_Keyboard),
                                         Input.GetKeyUp(this.ourCustomInputs.secondaryFireButton_Keyboard));
+        }
+
+        //If the player presses the button to invert Y movement controls
+        if(this.ourController.CheckButtonPressed(this.ourCustomInputs.invertY_Controller) || Input.GetKeyDown(this.ourCustomInputs.invertY_Keyboard))
+        {
+            this.ourCustomInputs.invertYMovement = !this.ourCustomInputs.invertYMovement;
         }
 	}
 

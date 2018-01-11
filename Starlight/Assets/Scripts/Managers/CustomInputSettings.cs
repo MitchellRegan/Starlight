@@ -60,6 +60,11 @@ public class PlayerInputs
     //The controller button used to break
     public ControllerButtons breakButton_Controller = ControllerButtons.Left_Trigger;
 
+    [Space(8)]
+
+    //The controller button used to invert Y movement controls
+    public ControllerButtons invertY_Controller = ControllerButtons.Back_Button;
+
 
     [Space(18)]
 
@@ -86,4 +91,9 @@ public class PlayerInputs
     public KeyCode boostButton_Keyboard = KeyCode.Space;
     //The keyboard/mouse button used to break
     public KeyCode breakButton_Keyboard = KeyCode.LeftShift;
+
+    [Space(8)]
+
+    //The keyboard/mouse button used to invert Y movement controls
+    public KeyCode invertY_Keyboard = KeyCode.I;
 }
