@@ -23,7 +23,7 @@ public class WeaponProjectile : MonoBehaviour
 	
     
     //Function called externally from Weapon.cs to set this projectile's attacker ID and forward direction
-    public void SetProjectileInfo(AttackerID projectileID_)
+    public virtual void SetProjectileInfo(AttackerID projectileID_)
     {
         //Setting the ID of the attacker that fired this projectile
         this.attackerID = projectileID_;

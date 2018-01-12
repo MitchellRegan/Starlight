@@ -50,7 +50,7 @@ public class Weapon : MonoBehaviour
         }
 
         //If our current cooldown time is above 0 or there's no ammo, we can't fire
-        if(this.currentCooldownTime > 0 || (this.currentAmmo <= 0 && !this.unlimitedAmmo))
+        if (this.currentCooldownTime > 0 || (this.currentAmmo <= 0 && !this.unlimitedAmmo))
         {
             return;
         }

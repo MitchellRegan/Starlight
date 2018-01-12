@@ -171,7 +171,7 @@ public class PlayerShipController : MonoBehaviour
             this.secondaryWeapon.FireWeapon(this.ourController.CheckButtonPressed(this.ourCustomInputs.secondaryFireButton_Controller),
                                         this.ourController.CheckButtonDown(this.ourCustomInputs.secondaryFireButton_Controller),
                                         this.ourController.CheckButtonReleased(this.ourCustomInputs.secondaryFireButton_Controller));
-
+            
             this.secondaryWeapon.FireWeapon(Input.GetKeyDown(this.ourCustomInputs.secondaryFireButton_Keyboard),
                                         Input.GetKey(this.ourCustomInputs.secondaryFireButton_Keyboard),
                                         Input.GetKeyUp(this.ourCustomInputs.secondaryFireButton_Keyboard));
