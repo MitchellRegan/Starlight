@@ -15,7 +15,7 @@ public class ControllerInputManager : MonoBehaviour
 
 
     // Use this for initialization
-    void Start()
+    private void Awake()
     {
         //If there's already a static instance of a Controller Input Manager, we destroy this component
         if (globalReference != null)
@@ -164,5 +164,6 @@ public enum Players
     P1,
     P2,
     P3,
-    P4
+    P4,
+    AllPlayers
 }

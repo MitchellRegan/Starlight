@@ -32,8 +32,10 @@ public class ControllerInput
 
     //Float ranging from 0 to 1 showing how far the left trigger is pressed
     public float LeftTrigger = 0;
+    public float LeftTriggerPrevious = 0;
     //Float ranging from 0 to 1 showing how far the right trigger is pressed
     public float RightTrigger = 0;
+    public float RightTriggerPrevious = 0;
 
     public bool A_Button_Pressed = false;
     public bool B_Button_Pressed = false;
@@ -49,6 +51,8 @@ public class ControllerInput
     public bool DPad_Down_Pressed = false;
     public bool DPad_Left_Pressed = false;
     public bool DPad_Right_Pressed = false;
+    public bool Left_Trigger_Pressed = false;
+    public bool Right_Trigger_Pressed = false;
 
     public bool A_Button_Down = false;
     public bool B_Button_Down = false;
@@ -64,6 +68,8 @@ public class ControllerInput
     public bool DPad_Down_Down = false;
     public bool DPad_Left_Down = false;
     public bool DPad_Right_Down = false;
+    public bool Left_Trigger_Down = false;
+    public bool Right_Trigger_Down = false;
 
     public bool A_Button_Released = false;
     public bool B_Button_Released = false;
@@ -79,6 +85,8 @@ public class ControllerInput
     public bool DPad_Down_Released = false;
     public bool DPad_Left_Released = false;
     public bool DPad_Right_Released = false;
+    public bool Left_Trigger_Released = false;
+    public bool Right_Trigger_Released = false;
 
 
 
@@ -110,6 +118,10 @@ public class ControllerInput
 
         DPad.x = Input.GetAxis(Prefix + "_DPad_X");
         DPad.y = Input.GetAxis(Prefix + "_DPad_Y");
+
+        //Stores the previous values for the triggers
+        LeftTriggerPrevious = LeftTrigger;
+        RightTriggerPrevious = RightTrigger;
 
         //Stores the trigger ranges for this controller
         LeftTrigger = Input.GetAxis(Prefix + "_LeftTrigger");
@@ -155,6 +167,14 @@ public class ControllerInput
         Right_Stick_Button_Pressed = CheckButtonPressed(ControllerButtons.Right_Stick_Click);
         Right_Stick_Button_Down = CheckButtonDown(ControllerButtons.Right_Stick_Click);
         Right_Stick_Button_Released = CheckButtonReleased(ControllerButtons.Right_Stick_Click);
+
+        Left_Trigger_Pressed = CheckButtonPressed(ControllerButtons.Left_Trigger);
+        Left_Trigger_Down = CheckButtonDown(ControllerButtons.Left_Trigger);
+        Left_Trigger_Released = CheckButtonReleased(ControllerButtons.Left_Trigger);
+
+        Right_Trigger_Pressed = CheckButtonPressed(ControllerButtons.Right_Trigger);
+        Right_Trigger_Down = CheckButtonDown(ControllerButtons.Right_Trigger);
+        Right_Trigger_Released = CheckButtonReleased(ControllerButtons.Right_Trigger);
 
         CheckDPadPressed();
         CheckDPadDown();
@@ -202,7 +222,76 @@ public class ControllerInput
     //Checks to see if a controller button was pressed this frame based on the ControllerButtons enum given
     public bool CheckButtonPressed(ControllerButtons buttonID_)
     {
-        return Input.GetKeyDown("joystick " + JoystickNum + " button " + ((int)buttonID_));
+        //Getting the input based on the button ID
+        switch(buttonID_)
+        {
+            case ControllerButtons.Left_Trigger:
+                //If the previous left trigger input is below 50% and the current input is above, it was pressed
+                if (LeftTriggerPrevious < 0.5f && LeftTrigger >= 0.5f)
+                {
+                    return true;
+                }
+                //If the current input is still above 50% it's not released
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.Right_Trigger:
+                //If the previous right trigger input is below 50% and the current input is above, it was pressed
+                if (RightTriggerPrevious < 0.5f && RightTrigger >= 0.5f)
+                {
+                    return true;
+                }
+                //Otherwise it wasn't pressed
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Up:
+                if (DPad.y > 0.5 && PrevDPad.y < 0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Down:
+                if (DPad.y < -0.5 && PrevDPad.y > -0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Left:
+                if (DPad.x < -0.5 && PrevDPad.x > -0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Right:
+                if (DPad.x > 0.5 && PrevDPad.x < 0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            default:
+                return Input.GetKeyDown("joystick " + JoystickNum + " button " + ((int)buttonID_));
+        }
     }
 
 
@@ -210,7 +299,74 @@ public class ControllerInput
     //Checks to see if a controller button was held this frame
     public bool CheckButtonDown(ControllerButtons buttonID_)
     {
-        return Input.GetKey("joystick " + JoystickNum + " button " + ((int)buttonID_));
+        //Getting the input based on the button ID
+        switch (buttonID_)
+        {
+            case ControllerButtons.Left_Trigger:
+                //If the current input is above 50% it's down
+                if (LeftTrigger >= 0.5f)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.Right_Trigger:
+                //If the current input is above above 50% it's down
+                if (RightTrigger >= 0.5f)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Up:
+                if (DPad.y > 0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Down:
+                if (DPad.y < -0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Left:
+                if (DPad.x < -0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Right:
+                if (DPad.x > 0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            default:
+                return Input.GetKey("joystick " + JoystickNum + " button " + ((int)buttonID_));
+        }
     }
 
 
@@ -218,7 +374,76 @@ public class ControllerInput
     //Checks to see if a controller button was released this frame
     public bool CheckButtonReleased(ControllerButtons buttonID_)
     {
-        return Input.GetKeyUp("joystick " + JoystickNum + " button " + ((int)buttonID_));
+        //Getting the input based on the button ID
+        switch(buttonID_)
+        {
+            case ControllerButtons.Left_Trigger:
+                //If the previous left trigger input is above 50% and the current input is below, it was released
+                if(LeftTriggerPrevious >= 0.5f && LeftTrigger < 0.5f)
+                {
+                    return true;
+                }
+                //If the current input is still above 50% it's not released
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.Right_Trigger:
+                //If the previous right trigger input is above 50% and the current input is below, it was released
+                if (RightTriggerPrevious >= 0.5f && RightTrigger < 0.5f)
+                {
+                    return true;
+                }
+                //If the current input is still above 50% it's not released
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Up:
+                if (DPad.y < 0.5 && PrevDPad.y > 0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Down:
+                if (DPad.y > -0.5 && PrevDPad.y < -0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Left:
+                if (DPad.x > -0.5 && PrevDPad.x < -0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            case ControllerButtons.D_Pad_Right:
+                if (DPad.x < 0.5 && PrevDPad.x > 0.5)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            default:
+                return Input.GetKeyUp("joystick " + JoystickNum + " button " + ((int)buttonID_));
+        }
     }
 
 
@@ -281,6 +506,40 @@ public class ControllerInput
             DPad_Right_Down = false;
     }
 
+
+    //Checks the value of a controller stick
+    public float CheckStickValue(ControllerSticks stickID_)
+    {
+        switch(stickID_)
+        {
+            case ControllerSticks.Left_Stick_X:
+                return this.LeftStick.x;
+
+            case ControllerSticks.Left_Stick_Y:
+                return this.LeftStick.y * this.LeftInvertY;
+
+            case ControllerSticks.Right_Stick_X:
+                return this.RightStick.x;
+
+            case ControllerSticks.Right_Stick_Y:
+                return this.RightStick.y * this.RightInvertY;
+
+            case ControllerSticks.Left_Trigger:
+                return this.LeftTrigger;
+
+            case ControllerSticks.Right_Trigger:
+                return this.RightTrigger;
+
+            case ControllerSticks.D_Pad_X:
+                return this.DPad.x;
+
+            case ControllerSticks.D_Pad_Y:
+                return this.DPad.y;
+
+            default:
+                return 0;
+        }
+    }
 
 
     //Checks and sets all 4 DPad buttons to see if they were released this frame
@@ -428,14 +687,37 @@ public enum ControllerButtons
     X_Button,
     Y_Button,
 
-    Start_Button,
-    Back_Button,
-
     Left_Bumper,
     Right_Bumper,
+
+    Back_Button,
+    Start_Button,
 
     Left_Stick_Click,
     Right_Stick_Click,
 
+    Left_Trigger,
+    Right_Trigger,
 
+    D_Pad_Up,
+    D_Pad_Down,
+    D_Pad_Left,
+    D_Pad_Right
+}
+
+
+//Enum used to define stick inputs on the controller
+public enum ControllerSticks
+{
+    Left_Stick_X,
+    Left_Stick_Y,
+
+    Right_Stick_X,
+    Right_Stick_Y,
+
+    D_Pad_X,
+    D_Pad_Y,
+
+    Left_Trigger,
+    Right_Trigger
 }

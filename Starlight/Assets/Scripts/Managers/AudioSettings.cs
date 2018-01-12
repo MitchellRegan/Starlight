@@ -8,24 +8,24 @@ public class AudioSettings : MonoBehaviour
     public static AudioSettings globalReference;
 
     //Bool and slider for the music audio volume
-    public bool MuteMusic = false;
+    public bool muteMusic = false;
     [Range(0, 1.0f)]
-    public float MusicVolume = 1.0f;
+    public float musicVolume = 1.0f;
 
     //Bool and slider for the sound effect volume
-    public bool MuteSoundEffects = false;
+    public bool muteSoundEffects = false;
     [Range(0, 1.0f)]
-    public float SoundEffectVolume = 1.0f;
+    public float soundEffectVolume = 1.0f;
 
     //Bool and slider for the dialogue volume
-    public bool MuteDialogue = false;
+    public bool muteDialogue = false;
     [Range(0, 1.0f)]
-    public float DialogueVolume = 1.0f;
+    public float dialogueVolume = 1.0f;
 
     //Bool and slider for the global volume
-    public bool MuteAll = false;
+    public bool muteAll = false;
     [Range(0, 1.0f)]
-    public float GlobalVolume = 1.0f;
+    public float globalVolume = 1.0f;
 
 
 
@@ -49,19 +49,19 @@ public class AudioSettings : MonoBehaviour
     public void ChangeGlobalVolume(float newVolume_)
     {
         //Setting the global volume to the volume given
-        globalReference.GlobalVolume = newVolume_;
+        globalReference.globalVolume = newVolume_;
 
         //Making sure the new volume setting is between 0 and 1 or else things get odd
-        if (globalReference.GlobalVolume > 1)
+        if (globalReference.globalVolume > 1)
         {
-            globalReference.GlobalVolume = 1.0f;
+            globalReference.globalVolume = 1.0f;
         }
-        else if (globalReference.GlobalVolume < 0)
+        else if (globalReference.globalVolume < 0)
         {
-            globalReference.GlobalVolume = 0;
+            globalReference.globalVolume = 0;
         }
 
-        DispatchSoundChangeEvt();
+        this.DispatchSoundChangeEvt();
     }
 
 
@@ -69,19 +69,19 @@ public class AudioSettings : MonoBehaviour
     public void ChangeMusicVolume(float newVolume_)
     {
         //Setting the music volume to the volume given
-        globalReference.MusicVolume = newVolume_;
+        globalReference.musicVolume = newVolume_;
 
         //Making sure the new volume setting is between 0 and 1
-        if (globalReference.MusicVolume > 1)
+        if (globalReference.musicVolume > 1)
         {
-            globalReference.MusicVolume = 1.0f;
+            globalReference.musicVolume = 1.0f;
         }
-        else if (globalReference.MusicVolume < 0)
+        else if (globalReference.musicVolume < 0)
         {
-            globalReference.MusicVolume = 0;
+            globalReference.musicVolume = 0;
         }
 
-        DispatchSoundChangeEvt();
+        this.DispatchSoundChangeEvt();
     }
 
 
@@ -89,19 +89,19 @@ public class AudioSettings : MonoBehaviour
     public void ChangeSoundEffectVolume(float newVolume_)
     {
         //Setting the sound effect volume to the volume given
-        globalReference.SoundEffectVolume = newVolume_;
+        globalReference.soundEffectVolume = newVolume_;
 
         //Making sure the new volume setting is between 0 and 1
-        if (globalReference.SoundEffectVolume > 1)
+        if (globalReference.soundEffectVolume > 1)
         {
-            globalReference.SoundEffectVolume = 1.0f;
+            globalReference.soundEffectVolume = 1.0f;
         }
-        else if (globalReference.SoundEffectVolume < 0)
+        else if (globalReference.soundEffectVolume < 0)
         {
-            globalReference.SoundEffectVolume = 0;
+            globalReference.soundEffectVolume = 0;
         }
 
-        DispatchSoundChangeEvt();
+        this.DispatchSoundChangeEvt();
     }
 
 
@@ -109,51 +109,51 @@ public class AudioSettings : MonoBehaviour
     public void ChangeDialogueVolume(float newVolume_)
     {
         //Setting the dialogue volume to the volume given
-        globalReference.DialogueVolume = newVolume_;
+        globalReference.dialogueVolume = newVolume_;
 
         //Making sure the new volume setting is between 0 and 1
-        if (globalReference.DialogueVolume > 1)
+        if (globalReference.dialogueVolume > 1)
         {
-            globalReference.DialogueVolume = 1.0f;
+            globalReference.dialogueVolume = 1.0f;
         }
-        else if (globalReference.DialogueVolume < 0)
+        else if (globalReference.dialogueVolume < 0)
         {
-            globalReference.DialogueVolume = 0;
+            globalReference.dialogueVolume = 0;
         }
 
-        DispatchSoundChangeEvt();
+        this.DispatchSoundChangeEvt();
     }
 
 
     //If true, mutes all audio, if false unmutes
     public void ToggleMuteAll(bool isMuted_)
     {
-        globalReference.MuteAll = isMuted_;
-        DispatchSoundChangeEvt();
+        globalReference.muteAll = isMuted_;
+        this.DispatchSoundChangeEvt();
     }
 
 
     //If true, mutes all music, if false unmutes
     public void ToggleMuteMusic(bool isMuted_)
     {
-        globalReference.MuteMusic = isMuted_;
-        DispatchSoundChangeEvt();
+        globalReference.muteMusic = isMuted_;
+        this.DispatchSoundChangeEvt();
     }
 
 
     //If true, mutes all dialogue, if false unmutes
     public void ToggleMuteDialogue(bool isMuted_)
     {
-        globalReference.MuteDialogue = isMuted_;
-        DispatchSoundChangeEvt();
+        globalReference.muteDialogue = isMuted_;
+        this.DispatchSoundChangeEvt();
     }
 
 
     //If true, mutes all sound effects, if false unmutes
     public void ToggleMuteSFX(bool isMuted_)
     {
-        globalReference.MuteSoundEffects = isMuted_;
-        DispatchSoundChangeEvt();
+        globalReference.muteSoundEffects = isMuted_;
+        this.DispatchSoundChangeEvt();
     }
 
 
