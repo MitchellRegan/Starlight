@@ -7,16 +7,16 @@ public class BombLauncherWeapon : Weapon
     //Reference to the bomb projectile this weapon launches
     private BombProjectile ourBomb = null;
     //The current amount of time we're waiting for cooldowns
-    private float currentCooldownTime = 0;
+    private float currentCooldown = 0;
 
 
     //Function called every frame
     private void Update()
     {
         //If our current cooldown time is above 0, we reduce the time remaining
-        if (this.currentCooldownTime > 0)
+        if (this.currentCooldown > 0)
         {
-            this.currentCooldownTime -= Time.deltaTime;
+            this.currentCooldown -= Time.deltaTime;
         }
     }
 
@@ -33,7 +33,7 @@ public class BombLauncherWeapon : Weapon
         //If our current cooldown time is above 0 or there's no ammo, we can't fire
         if (this.ourBomb == null)
         {
-            if (this.currentCooldownTime > 0 || (this.currentAmmo <= 0 && !this.unlimitedAmmo))
+            if (this.currentCooldown > 0 || (this.currentAmmo <= 0 && !this.unlimitedAmmo))
             {
                 return;
             }
@@ -55,7 +55,7 @@ public class BombLauncherWeapon : Weapon
             }
 
             //Setting our weapon cooldown
-            this.currentCooldownTime = this.weaponCooldown;
+            this.currentCooldown = this.weaponCooldown;
 
             //Playing the muzzle's audio source
             this.muzzleAudio.ownerAudio.Play();
@@ -76,7 +76,7 @@ public class BombLauncherWeapon : Weapon
 
 
     //Function called externally to add ammo to this weapon
-    public void RefillAmmo(int amountToAdd_)
+    public override void RefillAmmo(int amountToAdd_)
     {
         //Adding the amount to our current ammo supply
         this.currentAmmo += amountToAdd_;

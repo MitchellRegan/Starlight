@@ -4,6 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(FreeMovementFlight))]
 [RequireComponent(typeof(RailMovementFlight))]
+[RequireComponent(typeof(HealthAndArmor))]
 public class PlayerShipController : MonoBehaviour
 {
     //Enum to determine which player controls this ship
@@ -12,6 +13,10 @@ public class PlayerShipController : MonoBehaviour
     //References to the public static ship controllers for each ship
     public static PlayerShipController p1ShipRef;
     public static PlayerShipController p2ShipRef;
+
+    //Reference to this ship's Health and Armor component
+    [HideInInspector]
+    public HealthAndArmor ourHealth;
 
     //The controller input that we use for this ship
     [HideInInspector]
@@ -40,6 +45,11 @@ public class PlayerShipController : MonoBehaviour
     public Transform xGyroscope;
     public Transform yGyroscope;
     public Transform zGyroscope;
+
+    [Space(8)]
+
+    //The health object for our cockpit
+    public HealthAndArmor shipCockpit;
 
     [Space(8)]
 
@@ -114,6 +124,9 @@ public class PlayerShipController : MonoBehaviour
         this.ourFreeMovement.ourShip = this;
         this.ourRailMovement.ourShip = this;
 
+        //Getting our health and armor component reference
+        this.ourHealth = this.GetComponent<HealthAndArmor>();
+
         //Looping through all of our weapons, wings and engines to tell them what player ID we are
         if (this.playerController == Players.P1)
         {
@@ -182,7 +195,54 @@ public class PlayerShipController : MonoBehaviour
         {
             this.ourCustomInputs.invertYMovement = !this.ourCustomInputs.invertYMovement;
         }
+
+        //Updating our ship's health
+        this.UpdateHealth();
 	}
+
+
+    //Function called from Update to find out how much health and shields our ship has
+    private void UpdateHealth()
+    {
+        //Int to hold the sum of all damage taken from each ship component
+        int damageTakenSum = 0;
+
+        //Ints to hold the sum of all armor and max amount of armor for each ship component
+        int currentShieldsSum = 0;
+        int maxShieldsSum = 0;
+
+        //Looping through each ship wing
+        foreach(ShipWingLogic wing in this.shipWings)
+        {
+            //Adding the amount of damage to our sum
+            damageTakenSum += wing.maxHealth - wing.currentHealth;
+            //Adding the current shield and max shield to our sums
+            currentShieldsSum += wing.currentShields;
+            maxShieldsSum += wing.maxShield;
+        }
+
+        //Looping through each ship engine
+        foreach(ShipEngineLogic engine in this.shipEngines)
+        {
+            //Adding the amount of damage to our sum
+            damageTakenSum += engine.maxHealth - engine.currentHealth;
+            //Adding the current shield and max shield to our sums
+            currentShieldsSum += engine.currentShields;
+            maxShieldsSum += engine.maxShield;
+        }
+
+        //Adding the amount of damage to the cockpit to our sum
+        damageTakenSum += shipCockpit.maxHealth - shipCockpit.currentHealth;
+        //Adding the current shield and max shield to our sums
+        currentShieldsSum += shipCockpit.currentShields;
+        maxShieldsSum += shipCockpit.maxShield;
+        
+        //Setting our health value minus the total damage taken
+        this.ourHealth.currentHealth = this.ourHealth.maxHealth - damageTakenSum;
+        //Setting our shield's current and max values
+        this.ourHealth.maxShield = maxShieldsSum;
+        this.ourHealth.currentShields = currentShieldsSum;
+    }
 
 
     //Function called when this object hits a trigger collider

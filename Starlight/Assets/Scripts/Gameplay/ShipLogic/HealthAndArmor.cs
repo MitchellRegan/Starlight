@@ -98,6 +98,7 @@ public class HealthAndArmor : MonoBehaviour
         //If this object has no health left, it is dead
         if(this.currentHealth < 1)
         {
+            this.currentHealth = 0;
             //Invoking our unity death event
             this.onDeathEvent.Invoke();
         }
