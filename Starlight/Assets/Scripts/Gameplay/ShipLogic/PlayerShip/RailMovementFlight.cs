@@ -244,39 +244,44 @@ public class RailMovementFlight : MonoBehaviour
             float rotationSpeed = 0;
 
             //If we're accelerating and not breaking, our rotation speed is increased
-            if(this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) || Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard) &&
-                !this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) && !Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+            if(this.ourShip.isShipBoosting)
             {
-                //Variables to hold the sum of our ship engines normal speed and boost speed
-                float sumNormalSpeed = 0;
-                float sumBoostSpeed = 0;
-
-                //Looping through all of our ship's engines
-                foreach(ShipEngineLogic engine in this.ourShip.shipEngines)
+                //If we have enough energy to boost, we continue
+                if (this.ourShip.ourEnergy.CanUseEnergy(this.ourShip.boostEnergyCost))
                 {
-                    sumNormalSpeed += engine.currentRailVelocity.y;
-                    sumBoostSpeed += engine.currentRailVelocity.z;
-                }
+                    //Variables to hold the sum of our ship engines normal speed and boost speed
+                    float sumNormalSpeed = 0;
+                    float sumBoostSpeed = 0;
 
-                rotationSpeed = rotationSpeed * (sumBoostSpeed / sumNormalSpeed);
+                    //Looping through all of our ship's engines
+                    foreach (ShipEngineLogic engine in this.ourShip.shipEngines)
+                    {
+                        sumNormalSpeed += engine.currentRailVelocity.y;
+                        sumBoostSpeed += engine.currentRailVelocity.z;
+                    }
+
+                    rotationSpeed = rotationSpeed * (sumBoostSpeed / sumNormalSpeed);
+                }
             }
             //If we're breaking and not accelerating, our rotation speed is reduced
-            else if (!this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) && !Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard) &&
-                this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) || Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+            else if (this.ourShip.isShipBreaking)
             {
-                //Variables to hold the sum of our ship engines normal speed and break speed
-                float sumNormalSpeed = 0;
-                float sumBreakSpeed = 0;
-
-                //Looping through all of our ship's engines
-                foreach (ShipEngineLogic engine in this.ourShip.shipEngines)
+                //If we have enough energy to break, we continue
+                if (this.ourShip.ourEnergy.CanUseEnergy(this.ourShip.breakEnergyCost))
                 {
-                    sumNormalSpeed += engine.currentRailVelocity.y;
-                    sumBreakSpeed += engine.currentRailVelocity.x;
-                }
+                    //Variables to hold the sum of our ship engines normal speed and break speed
+                    float sumNormalSpeed = 0;
+                    float sumBreakSpeed = 0;
 
-                rotationSpeed = rotationSpeed * (sumBreakSpeed / sumNormalSpeed);
-                Debug.Log(rotationSpeed);
+                    //Looping through all of our ship's engines
+                    foreach (ShipEngineLogic engine in this.ourShip.shipEngines)
+                    {
+                        sumNormalSpeed += engine.currentRailVelocity.y;
+                        sumBreakSpeed += engine.currentRailVelocity.x;
+                    }
+
+                    rotationSpeed = rotationSpeed * (sumBreakSpeed / sumNormalSpeed);
+                }
             }
 
             //Interpolating our rail parent's rotation to match the rotation of the zone we're entering
@@ -572,14 +577,12 @@ public class RailMovementFlight : MonoBehaviour
         float thrustInput = 0;
 
         //Getting the input based on the boost input
-        if (this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) ||
-            Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard))
+        if (this.ourShip.isShipBoosting)
         {
             thrustInput += 1;
         }
         //Getting the input based on the break input
-        else if(this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) ||
-            Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+        else if(this.ourShip.isShipBreaking)
         {
             thrustInput -= 1;
         }

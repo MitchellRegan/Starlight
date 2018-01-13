@@ -5,6 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(FreeMovementFlight))]
 [RequireComponent(typeof(RailMovementFlight))]
 [RequireComponent(typeof(HealthAndArmor))]
+[RequireComponent(typeof(ShipEnergy))]
 public class PlayerShipController : MonoBehaviour
 {
     //Enum to determine which player controls this ship
@@ -17,6 +18,9 @@ public class PlayerShipController : MonoBehaviour
     //Reference to this ship's Health and Armor component
     [HideInInspector]
     public HealthAndArmor ourHealth;
+    //Reference to this ship's energy component
+    [HideInInspector]
+    public ShipEnergy ourEnergy;
 
     //The controller input that we use for this ship
     [HideInInspector]
@@ -60,6 +64,17 @@ public class PlayerShipController : MonoBehaviour
 
     //The list of all engine objects that are attached to this ship
     public List<ShipEngineLogic> shipEngines;
+
+    //The amount of energy used each frame to boost
+    public float boostEnergyCost = 2;
+    //The amount of energy used each frame to break
+    public float breakEnergyCost = 1.5f;
+
+    //Bools that let other scripts know if we're currently boosting or breaking
+    [HideInInspector]
+    public bool isShipBoosting = false;
+    [HideInInspector]
+    public bool isShipBreaking = false;
 
 
 
@@ -126,6 +141,8 @@ public class PlayerShipController : MonoBehaviour
 
         //Getting our health and armor component reference
         this.ourHealth = this.GetComponent<HealthAndArmor>();
+        //Getting our energy component reference
+        this.ourEnergy = this.GetComponent<ShipEnergy>();
 
         //Looping through all of our weapons, wings and engines to tell them what player ID we are
         if (this.playerController == Players.P1)
@@ -190,12 +207,56 @@ public class PlayerShipController : MonoBehaviour
                                         Input.GetKeyUp(this.ourCustomInputs.secondaryFireButton_Keyboard));
         }
 
+        //Checking to see if we're pressing a boost button and if we're not currently breaking
+        if ((this.ourController.CheckButtonDown(this.ourCustomInputs.boostButton_Controller) ||
+            Input.GetKey(this.ourCustomInputs.boostButton_Keyboard)) &&
+            !this.isShipBreaking)
+        {
+            //Making sure we have enough energy
+            if (this.ourEnergy.CanUseEnergy(this.boostEnergyCost))
+            {
+                this.isShipBoosting = true;
+            }
+            //If not, we aren't boosting
+            else
+            {
+                this.isShipBoosting = false;
+            }
+        }
+        //Otherwise, we aren't boosting
+        else
+        {
+            this.isShipBoosting = false;
+        }
+
+        //Checking to see if we're pressing a break button and if we're not currently boosting
+        if ((this.ourController.CheckButtonDown(this.ourCustomInputs.breakButton_Controller) ||
+            Input.GetKey(this.ourCustomInputs.breakButton_Keyboard)) &&
+            !this.isShipBoosting)
+        {
+            //Making sure we have enough energy
+            if (this.ourEnergy.CanUseEnergy(this.breakEnergyCost))
+            {
+                this.isShipBreaking = true;
+            }
+            //If not, we aren't breaking
+            else
+            {
+                this.isShipBreaking = false;
+            }
+        }
+        //Otherwise, we aren't breaking
+        else
+        {
+            this.isShipBreaking = false;
+        }
+
         //If the player presses the button to invert Y movement controls
-        if(this.ourController.CheckButtonPressed(this.ourCustomInputs.invertY_Controller) || Input.GetKeyDown(this.ourCustomInputs.invertY_Keyboard))
+        if (this.ourController.CheckButtonPressed(this.ourCustomInputs.invertY_Controller) || Input.GetKeyDown(this.ourCustomInputs.invertY_Keyboard))
         {
             this.ourCustomInputs.invertYMovement = !this.ourCustomInputs.invertYMovement;
         }
-
+        
         //Updating our ship's health
         this.UpdateHealth();
 	}
