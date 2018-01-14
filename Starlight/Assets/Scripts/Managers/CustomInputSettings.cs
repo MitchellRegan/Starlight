@@ -62,6 +62,13 @@ public class PlayerInputs
 
     [Space(8)]
 
+    //The controller button used to tilt/roll right
+    public ControllerButtons rollRight_Controller = ControllerButtons.Right_Bumper;
+    //The controller button used to tilt/roll left
+    public ControllerButtons rollLeft_Controller = ControllerButtons.Left_Bumper;
+
+    [Space(8)]
+
     //The controller button used to invert Y movement controls
     public ControllerButtons invertY_Controller = ControllerButtons.Back_Button;
 
@@ -91,6 +98,13 @@ public class PlayerInputs
     public KeyCode boostButton_Keyboard = KeyCode.Space;
     //The keyboard/mouse button used to break
     public KeyCode breakButton_Keyboard = KeyCode.LeftShift;
+
+    [Space(8)]
+
+    //The keyboard/mouse button used to tilt/roll right
+    public KeyCode rollRight_Keyboard = KeyCode.E;
+    //The keyboard/mouse button used to tilt/roll left
+    public KeyCode rollLeft_Keyboard = KeyCode.Q;
 
     [Space(8)]
 
