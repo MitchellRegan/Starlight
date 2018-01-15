@@ -216,6 +216,12 @@ public class RailMovementFlight : MonoBehaviour
     //Function called every frame
     private void Update()
     {
+        //If the game is paused, nothing happens
+        if(PauseGame.isGamePaused)
+        {
+            return;
+        }
+
         //If we're changing bounding box size, we adjust its scale
         if(this.currentBoundChangeTime > 0)
         {

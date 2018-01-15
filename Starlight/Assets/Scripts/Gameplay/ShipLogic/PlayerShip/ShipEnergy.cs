@@ -33,7 +33,7 @@ public class ShipEnergy : MonoBehaviour
 	private void Update ()
     {
         //If the game is paused, nothing happens
-        if(GlobalData.globalReference.isGamePaused)
+        if(PauseGame.isGamePaused)
         {
             return;
         }

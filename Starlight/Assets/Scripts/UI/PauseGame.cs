@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class PauseGame : MonoBehaviour
 {
+    //Static bool that lets the gameplay objects know if time is paused
+    public static bool isGamePaused = false;
+
     //The game object to enable/disable for the player 1 pause screen
     public GameObject p1PauseScreen;
     //The game object to enable/disable for the player 2 pause screen
@@ -71,6 +74,8 @@ public class PauseGame : MonoBehaviour
         Time.timeScale = 0;
         //Displaying the player 1 pause screen
         this.p1PauseScreen.SetActive(true);
+        //Updating our static bool
+        isGamePaused = true;
     }
 
 
@@ -89,6 +94,8 @@ public class PauseGame : MonoBehaviour
         Time.timeScale = 1;
         //Hiding the player 1 pause screen
         this.p1PauseScreen.SetActive(false);
+        //Updating our static bool
+        isGamePaused = false;
     }
 
 
@@ -107,6 +114,8 @@ public class PauseGame : MonoBehaviour
         Time.timeScale = 0;
         //Displaying the player 2 pause screen
         this.p2PauseScreen.SetActive(true);
+        //Updating our static bool
+        isGamePaused = true;
     }
 
 
@@ -125,5 +134,7 @@ public class PauseGame : MonoBehaviour
         Time.timeScale = 1;
         //Hiding the player 2 pause screen
         this.p2PauseScreen.SetActive(false);
+        //Updating our static bool
+        isGamePaused = false;
     }
 }

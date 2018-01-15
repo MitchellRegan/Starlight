@@ -46,8 +46,14 @@ public class ShipTiltAndRoll : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
+        //If the game is paused, nothing happens
+        if (PauseGame.isGamePaused)
+        {
+            return;
+        }
+
         //If our current double tap buffer time is above 0, we count down
-        if(this.currentBufferTime > 0)
+        if (this.currentBufferTime > 0)
         {
             this.currentBufferTime -= Time.deltaTime;
         }

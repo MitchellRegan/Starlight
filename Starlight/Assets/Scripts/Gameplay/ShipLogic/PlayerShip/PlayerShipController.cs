@@ -187,6 +187,12 @@ public class PlayerShipController : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
+        //If the game is paused, we stop taking input
+        if(PauseGame.isGamePaused)
+        {
+            return;
+        }
+
 		//If we have a main weapon, we pass it the controller input and keyboard input for the main fire
         if(this.mainWeapon != null)
         {

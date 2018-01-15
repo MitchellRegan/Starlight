@@ -70,6 +70,12 @@ public class CameraSpeedInterp : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
+        //If the game is paused, nothing happens
+        if (PauseGame.isGamePaused)
+        {
+            return;
+        }
+
         //The Z distance and FOV variables that we need to interpolate to
         float targetZDist = 0;
         float targetFOV = 0;
