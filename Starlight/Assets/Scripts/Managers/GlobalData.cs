@@ -10,6 +10,10 @@ public class GlobalData : MonoBehaviour
     //Determines if the mouse cursor is visible or hidden
     public bool ShowMouseCursor = true;
 
+    //Bool that determines if the game is paused or not
+    [HideInInspector]
+    public bool isGamePaused = false;
+
     static public Color P1HilightColor = new Color(1, 0.2f, 0.2f, 1);
     static public Color P2HilightColor = new Color(0, 0.5f, 1, 1);
     static public Color P3HilightColor = Color.green;

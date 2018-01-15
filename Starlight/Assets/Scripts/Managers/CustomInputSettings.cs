@@ -37,6 +37,11 @@ public class PlayerInputs
     public bool invertYMovement = true;
 
     //~~~~~~~~~~~~~~~~~~~~~~~CONTROLLER INPUT~~~~~~~~~~~~~~~~~~~~~~~~~
+    //The controller button for pausing the game
+    public ControllerButtons pause_Controller = ControllerButtons.Start_Button;
+
+    [Space(8)]
+
     //The controller stick for moving left and right
     public ControllerSticks moveLeftRight_Controller = ControllerSticks.Left_Stick_X;
     //The controller stick for moving up and down
@@ -76,6 +81,11 @@ public class PlayerInputs
     [Space(18)]
 
     //~~~~~~~~~~~~~~~~~~~~~~~KEYBOARD/MOUSE INPUT~~~~~~~~~~~~~~~~~~~~~~~~~
+    //The keyboard input for pausing the game
+    public KeyCode pause_Keyboard = KeyCode.Escape;
+
+    [Space(8)]
+
     //The keyboard input for moving left
     public KeyCode moveLeft_Keyboard = KeyCode.A;
     //The keyboard input for moving right

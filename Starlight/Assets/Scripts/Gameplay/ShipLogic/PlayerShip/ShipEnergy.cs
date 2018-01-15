@@ -32,6 +32,12 @@ public class ShipEnergy : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
+        //If the game is paused, nothing happens
+        if(GlobalData.globalReference.isGamePaused)
+        {
+            return;
+        }
+
 		//If we're waiting to recharge, we reduce our recharge time
         if(this.currentRechargeTime > 0)
         {
