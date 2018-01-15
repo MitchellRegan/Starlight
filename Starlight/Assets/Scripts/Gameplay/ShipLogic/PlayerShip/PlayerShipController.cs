@@ -76,6 +76,10 @@ public class PlayerShipController : MonoBehaviour
     [HideInInspector]
     public bool isShipBreaking = false;
 
+    //Bools that let other scripts know if we're currently tilting or rolling
+    [HideInInspector]
+    public bool isShipTilting = false;
+
 
 
 
