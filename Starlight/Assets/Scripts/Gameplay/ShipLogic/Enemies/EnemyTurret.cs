@@ -140,30 +140,51 @@ public class EnemyTurret : HealthAndArmor
                 if(objR.rotateX)
                 {
                     //Getting the quaternion rotation to only move the X rotation to face the player position
-                    Vector3 xLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, 0, 0);
+                    //Vector3 xLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, 0, 0);
+                    Vector3 xLookPos = new Vector3(0, posToShoot.y - objR.objToRotate.position.y, posToShoot.z - objR.objToRotate.position.z);
                     Quaternion newXRot = Quaternion.LookRotation(xLookPos);
                     //Rotating the X direction to face the new rotation given our speed
-                    objR.objToRotate.rotation = Quaternion.Slerp(objR.objToRotate.rotation, newXRot, objR.rotationSpeed);
+                    objR.objToRotate.rotation = Quaternion.Lerp(objR.objToRotate.rotation, newXRot, objR.rotationSpeed);
+
+                    //If this object ONLY rotates the X value, we clamp the YZ rotations
+                    if(objR.rotateX && !objR.rotateY && !objR.rotateZ)
+                    {
+                        objR.objToRotate.localEulerAngles = new Vector3(objR.objToRotate.localEulerAngles.x, 0, 0);
+                    }
                 }
 
                 //If we rotate the Y axis
                 if(objR.rotateY)
                 {
                     //Getting the quaternion rotation to only move the Y rotation to face the player position
-                    Vector3 yLookPos = new Vector3(0, posToShoot.y - objR.objToRotate.position.y, 0);
+                    //Vector3 yLookPos = new Vector3(0, posToShoot.y - objR.objToRotate.position.y, 0);
+                    Vector3 yLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, 0, posToShoot.z - objR.objToRotate.position.z);
                     Quaternion newYRot = Quaternion.LookRotation(yLookPos);
                     //Rotating the Y direction to face the new rotation given our speed
-                    objR.objToRotate.rotation = Quaternion.Slerp(objR.objToRotate.rotation, newYRot, objR.rotationSpeed);
+                    objR.objToRotate.rotation = Quaternion.Lerp(objR.objToRotate.rotation, newYRot, objR.rotationSpeed);
+
+                    //If this object ONLY rotates the Y value, we clamp the XZ rotations
+                    if (!objR.rotateX && objR.rotateY && !objR.rotateZ)
+                    {
+                        objR.objToRotate.localEulerAngles = new Vector3(0, objR.objToRotate.localEulerAngles.y, 0);
+                    }
                 }
 
                 //If we rotate the Z axis
                 if(objR.rotateZ)
                 {
                     //Getting the quaternion rotation to only move the Z rotation to face the player position
-                    Vector3 zLookPos = new Vector3(0, 0, posToShoot.z - objR.objToRotate.position.z);
+                    //Vector3 zLookPos = new Vector3(0, 0, posToShoot.z - objR.objToRotate.position.z);
+                    Vector3 zLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, posToShoot.y - objR.objToRotate.position.y, 0);
                     Quaternion newZRot = Quaternion.LookRotation(zLookPos);
                     //Rotating the X direction to face the new rotation given our speed
-                    objR.objToRotate.rotation = Quaternion.Slerp(objR.objToRotate.rotation, newZRot, objR.rotationSpeed);
+                    objR.objToRotate.rotation = Quaternion.Lerp(objR.objToRotate.rotation, newZRot, objR.rotationSpeed);
+
+                    //If this object ONLY rotates the Z value, we clamp the XY rotations
+                    if (!objR.rotateX && !objR.rotateY && objR.rotateZ)
+                    {
+                        objR.objToRotate.localEulerAngles = new Vector3(0, 0, objR.objToRotate.localEulerAngles.z);
+                    }
                 }
             }
         }
@@ -184,7 +205,7 @@ public class EnemyTurret : HealthAndArmor
 
 
         //Firing at the player whenever possible
-        if(this.currentCooldown > 0)
+        if(this.currentCooldown <= 0)
         {
             //If our time between shots is up, we can fire
             if(this.currentTimeBetweenShots <= 0)
