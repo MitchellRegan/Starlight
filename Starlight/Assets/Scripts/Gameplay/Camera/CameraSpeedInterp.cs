@@ -70,20 +70,24 @@ public class CameraSpeedInterp : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
+        //If the game is paused, nothing happens
+        if (PauseGame.isGamePaused)
+        {
+            return;
+        }
+
         //The Z distance and FOV variables that we need to interpolate to
         float targetZDist = 0;
         float targetFOV = 0;
 
         //If the player is boosting
-        if (this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) ||
-            Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard))
+        if (this.ourShip.isShipBoosting)
         {
             targetZDist = this.boostZDist;
             targetFOV = this.boostFOV;
         }
         //If the player is breaking
-        else if (this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) ||
-            Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+        else if (this.ourShip.isShipBreaking)
         {
             targetZDist = this.breakZDist;
             targetFOV = this.breakFOV;

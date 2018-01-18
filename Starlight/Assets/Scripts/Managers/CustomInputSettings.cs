@@ -37,6 +37,11 @@ public class PlayerInputs
     public bool invertYMovement = true;
 
     //~~~~~~~~~~~~~~~~~~~~~~~CONTROLLER INPUT~~~~~~~~~~~~~~~~~~~~~~~~~
+    //The controller button for pausing the game
+    public ControllerButtons pause_Controller = ControllerButtons.Start_Button;
+
+    [Space(8)]
+
     //The controller stick for moving left and right
     public ControllerSticks moveLeftRight_Controller = ControllerSticks.Left_Stick_X;
     //The controller stick for moving up and down
@@ -62,6 +67,13 @@ public class PlayerInputs
 
     [Space(8)]
 
+    //The controller button used to tilt/roll right
+    public ControllerButtons rollRight_Controller = ControllerButtons.Right_Bumper;
+    //The controller button used to tilt/roll left
+    public ControllerButtons rollLeft_Controller = ControllerButtons.Left_Bumper;
+
+    [Space(8)]
+
     //The controller button used to invert Y movement controls
     public ControllerButtons invertY_Controller = ControllerButtons.Back_Button;
 
@@ -69,6 +81,11 @@ public class PlayerInputs
     [Space(18)]
 
     //~~~~~~~~~~~~~~~~~~~~~~~KEYBOARD/MOUSE INPUT~~~~~~~~~~~~~~~~~~~~~~~~~
+    //The keyboard input for pausing the game
+    public KeyCode pause_Keyboard = KeyCode.Escape;
+
+    [Space(8)]
+
     //The keyboard input for moving left
     public KeyCode moveLeft_Keyboard = KeyCode.A;
     //The keyboard input for moving right
@@ -91,6 +108,13 @@ public class PlayerInputs
     public KeyCode boostButton_Keyboard = KeyCode.Space;
     //The keyboard/mouse button used to break
     public KeyCode breakButton_Keyboard = KeyCode.LeftShift;
+
+    [Space(8)]
+
+    //The keyboard/mouse button used to tilt/roll right
+    public KeyCode rollRight_Keyboard = KeyCode.E;
+    //The keyboard/mouse button used to tilt/roll left
+    public KeyCode rollLeft_Keyboard = KeyCode.Q;
 
     [Space(8)]
 

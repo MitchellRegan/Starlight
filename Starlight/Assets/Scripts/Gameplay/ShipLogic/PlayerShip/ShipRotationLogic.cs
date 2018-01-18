@@ -71,6 +71,12 @@ public class ShipRotationLogic : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
+        //If the game is paused, nothing happens
+        if (PauseGame.isGamePaused)
+        {
+            return;
+        }
+
         //Getting the player inputs from the controller or keyboard
         Vector2 playerInputs = this.GetXYMoveInput();
 

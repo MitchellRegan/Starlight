@@ -216,6 +216,12 @@ public class RailMovementFlight : MonoBehaviour
     //Function called every frame
     private void Update()
     {
+        //If the game is paused, nothing happens
+        if(PauseGame.isGamePaused)
+        {
+            return;
+        }
+
         //If we're changing bounding box size, we adjust its scale
         if(this.currentBoundChangeTime > 0)
         {
@@ -244,39 +250,44 @@ public class RailMovementFlight : MonoBehaviour
             float rotationSpeed = 0;
 
             //If we're accelerating and not breaking, our rotation speed is increased
-            if(this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) || Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard) &&
-                !this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) && !Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+            if(this.ourShip.isShipBoosting)
             {
-                //Variables to hold the sum of our ship engines normal speed and boost speed
-                float sumNormalSpeed = 0;
-                float sumBoostSpeed = 0;
-
-                //Looping through all of our ship's engines
-                foreach(ShipEngineLogic engine in this.ourShip.shipEngines)
+                //If we have enough energy to boost, we continue
+                if (this.ourShip.ourEnergy.CanUseEnergy(this.ourShip.boostEnergyCost))
                 {
-                    sumNormalSpeed += engine.currentRailVelocity.y;
-                    sumBoostSpeed += engine.currentRailVelocity.z;
-                }
+                    //Variables to hold the sum of our ship engines normal speed and boost speed
+                    float sumNormalSpeed = 0;
+                    float sumBoostSpeed = 0;
 
-                rotationSpeed = rotationSpeed * (sumBoostSpeed / sumNormalSpeed);
+                    //Looping through all of our ship's engines
+                    foreach (ShipEngineLogic engine in this.ourShip.shipEngines)
+                    {
+                        sumNormalSpeed += engine.currentRailVelocity.y;
+                        sumBoostSpeed += engine.currentRailVelocity.z;
+                    }
+
+                    rotationSpeed = rotationSpeed * (sumBoostSpeed / sumNormalSpeed);
+                }
             }
             //If we're breaking and not accelerating, our rotation speed is reduced
-            else if (!this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) && !Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard) &&
-                this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) || Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+            else if (this.ourShip.isShipBreaking)
             {
-                //Variables to hold the sum of our ship engines normal speed and break speed
-                float sumNormalSpeed = 0;
-                float sumBreakSpeed = 0;
-
-                //Looping through all of our ship's engines
-                foreach (ShipEngineLogic engine in this.ourShip.shipEngines)
+                //If we have enough energy to break, we continue
+                if (this.ourShip.ourEnergy.CanUseEnergy(this.ourShip.breakEnergyCost))
                 {
-                    sumNormalSpeed += engine.currentRailVelocity.y;
-                    sumBreakSpeed += engine.currentRailVelocity.x;
-                }
+                    //Variables to hold the sum of our ship engines normal speed and break speed
+                    float sumNormalSpeed = 0;
+                    float sumBreakSpeed = 0;
 
-                rotationSpeed = rotationSpeed * (sumBreakSpeed / sumNormalSpeed);
-                Debug.Log(rotationSpeed);
+                    //Looping through all of our ship's engines
+                    foreach (ShipEngineLogic engine in this.ourShip.shipEngines)
+                    {
+                        sumNormalSpeed += engine.currentRailVelocity.y;
+                        sumBreakSpeed += engine.currentRailVelocity.x;
+                    }
+
+                    rotationSpeed = rotationSpeed * (sumBreakSpeed / sumNormalSpeed);
+                }
             }
 
             //Interpolating our rail parent's rotation to match the rotation of the zone we're entering
@@ -572,14 +583,12 @@ public class RailMovementFlight : MonoBehaviour
         float thrustInput = 0;
 
         //Getting the input based on the boost input
-        if (this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.boostButton_Controller) ||
-            Input.GetKey(this.ourShip.ourCustomInputs.boostButton_Keyboard))
+        if (this.ourShip.isShipBoosting)
         {
             thrustInput += 1;
         }
         //Getting the input based on the break input
-        else if(this.ourShip.ourController.CheckButtonDown(this.ourShip.ourCustomInputs.breakButton_Controller) ||
-            Input.GetKey(this.ourShip.ourCustomInputs.breakButton_Keyboard))
+        else if(this.ourShip.isShipBreaking)
         {
             thrustInput -= 1;
         }
@@ -591,372 +600,98 @@ public class RailMovementFlight : MonoBehaviour
     //Function called from MoveShip to rotate the player ship's model
     private void RotateShipModel(Vector2 playerInputs_)
     {
-        /*/Float to hold the player ship's X rotation (pitch)
-        float xRot = 0;
-
-        //Getting the angle of our x rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
-        float correctedXRotation = this.ourShip.xGyroscope.localEulerAngles.x;
-        if (correctedXRotation > 180)
+        //If we're not rolling or tilting, we rotate our ship's Z rotation
+        if (!this.ourShip.isShipTilting)
         {
-            correctedXRotation -= 360;
-        }
+            //Float to hold the player ship's Z rotation (roll)
+            float zRot = 0;
 
-        //If our X input (Y stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
-        if (playerInputs_.y > 0.1f || playerInputs_.y < -0.1f)
-        {
-            xRot = -this.maxRotationChange.x * playerInputs_.y;
-
-            //If the ship's X rotation is above the max, we cap it off
-            if (correctedXRotation >= this.maxShipRotation.x)
+            //Getting the angle of our z rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
+            float correctedZRotation = this.ourShip.zGyroscope.localEulerAngles.z;
+            if (correctedZRotation > 180)
             {
-                xRot = this.maxShipRotation.x - correctedXRotation;
+                correctedZRotation -= 360;
             }
-            //If the ship's X rotation is below the min, we cap it off
-            else if (correctedXRotation <= -this.maxShipRotation.x)
+
+            //If our Z input (X stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
+            if (playerInputs_.x > this.deadzone || playerInputs_.x < -this.deadzone)
             {
-                xRot = -this.maxShipRotation.x - correctedXRotation;
-            }
-        }
-        //If our X input is inside the input deadzone and our gyroscope's x rotation isn't 0, we need to correct it
-        else if(correctedXRotation != 0)
-        {
-            //If our x rotation is above 0, we need to ease it down
-            if(correctedXRotation > 0)
-            {
-                //If the angle is greater than our level out rotation, we use all of the rotation we can
-                if (correctedXRotation > this.levelOutRotation.x)
+                zRot = -this.maxRotationChange.z * playerInputs_.x;
+
+                //If the ship's Z rotation is above the max, we cap it off
+                if (correctedZRotation >= this.maxShipRotation.z)
                 {
-                    xRot = -this.levelOutRotation.x;
+                    //If the difference is greater than the level out angle, we angle back to the max
+                    if (correctedZRotation - this.maxShipRotation.z <= this.levelOutRotation.z)
+                    {
+                        zRot = this.maxShipRotation.z - correctedZRotation;
+                    }
+                    //Otherwise we zero out as much as possible
+                    else
+                    {
+                        zRot = -this.levelOutRotation.z;
+                    }
                 }
-                //If the angle is less than our level out rotation, we make sure not to over correct
+                //If the ship's Z rotation is below the min, we cap it off
+                else if (correctedZRotation <= -this.maxShipRotation.z)
+                {
+                    //If the difference is less than the negative level out angle, we angle back to the max
+                    if (correctedZRotation + this.maxShipRotation.z >= -this.levelOutRotation.z)
+                    {
+                        zRot = -this.maxShipRotation.z - correctedZRotation;
+                    }
+                    //Otherwise we zero out as much as possible
+                    else
+                    {
+                        zRot = this.levelOutRotation.z;
+                    }
+                }
+            }
+            //If our Z input is inside the input deadzone and our gyroscope's z rotation isn't 0, we need to correct it
+            else if (correctedZRotation != 0)
+            {
+                //If our z rotation is above 0, we need to ease it down
+                if (correctedZRotation > 0)
+                {
+                    //If the angle is greater than our level out rotation, we use all of the rotation we can
+                    if (correctedZRotation > this.levelOutRotation.z)
+                    {
+                        zRot = -this.levelOutRotation.z;
+                    }
+                    //If the angle is less than our level out rotation, we make sure not to over correct
+                    else
+                    {
+                        zRot = -correctedZRotation;
+                    }
+                }
+                //If our z rotation is below 0, we need to ease it up
                 else
                 {
-                    xRot = -correctedXRotation;
+                    //If the angle is greater than our level out rotation, we use all of the rotation we can
+                    if (correctedZRotation < this.levelOutRotation.z)
+                    {
+                        zRot = this.levelOutRotation.z;
+                    }
+                    //If the angle is less than our level out rotation, we make sure not to over correct
+                    else
+                    {
+                        zRot = correctedZRotation;
+                    }
                 }
             }
-            //If our x rotation is below 0, we need to ease it up
-            else
+
+            //Adjusting our ship's Z gyroscope to rotate with these inputs
+            this.ourShip.zGyroscope.localEulerAngles += new Vector3(0, 0, zRot);
+
+
+            //Updating our corrected rotation
+            correctedZRotation = this.ourShip.zGyroscope.localEulerAngles.z;
+            if (correctedZRotation > 180)
             {
-                //If the angle is greater than our level out rotation, we use all of the rotation we can
-                if (correctedXRotation < this.levelOutRotation.x)
-                {
-                    xRot = this.levelOutRotation.x;
-                }
-                //If the angle is less than our level out rotation, we make sure not to over correct
-                else
-                {
-                    xRot = correctedXRotation;
-                }
+                correctedZRotation -= 360;
             }
         }
 
-
-
-        //Float to hold the player ship's Y rotation (yaw)
-        float yRot = 0;
-
-        //Getting the angle of our y rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
-        float correctedYRotation = this.ourShip.yGyroscope.localEulerAngles.y;
-        if (correctedYRotation > 180)
-        {
-            correctedYRotation -= 360;
-        }
-        
-        //If our Y input (X stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
-        if (playerInputs_.x > 0.1f || playerInputs_.x < -0.1f)
-        {
-            yRot = -this.maxRotationChange.y * playerInputs_.x;
-
-            //If the ship's Y rotation is above the max, we cap it off
-            if (correctedYRotation >= this.maxShipRotation.y)
-            {
-                yRot = this.maxShipRotation.y - correctedYRotation;
-            }
-            //If the ship's Y rotation is below the min, we cap it off
-            else if (correctedYRotation <= -this.maxShipRotation.y)
-            {
-                yRot = -this.maxShipRotation.y - correctedYRotation;
-            }
-        }
-        //If our Y input is inside the input deadzone and our gyroscope's y rotation isn't 0, we need to correct it
-        else if(correctedYRotation != 0)
-        {
-            //If our y rotation is above 0, we need to ease it down
-            if (correctedYRotation > 0)
-            {
-                //If the angle is greater than our level out rotation, we use all of the rotation we can
-                if (correctedYRotation > this.levelOutRotation.y)
-                {
-                    yRot = -this.levelOutRotation.y;
-                }
-                //If the angle is less than our level out rotation, we make sure not to over correct
-                else
-                {
-                    yRot = -correctedYRotation;
-                }
-            }
-            //If our y rotation is below 0, we need to ease it up
-            else
-            {
-                //If the angle is greater than our level out rotation, we use all of the rotation we can
-                if (correctedYRotation < this.levelOutRotation.y)
-                {
-                    yRot = this.levelOutRotation.y;
-                }
-                //If the angle is less than our level out rotation, we make sure not to over correct
-                else
-                {
-                    yRot = correctedYRotation;
-                }
-            }
-        }
-        */
-
-
-        //Float to hold the player ship's Z rotation (roll)
-        float zRot = 0;
-
-        //Getting the angle of our z rotation between -180 and 180 (Unity handles it between 0 and 359.99 which throws things off)
-        float correctedZRotation = this.ourShip.zGyroscope.localEulerAngles.z;
-        if (correctedZRotation > 180)
-        {
-            correctedZRotation -= 360;
-        }
-        
-        //If our Z input (X stick axis) is outside the input deadzone (-0.1 - 0.1), we rotate the ship
-        if (playerInputs_.x > this.deadzone || playerInputs_.x < -this.deadzone)
-        {
-            zRot = -this.maxRotationChange.z * playerInputs_.x;
-            
-            //If the ship's Z rotation is above the max, we cap it off
-            if (correctedZRotation >= this.maxShipRotation.z)
-            {
-                zRot = this.maxShipRotation.z - correctedZRotation;
-            }
-            //If the ship's Z rotation is below the min, we cap it off
-            else if (correctedZRotation <= -this.maxShipRotation.z)
-            {
-                zRot = -this.maxShipRotation.z - correctedZRotation;
-            }
-        }
-        //If our Z input is inside the input deadzone and our gyroscope's z rotation isn't 0, we need to correct it
-        else if(correctedZRotation != 0)
-        {
-            //If our z rotation is above 0, we need to ease it down
-            if (correctedZRotation > 0)
-            {
-                //If the angle is greater than our level out rotation, we use all of the rotation we can
-                if (correctedZRotation > this.levelOutRotation.z)
-                {
-                    zRot = -this.levelOutRotation.z;
-                }
-                //If the angle is less than our level out rotation, we make sure not to over correct
-                else
-                {
-                    zRot = -correctedZRotation;
-                }
-            }
-            //If our z rotation is below 0, we need to ease it up
-            else
-            {
-                //If the angle is greater than our level out rotation, we use all of the rotation we can
-                if (correctedZRotation < this.levelOutRotation.z)
-                {
-                    zRot = this.levelOutRotation.z;
-                }
-                //If the angle is less than our level out rotation, we make sure not to over correct
-                else
-                {
-                    zRot = correctedZRotation;
-                }
-            }
-        }
-        
-
-        //Adjusting our ship's gyroscope to rotate with these inputs
-        //this.ourShip.xGyroscope.localEulerAngles += new Vector3(xRot, 0, 0);
-        //this.ourShip.yGyroscope.localEulerAngles += new Vector3(0, yRot, 0);
-        this.ourShip.zGyroscope.localEulerAngles += new Vector3(0, 0, zRot);
-
-
-        //Updating our corrected rotations
-        /*correctedXRotation = this.ourShip.xGyroscope.localEulerAngles.x;
-        if (correctedXRotation > 180)
-        {
-            correctedXRotation -= 360;
-        }
-        correctedYRotation = this.ourShip.yGyroscope.localEulerAngles.y;
-        if (correctedYRotation > 180)
-        {
-            correctedYRotation -= 360;
-        }*/
-        correctedZRotation = this.ourShip.zGyroscope.localEulerAngles.z;
-        if (correctedZRotation > 180)
-        {
-            correctedZRotation -= 360;
-        }
-
-
-        //Making sure our X rotation isn't past the max or min
-        /*if (correctedXRotation > this.maxShipRotation.x)
-        {
-            this.ourShip.xGyroscope.localEulerAngles = new Vector3(this.maxShipRotation.x, 0, 0);
-        }
-        else if(correctedXRotation < -this.maxShipRotation.x)
-        {
-            this.ourShip.xGyroscope.localEulerAngles = new Vector3(360 - this.maxShipRotation.x, 0, 0);
-        }
-
-        //Making sure our Y rotation isn't past the max or min
-        if(correctedYRotation > this.maxShipRotation.y)
-        {
-            this.ourShip.yGyroscope.localEulerAngles = new Vector3(0, this.maxShipRotation.y, 0);
-        }
-        else if(correctedYRotation < -this.maxShipRotation.y)
-        {
-            this.ourShip.yGyroscope.localEulerAngles = new Vector3(0, 360 - this.maxShipRotation.y, 0);
-        }
-        */
-        //Making sure our Z rotation isn't past the max or min
-        if(correctedZRotation > this.maxShipRotation.z)
-        {
-            this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, this.maxShipRotation.z);
-        }
-        else if(correctedZRotation < -this.maxShipRotation.z)
-        {
-            this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, 360 - this.maxShipRotation.z);
-        }
-
-
-        /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
-        //Variables to hold the change in position for the target rotation object
-        /*float xChange = 0;
-        float yChange = 0;
-
-        //If the X input is outside the deadzone
-        if(playerInputs_.x > this.deadzone || playerInputs_.x < -this.deadzone)
-        {
-            xChange = playerInputs_.x * this.targetRotObjXSpeed;
-        }
-        //If the X input is in the deadzone, we need to level out toward the center
-        else
-        {
-            //If the target rotation object's x position is positive, we need to go negative
-            if(this.targetRotationObj.localPosition.x > 0)
-            {
-                //If the position's value is greater than the level-out value, we don't want to go over
-                if (this.targetRotationObj.localPosition.x < this.levelOutRotation.x)
-                {
-                    xChange = -this.targetRotationObj.localPosition.x;
-                }
-                else
-                {
-                    xChange = -this.levelOutRotation.x;
-                }
-            }
-            //If the target rotation object's x position is negative, we need to go positive
-            else if(this.targetRotationObj.localPosition.x < 0)
-            {
-                //If the position's value is greater than the level-out value, we don't want to go over
-                if (this.targetRotationObj.localPosition.x > -this.levelOutRotation.x)
-                {
-                    xChange = -this.targetRotationObj.localPosition.x;
-                }
-                else
-                {
-                    xChange = this.levelOutRotation.x;
-                }
-            }
-        }
-
-        //If the Y input is outside the positive deadzone
-        if(playerInputs_.y > this.deadzone)
-        {
-            yChange = playerInputs_.y * this.targetRotObjUpDownSpeed.x;
-
-            //If the target rotation object's position is above 0, we need to ease down on the velocity
-            if(targetRotationObj.localPosition.y > 0)
-            {
-                //Calculating the maximum y change we can apply so that it's reduced based on how close we get to the cap
-                float maxYChangeMultiplier = 1 - ((this.targetRotObjMaxXY.y - targetRotationObj.localPosition.y) / this.targetRotObjMaxXY.y);
-            }
-        }
-        //If the Y input is outside the negative deadzone
-        else if(playerInputs_.y < -this.deadzone)
-        {
-            yChange = playerInputs_.y * this.targetRotObjUpDownSpeed.y;
-        }
-        //If the Y input is in the deadzone, we need to level out toward the center
-        else
-        {
-            //If the target rotation object's y position is positive, we need to go negative
-            if (this.targetRotationObj.localPosition.y > 0)
-            {
-                //If the position's value is greater than the level-out value, we don't want to go over
-                if (this.targetRotationObj.localPosition.y < this.levelOutRotation.y)
-                {
-                    yChange = -this.targetRotationObj.localPosition.y;
-                }
-                else
-                {
-                    yChange = -this.levelOutRotation.y;
-                }
-            }
-            //If the target rotation object's y position is negative, we need to go positive
-            else if(this.targetRotationObj.localPosition.y < 0)
-            {
-                //If the position's value is greater than the level-out value, we don't want to go over
-                if (this.targetRotationObj.localPosition.y > -this.levelOutRotation.y)
-                {
-                    yChange = -this.targetRotationObj.localPosition.y;
-                }
-                else
-                {
-                    yChange = this.levelOutRotation.y;
-                }
-            }
-        }
-
-        //Setting the target rotation object's relative position based on inputs
-        this.targetRotationObj.localPosition += new Vector3(xChange, yChange, 0);
-
-        //Finding the angle that the movement joystick is making so we can constrain the target rotation object's max positions to be an oval
-        float joystickAngle = Mathf.Atan2(playerInputs_.y, playerInputs_.x);
-        //Finding the magnitude of the joystick's input using the pythagorean theorum
-        float joystickMagnitude = Mathf.Sqrt((playerInputs_.x * playerInputs_.x) + (playerInputs_.y * playerInputs_.y));
-
-        //Creating multipliers for the max XY positions for the target rotation obj so that it stays within a circle
-        float maxXRadial = this.targetRotObjMaxXY.x * Mathf.Cos(joystickAngle);
-        float maxYRadial = this.targetRotObjMaxXY.y * Mathf.Sin(joystickAngle);
-        
-        //Making sure the X positions aren't past their max positions
-        if(this.targetRotationObj.localPosition.x > maxXRadial && playerInputs_.x > 0)
-        {
-            this.targetRotationObj.localPosition = new Vector3(maxXRadial, //used to be targetrotobjmaxxy.x
-                                                                this.targetRotationObj.localPosition.y,
-                                                                this.targetRotationObj.localPosition.z);
-        }
-        else if(this.targetRotationObj.localPosition.x < maxXRadial && playerInputs_.x < 0)
-        {
-            this.targetRotationObj.localPosition = new Vector3(maxXRadial, //used to be -targetrotobjmaxxy.x
-                                                                this.targetRotationObj.localPosition.y,
-                                                                this.targetRotationObj.localPosition.z);
-        }
-        //Making sure the Y positions aren't past their max positions
-        if (this.targetRotationObj.localPosition.y > maxYRadial && playerInputs_.y > 0)
-        {
-            this.targetRotationObj.localPosition = new Vector3(this.targetRotationObj.localPosition.x,
-                                                                maxYRadial,//used to be targetrotobjmaxxy.y
-                                                                this.targetRotationObj.localPosition.z);
-        }
-        else if (this.targetRotationObj.localPosition.y < maxYRadial && playerInputs_.y < 0)
-        {
-            this.targetRotationObj.localPosition = new Vector3(this.targetRotationObj.localPosition.x,
-                                                                maxYRadial, //used to be targetrotobjmaxxy.y
-                                                                this.targetRotationObj.localPosition.z);
-        }
-        */
         //Rotating our ship to face the target rotation object
         Quaternion lookRotation = Quaternion.LookRotation(this.targetRotationObj.position - this.ourShip.xGyroscope.position);
         this.ourShip.xGyroscope.transform.localRotation = Quaternion.Lerp(this.ourShip.xGyroscope.rotation, lookRotation, 1);

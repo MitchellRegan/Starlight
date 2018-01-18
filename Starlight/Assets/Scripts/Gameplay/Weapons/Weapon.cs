@@ -76,7 +76,7 @@ public class Weapon : MonoBehaviour
 
     
     //Function called externally to add ammo to this weapon
-    public void RefillAmmo(int amountToAdd_)
+    public virtual void RefillAmmo(int amountToAdd_)
     {
         //Adding the amount to our current ammo supply
         this.currentAmmo += amountToAdd_;
