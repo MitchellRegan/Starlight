@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Weapon))]
-public class EnemyTurret : HealthAndArmor
+[RequireComponent(typeof(HealthAndArmor))]
+public class EnemyTurret : MonoBehaviour
 {
-    [Space(8)]
-
     //This enemy's weapon reference
     private Weapon ourWeapon;
 
