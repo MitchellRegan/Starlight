@@ -619,12 +619,40 @@ public class RailMovementFlight : MonoBehaviour
                 zRot = -this.maxRotationChange.z * playerInputs_.x;
 
                 //If the ship's Z rotation is above the max, we cap it off
-                if (correctedZRotation >= this.maxShipRotation.z)
+                if (correctedZRotation > this.maxShipRotation.z)
+                {
+                    //If the difference is greater than the level out angle, we angle back to the max
+                    if (correctedZRotation - this.maxShipRotation.z <= this.levelOutRotation.z)
+                    {
+                        zRot = this.maxShipRotation.z - correctedZRotation;
+                    }
+                    //Otherwise we zero out as much as possible
+                    else
+                    {
+                        zRot = -this.levelOutRotation.z;
+                    }
+                }
+                //If the added z rotation will put our ship's Z rotation above the max, we make sure it doesn't
+                else if(correctedZRotation + zRot > this.maxShipRotation.z)
                 {
                     zRot = this.maxShipRotation.z - correctedZRotation;
                 }
                 //If the ship's Z rotation is below the min, we cap it off
-                else if (correctedZRotation <= -this.maxShipRotation.z)
+                else if (correctedZRotation < -this.maxShipRotation.z)
+                {
+                    //If the difference is less than the negative level out angle, we angle back to the max
+                    if (correctedZRotation + this.maxShipRotation.z >= -this.levelOutRotation.z)
+                    {
+                        zRot = -this.maxShipRotation.z - correctedZRotation;
+                    }
+                    //Otherwise we zero out as much as possible
+                    else
+                    {
+                        zRot = this.levelOutRotation.z;
+                    }
+                }
+                //If the added z rotation will put our ship's Z rotation below the max, we make sure it doesn't
+                else if(correctedZRotation + zRot < -this.maxShipRotation.z)
                 {
                     zRot = -this.maxShipRotation.z - correctedZRotation;
                 }
@@ -671,15 +699,6 @@ public class RailMovementFlight : MonoBehaviour
             if (correctedZRotation > 180)
             {
                 correctedZRotation -= 360;
-            }
-            //Making sure our Z rotation isn't past the max or min
-            if (correctedZRotation > this.maxShipRotation.z)
-            {
-                this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, this.maxShipRotation.z);
-            }
-            else if (correctedZRotation < -this.maxShipRotation.z)
-            {
-                this.ourShip.zGyroscope.localEulerAngles = new Vector3(0, 0, 360 - this.maxShipRotation.z);
             }
         }
 

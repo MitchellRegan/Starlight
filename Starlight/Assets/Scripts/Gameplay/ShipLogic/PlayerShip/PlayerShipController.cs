@@ -153,11 +153,13 @@ public class PlayerShipController : MonoBehaviour
         {
             this.mainWeapon.objectIDType = AttackerID.Player1;
             this.secondaryWeapon.objectIDType = AttackerID.Player1;
+            this.shipCockpit.objectIDType = AttackerID.Player1;
         }
         else
         {
             this.mainWeapon.objectIDType = AttackerID.Player2;
             this.secondaryWeapon.objectIDType = AttackerID.Player2;
+            this.shipCockpit.objectIDType = AttackerID.Player2;
         }
         foreach (ShipWingLogic wing in this.shipWings)
         {
@@ -181,6 +183,7 @@ public class PlayerShipController : MonoBehaviour
                 engine.objectIDType = AttackerID.Player2;
             }
         }
+
     }
 
 
