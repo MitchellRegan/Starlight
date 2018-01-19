@@ -69,7 +69,7 @@ public class ExplosionLogic : MonoBehaviour
         {
             return;
         }
-        
+
         //If the object we hit has a health and armor component, we might be able to damage it
         if (collider_.gameObject.GetComponent<HealthAndArmor>())
         {
