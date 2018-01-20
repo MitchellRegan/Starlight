@@ -619,7 +619,7 @@ public class RailMovementFlight : MonoBehaviour
                 zRot = -this.maxRotationChange.z * playerInputs_.x;
 
                 //If the ship's Z rotation is above the max, we cap it off
-                if (correctedZRotation >= this.maxShipRotation.z)
+                if (correctedZRotation > this.maxShipRotation.z)
                 {
                     //If the difference is greater than the level out angle, we angle back to the max
                     if (correctedZRotation - this.maxShipRotation.z <= this.levelOutRotation.z)
@@ -632,8 +632,13 @@ public class RailMovementFlight : MonoBehaviour
                         zRot = -this.levelOutRotation.z;
                     }
                 }
+                //If the added z rotation will put our ship's Z rotation above the max, we make sure it doesn't
+                else if(correctedZRotation + zRot > this.maxShipRotation.z)
+                {
+                    zRot = this.maxShipRotation.z - correctedZRotation;
+                }
                 //If the ship's Z rotation is below the min, we cap it off
-                else if (correctedZRotation <= -this.maxShipRotation.z)
+                else if (correctedZRotation < -this.maxShipRotation.z)
                 {
                     //If the difference is less than the negative level out angle, we angle back to the max
                     if (correctedZRotation + this.maxShipRotation.z >= -this.levelOutRotation.z)
@@ -645,6 +650,11 @@ public class RailMovementFlight : MonoBehaviour
                     {
                         zRot = this.levelOutRotation.z;
                     }
+                }
+                //If the added z rotation will put our ship's Z rotation below the max, we make sure it doesn't
+                else if(correctedZRotation + zRot < -this.maxShipRotation.z)
+                {
+                    zRot = -this.maxShipRotation.z - correctedZRotation;
                 }
             }
             //If our Z input is inside the input deadzone and our gyroscope's z rotation isn't 0, we need to correct it
