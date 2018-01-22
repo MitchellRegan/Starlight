@@ -457,28 +457,12 @@ public class RailMovementFlight : MonoBehaviour
         {
             localVelocity.x *= this.xVelocityDrag;
             this.ourRigidbody.velocity = this.ourRigidbody.transform.TransformDirection(localVelocity);
-            /*Vector3 velocityToRemove = (1 - this.xVelocityDrag) * this.railRightDirection;
-            velocityToRemove = new Vector3(velocityToRemove.x * this.ourRigidbody.velocity.x,
-                                            velocityToRemove.y * this.ourRigidbody.velocity.y,
-                                            velocityToRemove.z * this.ourRigidbody.velocity.z);
-            this.ourRigidbody.AddForce(-velocityToRemove);*/
-            /*this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x * this.xVelocityDrag,
-                                                    this.ourRigidbody.velocity.y,
-                                                    0);// this.ourRigidbody.velocity.z);*/
         }
         //If there's no Y input, we apply drag to the Y velocity
         if(movementInput.y < 0.1f && movementInput.y > -0.1f)
         {
             localVelocity.y *= this.yVelocityDrag;
             this.ourRigidbody.velocity = this.ourRigidbody.transform.TransformDirection(localVelocity);
-            /*Vector3 velocityToRemove = (1 - this.yVelocityDrag) * this.railUpDirection;
-            velocityToRemove = new Vector3(velocityToRemove.x * this.ourRigidbody.velocity.x,
-                                            velocityToRemove.y * this.ourRigidbody.velocity.y,
-                                            velocityToRemove.z * this.ourRigidbody.velocity.z);
-            this.ourRigidbody.AddForce(-velocityToRemove);*/
-            /*this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
-                                                    this.ourRigidbody.velocity.y * this.yVelocityDrag,
-                                                    0);// this.ourRigidbody.velocity.z);*/
         }
 
         //Making sure the X velocity is within the min/max
@@ -487,34 +471,22 @@ public class RailMovementFlight : MonoBehaviour
         {
             localVelocity.x = this.maxLeftRightVelocity;
             this.ourRigidbody.velocity = this.ourRigidbody.transform.TransformDirection(localVelocity);
-            /*this.ourRigidbody.velocity = new Vector3(this.maxLeftRightVelocity,
-                                                    this.ourRigidbody.velocity.y,
-                                                    0);// this.ourRigidbody.velocity.z);*/
         }
         else if(localVelocity.x < -this.maxLeftRightVelocity)
         {
             localVelocity.x = -this.maxLeftRightVelocity;
             this.ourRigidbody.velocity = this.ourRigidbody.transform.TransformDirection(localVelocity);
-            /*this.ourRigidbody.velocity = new Vector3(-this.maxLeftRightVelocity,
-                                                    this.ourRigidbody.velocity.y,
-                                                    0);// this.ourRigidbody.velocity.z);*/
         }
         //Making sure the Y velocity is within the min/max
         if (localVelocity.y > this.maxUpDownVelocities.x)
         {
             localVelocity.y = this.maxUpDownVelocities.x;
             this.ourRigidbody.velocity = this.ourRigidbody.transform.TransformDirection(localVelocity);
-            /*this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
-                                                    this.maxUpDownVelocities.x,
-                                                    0);// this.ourRigidbody.velocity.z);*/
         }
         else if(localVelocity.y < -this.maxUpDownVelocities.y)
         {
             localVelocity.y = -this.maxUpDownVelocities.y;
             this.ourRigidbody.velocity = this.ourRigidbody.transform.TransformDirection(localVelocity);
-            /*this.ourRigidbody.velocity = new Vector3(this.ourRigidbody.velocity.x,
-                                                    -this.maxUpDownVelocities.y,
-                                                    0);// this.ourRigidbody.velocity.z);*/
         }
     }
 
@@ -730,6 +702,6 @@ public class RailMovementFlight : MonoBehaviour
         //Rotating our ship to face the target rotation object
         Quaternion lookRotation = Quaternion.LookRotation(this.targetRotationObj.position - this.ourShip.xGyroscope.position);
         this.ourShip.xGyroscope.transform.rotation = Quaternion.Lerp(this.ourShip.xGyroscope.rotation, lookRotation, 1);
-        //this.ourShip.xGyroscope.localEulerAngles = new Vector3(this.ourShip.xGyroscope.localEulerAngles.x, 0, 0);
+        this.ourShip.xGyroscope.localEulerAngles = new Vector3(this.ourShip.xGyroscope.localEulerAngles.x, this.ourShip.xGyroscope.localEulerAngles.y, 0);
     }
 }
