@@ -42,6 +42,14 @@ public class UITargetingReticle : MonoBehaviour
                 this.farObj = TargetPoint.p1Far;
                 break;
         }
+
+        //If either are null, we disable this script
+        if(this.closeObj == null || this.farObj == null)
+        {
+            this.closeTargetImage.enabled = false;
+            this.farTargetImage.enabled = false;
+            this.enabled = false;
+        }
 	}
 	
 
