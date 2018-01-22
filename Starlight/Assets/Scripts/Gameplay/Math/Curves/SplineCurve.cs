@@ -15,3 +15,5 @@ public class SplineCurve : MonoBehaviour
     [Range(0, 20)]
     public int segments = 3;
 }
+
+
