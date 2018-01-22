@@ -16,6 +16,10 @@ public class BezierCurveInspector : Editor
     //The rotation of our handle
     private Quaternion handleRotation;
 
+    //Constant float to scale the curve
+    private const float directionScale = 0.5f;
+
+
 
     //Function called when the GUI is displayed
     private void OnSceneGUI()
@@ -31,24 +35,15 @@ public class BezierCurveInspector : Editor
         Vector3 p0 = this.ShowPoint(0);
         Vector3 p1 = this.ShowPoint(1);
         Vector3 p2 = this.ShowPoint(2);
+        Vector3 p3 = this.ShowPoint(3);
 
         //Drawing lines connecting each point
-        Handles.color = Color.white;
+        Handles.color = this.curve.handleLineColor;
         Handles.DrawLine(p0, p1);
-        Handles.DrawLine(p1, p2);
+        Handles.DrawLine(p2, p3);
 
-        //Drawing the actual bezier curve
-        Handles.color = Color.red;
-        Vector3 lineStart = this.curve.GetPoint(0f);
-        //Looping through each step in the curve segment
-        for(int i = 1; i <= lineSteps; i++)
-        {
-            Vector3 lineEnd = this.curve.GetPoint(i / (float)lineSteps);
-            Handles.DrawLine(lineStart, lineEnd);
-            Handles.color = Color.green;
-            Handles.DrawLine(lineEnd, lineEnd + this.curve.GetVelocity(i / (float)lineSteps));
-            lineStart = lineEnd;
-        }
+        this.ShowDirections();
+        Handles.DrawBezier(p0, p3, p1, p2, this.curve.curveColor, null, 2f);
     }
 
 
@@ -70,5 +65,19 @@ public class BezierCurveInspector : Editor
         }
 
         return point;
+    }
+
+
+    //Function called from OnSceneGUI
+    private void ShowDirections()
+    {
+        Handles.color = this.curve.velocityLineColor;
+        Vector3 point = this.curve.GetPoint(0f);
+        Handles.DrawLine(point, point + this.curve.GetDirection(0f) * directionScale);
+        for(int i = 1; i <= lineSteps; i++)
+        {
+            point = this.curve.GetPoint(i / (float)lineSteps);
+            Handles.DrawLine(point, point + this.curve.GetDirection(i / (float)lineSteps * directionScale));
+        }
     }
 }
