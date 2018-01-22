@@ -46,9 +46,9 @@ public class BezierCurve : MonoBehaviour
 
 
     //Function called externally from BezierCurveInspector.cs to get the normalized velocity
-    public Vector3 GetDirection(float t)
+    public Vector3 GetDirection(float t_)
     {
-        return GetVelocity(t).normalized;
+        return this.GetVelocity(t_).normalized;
     }
 }
 
