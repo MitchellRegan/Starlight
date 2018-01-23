@@ -16,18 +16,62 @@ public class MoveAlongSpline : MonoBehaviour
     //Bool that determines if this object rotates to face the direction of the spline
     public bool rotateToFollowSpline = true;
 
+    //Enum to determine what happens when this object reaches the end of the spline
+    public enum SplineEndBehavior
+    {
+        Stop,
+        Loop,
+        PingPong
+    }
+    public SplineEndBehavior endBehavior = SplineEndBehavior.Stop;
+
+    //Bool for if this object is progressing forward or backwards along this spline
+    private bool isMovingForward = true;
+
         
 
 	// Update is called once per frame
 	private void Update ()
     {
-        //Increasing our current time
-        this.currentTime += Time.deltaTime;
-
-        //If we reach the time to complete, we make sure we don't go over
-        if(this.currentTime > this.timeToComplete)
+        //If this object is moving forward along the spline
+        if (this.isMovingForward)
         {
-            this.currentTime = this.timeToComplete;
+            //Increasing our current time
+            this.currentTime += Time.deltaTime;
+
+            //If we reach the time to complete, we make sure we don't go over
+            if (this.currentTime > this.timeToComplete)
+            {
+                //If our end behavior is "Stop", we stop moving
+                if (this.endBehavior == SplineEndBehavior.Stop)
+                {
+                    this.currentTime = this.timeToComplete;
+                }
+                //If our end behavior is "Loop", we cycle back to the beginning
+                else if(this.endBehavior == SplineEndBehavior.Loop)
+                {
+                    this.currentTime -= this.timeToComplete;
+                }
+                //If our end behavior is "PingPong", we reverse direction
+                else
+                {
+                    this.currentTime = (2 * this.timeToComplete) - this.currentTime;
+                    this.isMovingForward = false;
+                }
+            }
+        }
+        //If this object is moving backward along the spline
+        else
+        {
+            //Decreasing our current time
+            this.currentTime -= Time.deltaTime;
+
+            //If we reach time 0, we reverse direction
+            if(this.currentTime < 0)
+            {
+                this.currentTime = -this.currentTime;
+                this.isMovingForward = true;
+            }
         }
 
         //Setting our transform to the correct percent along the spline based on the time completed

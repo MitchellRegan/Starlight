@@ -16,8 +16,15 @@ public class BezierSpline : MonoBehaviour
     public Color velocityLineColor = Color.yellow;
 
     //The list of control points that make up this spline
-    //[SerializeField]
-    private Vector3[] points;
+    [HideInInspector]
+    [SerializeField]
+    private Vector3[] points =
+    {
+        new Vector3(0f, 0f, 0f),
+        new Vector3(3f, 0f, 0f),
+        new Vector3(6f, 0f, 0f),
+        new Vector3(9f, 0f, 0f)
+    };
 
     //Enum for what mode the control points will be in
     public enum BezierControlPointMode
@@ -28,7 +35,13 @@ public class BezierSpline : MonoBehaviour
     }
 
     //An array of BezierControlPointMode enums for each of our control points
-    private BezierControlPointMode[] modes;
+    [HideInInspector]
+    [SerializeField]
+    private BezierControlPointMode[] modes =
+    {
+        BezierControlPointMode.Free,
+        BezierControlPointMode.Free
+    };
 
     //Bool that determines if this spline loops back around to the start point
     private bool loop = false;
@@ -194,8 +207,8 @@ public class BezierSpline : MonoBehaviour
         //Setting our default control modes for the newly added points
         this.modes = new BezierControlPointMode[]
         {
-            BezierControlPointMode.Free,
-            BezierControlPointMode.Free
+            BezierControlPointMode.Aligned,
+            BezierControlPointMode.Aligned
         };
     }
 
