@@ -30,7 +30,10 @@ public class BezierSpline : MonoBehaviour
     //An array of BezierControlPointMode enums for each of our control points
     private BezierControlPointMode[] modes;
 
+    //Bool that determines if this spline loops back around to the start point
+    private bool loop = false;
 
+    
 
     //Accessor function to get the length of our points list
     public int ControlPointCount
@@ -62,6 +65,57 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to set the position of a control point at the given index
     public void SetControlPoint(int index_, Vector3 point_)
     {
+        //If the point at the given index is a center control point
+        if(index_ % 3 == 0)
+        {
+            //Finding the distance that this point is being moved
+            Vector3 delta = point_ - this.points[index_];
+
+            //If this spline loops back around
+            if (this.loop)
+            {
+                //If this control point is the first point in the spline
+                if(index_ == 0)
+                {
+                    //Moving the next control point (this point's handle), the last control point in the spline, and the last point's handle
+                    this.points[1] += delta;
+                    this.points[this.points.Length - 1] = point_;
+                    this.points[this.points.Length - 2] += delta;
+                }
+                //If this control point is the last point in the spline
+                else if(index_ == this.points.Length - 1)
+                {
+                    //Moving the previous control point (this point's handle), the first control point in the spline, and the first point's handle
+                    this.points[0] = point_;
+                    this.points[1] += delta;
+                    this.points[this.points.Length - 1] += delta;
+                }
+                //If this control point is somewhere between the start and end points
+                else
+                {
+                    //Moving both of these control point's handles
+                    this.points[index_ - 1] += delta;
+                    this.points[index_ + 1] += delta;
+                }
+            }
+            //If this spline doesn't loop
+            else
+            {
+                //If the point isn't the starting point of the spline
+                if (index_ > 0)
+                {
+                    //We move the previous control point handle the same distance as this control point
+                    this.points[index_ - 1] += delta;
+                }
+                //If the point isn't the end point of the spline
+                if (index_ + 1 < this.points.Length)
+                {
+                    //We move the next control point handle the same distance as this control point
+                    this.points[index_ + 1] += delta;
+                }
+            }
+        }
+
         this.points[index_] = point_;
         //Enforcing the control point's mode
         this.EnforceMode(index_);
@@ -78,9 +132,50 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to set the control point mode for the point at the given index
     public void SetControlPointMode(int index_, BezierControlPointMode mode_)
     {
-        this.modes[(index_ + 1) / 3] = mode_;
+        //Getting the index for the point that controls this point's mode
+        int modeIndex = (index_ + 1) / 3;
+        this.modes[modeIndex] = mode_;
+
+        //If this spline loops
+        if(this.loop)
+        {
+            //If this control point is the first node in the spline
+            if(modeIndex == 0)
+            {
+                //We set the last control point's mode to the same mode as this one
+                this.modes[this.modes.Length - 1] = mode_;
+            }
+            //If this control point is the last node in the spline
+            else if(modeIndex == this.modes.Length - 1)
+            {
+                //We set the first control point's mode to the same mode as this one
+                this.modes[0] = mode_;
+            }
+        }
+
         //Enforcing the control point's mode
         this.EnforceMode(index_);
+    }
+
+
+    //Accessor function to designate if this spline should loop or not
+    public bool Loop
+    {
+        get
+        {
+            return this.loop;
+        }
+        set
+        {
+            this.loop = value;
+            //If we should loop this spline
+            if(value == true)
+            {
+                //We set the last control point mode to the same as the first point's mode
+                this.modes[this.modes.Length - 1] = this.modes[0];
+                this.SetControlPoint(0, this.points[0]);
+            }
+        }
     }
 
 
@@ -91,9 +186,9 @@ public class BezierSpline : MonoBehaviour
         this.points = new Vector3[]
         {
             new Vector3(0f, 0f, 0f),
-            new Vector3(1f, 0f, 0f),
-            new Vector3(2f, 0f, 0f),
-            new Vector3(3f, 0f, 0f)
+            new Vector3(3f, 0f, 0f),
+            new Vector3(6f, 0f, 0f),
+            new Vector3(9f, 0f, 0f)
         };
 
         //Setting our default control modes for the newly added points
@@ -176,7 +271,7 @@ public class BezierSpline : MonoBehaviour
     }
 
 
-    //
+    //Function called from AddCurve, SetControlPoint, and SetControlPointMode to make sure the handles next to each control point are behaving correctly
     private void EnforceMode(int index_)
     {
         //Getting the index of our mode for the given control point
@@ -184,7 +279,7 @@ public class BezierSpline : MonoBehaviour
         BezierControlPointMode mode = this.modes[modeIndex];
 
         //If the control mode is free or the control point is either the start or end points, nothing happens
-        if(mode == BezierControlPointMode.Free || modeIndex == 0 || modeIndex == modes.Length - 1)
+        if(mode == BezierControlPointMode.Free || !loop && (modeIndex == 0 || modeIndex == modes.Length - 1))
         {
             return;
         }
@@ -198,12 +293,28 @@ public class BezierSpline : MonoBehaviour
         if(index_ <= middleIndex)
         {
             fixedIndex = middleIndex - 1;
+            if(fixedIndex < 0)
+            {
+                fixedIndex = this.points.Length - 2;
+            }
             enforcedIndex = middleIndex + 1;
+            if(enforcedIndex >= this.points.Length)
+            {
+                enforcedIndex = 1;
+            }
         }
         else
         {
             fixedIndex = middleIndex + 1;
+            if(fixedIndex >= this.points.Length)
+            {
+                fixedIndex = 1;
+            }
             enforcedIndex = middleIndex - 1;
+            if(fixedIndex < 0)
+            {
+                enforcedIndex = this.points.Length - 2;
+            }
         }
 
         Vector3 middle = this.points[middleIndex];
@@ -216,6 +327,8 @@ public class BezierSpline : MonoBehaviour
             enforcedTangent = enforcedTangent.normalized * Vector3.Distance(middle, this.points[enforcedIndex]);
         }
         this.points[enforcedIndex] = middle + enforcedTangent;
+
+
     }
 
 
@@ -229,12 +342,23 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref this.points, this.points.Length + 3);
 
         //Making it so that the newly added points are offset from the previously last point
-        this.points[this.points.Length - 3].x = point.x + 1;
-        this.points[this.points.Length - 2].x = point.x + 2;
-        this.points[this.points.Length - 1].x = point.x + 3;
+        this.points[this.points.Length - 3].x = point.x + 3;
+        this.points[this.points.Length - 2].x = point.x + 6;
+        this.points[this.points.Length - 1].x = point.x + 9;
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);
         this.modes[this.modes.Length - 1] = this.modes[modes.Length - 2];
+
+        //Making sure the added handles are behaving correctly
+        this.EnforceMode(this.points.Length - 4);
+
+        //If we loop this spline, we make sure the new last point matches the first
+        if(this.loop)
+        {
+            this.points[this.points.Length - 1] = this.points[0];
+            this.modes[this.modes.Length - 1] = this.modes[0];
+            this.EnforceMode(0);
+        }
     }
 }

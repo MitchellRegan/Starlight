@@ -103,6 +103,19 @@ public class BezierSplineInspector : Editor
         //Getting the selected spline reference
         this.spline = target as BezierSpline;
 
+        //Checking for any changes with the selected spline's "loop" variable
+        EditorGUI.BeginChangeCheck();
+        bool loop = EditorGUILayout.Toggle("Loop Spline", this.spline.Loop);
+        //If the loop variable was changed
+        if(EditorGUI.EndChangeCheck())
+        {
+            //We set the selected spline to dirty so that we can save or undo changes
+            Undo.RecordObject(this.spline, "Toggle Loop");
+            EditorUtility.SetDirty(this.spline);
+            //Telling the selected spline to loop back to the first control point
+            this.spline.Loop = loop;
+        }
+
         //If we have a valid selected point index, we can allow the user to edit the selected handle's position with text
         if(this.selectedIndex >= 0 && this.selectedIndex < this.spline.ControlPointCount)
         {
@@ -161,6 +174,13 @@ public class BezierSplineInspector : Editor
             Handles.color = this.modeColors[(int)this.spline.GetControlPointMode(index_)];
 
             float size = HandleUtility.GetHandleSize(point);
+
+            //If the given index is the starting control point in the spline, we increase the size
+            if(index_ == 0)
+            {
+                size *= 2f;
+            }
+
             //Creating a handle button to designate the selected point index
             if(Handles.Button(point, this.handleRotation, size * handleSize, size * pickSize, Handles.DotCap))
             {
