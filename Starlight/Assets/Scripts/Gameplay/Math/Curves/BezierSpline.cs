@@ -43,6 +43,15 @@ public class BezierSpline : MonoBehaviour
         BezierControlPointMode.Free
     };
 
+    //An array of points that determine the Up direction for objects traveling along this spline
+    [HideInInspector]
+    [SerializeField]
+    private Vector3[] upRotationPoints =
+    {
+        new Vector3(0f, 1f, 0f),
+        new Vector3(9f, 1f, 0f)
+    };
+
     //Bool that determines if this spline loops back around to the start point
     private bool loop = false;
 
@@ -94,6 +103,7 @@ public class BezierSpline : MonoBehaviour
                     this.points[1] += delta;
                     this.points[this.points.Length - 1] = point_;
                     this.points[this.points.Length - 2] += delta;
+                    this.upRotationPoints[0] += delta;
                 }
                 //If this control point is the last point in the spline
                 else if(index_ == this.points.Length - 1)
@@ -102,6 +112,7 @@ public class BezierSpline : MonoBehaviour
                     this.points[0] = point_;
                     this.points[1] += delta;
                     this.points[this.points.Length - 1] += delta;
+                    this.upRotationPoints[this.upRotationPoints.Length - 1] += delta;
                 }
                 //If this control point is somewhere between the start and end points
                 else
@@ -109,6 +120,7 @@ public class BezierSpline : MonoBehaviour
                     //Moving both of these control point's handles
                     this.points[index_ - 1] += delta;
                     this.points[index_ + 1] += delta;
+                    this.upRotationPoints[(index_ + 1) / 3] += delta;
                 }
             }
             //If this spline doesn't loop
@@ -126,6 +138,8 @@ public class BezierSpline : MonoBehaviour
                     //We move the next control point handle the same distance as this control point
                     this.points[index_ + 1] += delta;
                 }
+
+                this.upRotationPoints[(index_ + 1) / 3] += delta;
             }
         }
 
@@ -168,6 +182,29 @@ public class BezierSpline : MonoBehaviour
 
         //Enforcing the control point's mode
         this.EnforceMode(index_);
+    }
+
+
+    //Accessor function to get the Up rotation point at the given index
+    public Vector3 GetUpRotationPoint(int index_)
+    {
+        return this.upRotationPoints[index_ / 3];
+    }
+
+
+    //Accessor function to set the Up rotatino point at the given index
+    public void SetUpRotationPoint(int index_, Vector3 point_)
+    {
+        //Finding the control point at the given index so we can find out the direction it's facing
+        int controlPointIndex = (index_ + 1) / 3;
+
+        //Getting the % progress that this control point is along the spline
+        float progress = (float)controlPointIndex / (float)(this.points.Length - 1);
+
+        //Getting the forward direction of the control point along the spline
+        Vector3 forward = this.GetDirection(progress);
+
+        this.upRotationPoints[controlPointIndex] = point_;//Vector3.ProjectOnPlane(point_, forward);
     }
 
 
@@ -363,6 +400,12 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref this.modes, this.modes.Length + 1);
         this.modes[this.modes.Length - 1] = this.modes[modes.Length - 2];
 
+        //Adding a new up rotation point
+        Array.Resize(ref this.upRotationPoints, this.upRotationPoints.Length + 1);
+        //Getting the distance difference that the previously last up rotation point is from the previously last control point
+        Vector3 distDiff = this.upRotationPoints[this.upRotationPoints.Length - 2] - this.points[this.points.Length - 4];
+        this.upRotationPoints[this.upRotationPoints.Length - 1] = this.points[this.points.Length -1] + distDiff;
+
         //Making sure the added handles are behaving correctly
         this.EnforceMode(this.points.Length - 4);
 
@@ -371,6 +414,7 @@ public class BezierSpline : MonoBehaviour
         {
             this.points[this.points.Length - 1] = this.points[0];
             this.modes[this.modes.Length - 1] = this.modes[0];
+            this.upRotationPoints[this.upRotationPoints.Length - 1] = this.upRotationPoints[0];
             this.EnforceMode(0);
         }
     }
