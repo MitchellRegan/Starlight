@@ -14,6 +14,10 @@ public class RailMovementFlight : MonoBehaviour
     //Reference to our rail parent object's rigid body component
     public Rigidbody railParentObj;
 
+    //Multipliers to our XY speed for when we're rolling during rail movement
+    [HideInInspector]
+    public Vector2 railRollXYMultiplier = new Vector2(1, 1);
+
     [Space(8)]
 
     //Float for how fast we change bounding box sizes when changing regions
@@ -436,8 +440,8 @@ public class RailMovementFlight : MonoBehaviour
 
         //Vector 3 to hold our XY velocities in the correct orientations based on our region
         Vector3 XYorientationVelocities = new Vector3();
-        XYorientationVelocities += velocities.x * this.railRightDirection;
-        XYorientationVelocities += velocities.y * this.railUpDirection;
+        XYorientationVelocities += velocities.x * this.railRightDirection * this.railRollXYMultiplier.x;
+        XYorientationVelocities += velocities.y * this.railUpDirection * this.railRollXYMultiplier.y;
 
         //Vector 3 to hold our Z velocity in the correct orientation based on our region
         Vector3 ZorientationVelocity = new Vector3();

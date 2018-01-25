@@ -23,6 +23,9 @@ public class ShipTiltAndRoll : MonoBehaviour
     //The current amount of time left for the player invincibility
     private float currentInvincibilityTime = 0f;
 
+    //Multipliers to our XY speed while rolling
+    public Vector2 rollXYSpeedMultiplier = new Vector2(1.2f, 1.2f);
+
     //The number of rolls our ship does
     public int numberOfRolls = 3;
 
@@ -98,10 +101,17 @@ public class ShipTiltAndRoll : MonoBehaviour
             //Adding the rotation difference to our current Z rotation
             this.ourShip.zGyroscope.localEulerAngles += new Vector3(0, 0, rotToAdd);
 
-            //If our current roll time is up, we disable the roll trail object
-            if(this.rollTrails != null && this.currentRollTime <= 0)
+            //If our current roll time is up
+            if(this.currentRollTime <= 0)
             {
-                this.rollTrails.SetActive(false);
+                //We disable our roll trail object
+                if (this.rollTrails != null)
+                {
+                    this.rollTrails.SetActive(false);
+                }
+
+                //We set our ship's rail movement flight XY speed multiplier back to x1
+                this.ourShip.ourRailMovement.railRollXYMultiplier = new Vector2(1, 1);
             }
             return;
         }
@@ -279,6 +289,9 @@ public class ShipTiltAndRoll : MonoBehaviour
 
         //Telling our ship that it now has some I-frames where it ignores some damage types
         this.ourShip.ToggleIFrames(true);
+
+        //Setting our ship's rail movement flight XY speed multipliers so that we can maneuver faster
+        this.ourShip.ourRailMovement.railRollXYMultiplier = new Vector2(this.rollXYSpeedMultiplier.x, this.rollXYSpeedMultiplier.y);
 
         //Setting our initial total roll degrees (this will be changed in a moment
         this.totalRollDegrees = 360 * numberOfRolls;
