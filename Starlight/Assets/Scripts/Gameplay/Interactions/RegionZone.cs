@@ -13,9 +13,10 @@ public class RegionZone : MonoBehaviour
     public bool effectPlayer1 = true;
     public bool effectPlayer2 = true;
 
-    //The multiplier to forward thrust that player ships move at in this zone
-    [Range(0.1f, 2)]
-    public float thrustMultiplier = 1;
+    //If this is a rail zone, we need to designate which rail zone the player will follow
+    public BezierSpline railZoneSplineToFollow;
+    //The amount of time that it takes to complete this rail zone
+    public float timeToFinishSpline = 10;
 
     //UnityEvent called when the player hits this zone's collider
     public UnityEvent onCollisionEvent;

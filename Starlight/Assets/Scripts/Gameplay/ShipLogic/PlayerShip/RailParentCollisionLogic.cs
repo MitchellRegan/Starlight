@@ -3,11 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(MoveAlongSpline))]
 public class RailParentCollisionLogic : MonoBehaviour
 {
     //The reference to our ship's RailMovementFlight component
     public PlayerShipController ourShipController;
 
+    //Reference to this object's MoveAlongSpline component
+    public MoveAlongSpline ourSplineMove;
+
+
+
+    //Function called when this object is created
+    private void Awake()
+    {
+        //Getting the reference to this object's MoveAlongSpline component
+        this.ourSplineMove = this.GetComponent<MoveAlongSpline>();
+    }
 	
 
     //Function called when we hit a trigger collider
@@ -26,18 +38,14 @@ public class RailParentCollisionLogic : MonoBehaviour
                     //We disable our free movement controls and enable our rail movement controls
                     this.ourShipController.ourFreeMovement.enabled = false;
                     this.ourShipController.ourRailMovement.enabled = true;
+                    this.ourSplineMove.enabled = true;
 
                     //Setting the new direction for our rail movement
                     this.ourShipController.ourRailMovement.SetNewRailDirection(collider_);
+
+                    //Setting the spline that we need to move along
+                    this.ourSplineMove.ChangeSplineToFollow(collider_.GetComponent<RegionZone>().railZoneSplineToFollow, collider_.GetComponent<RegionZone>().timeToFinishSpline);
                 }
-                //If the region has free movement
-                /*else if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Free)
-                {
-                    //We disable our rail movement controls and enable our free movement controls
-                    this.ourShipController.ourRailMovement.BeforeDisable();
-                    this.ourShipController.ourRailMovement.enabled = false;
-                    this.ourShipController.ourFreeMovement.enabled = true;
-                }*/
             }
         }
     }

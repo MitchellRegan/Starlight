@@ -63,9 +63,6 @@ public class RailMovementFlight : MonoBehaviour
 
     //The width and height of the designated flight zone of our current region
     private Vector2 flightBoundingBox;
-
-    //The forward thrust multiplier for this rail zone
-    private float zoneThrustMultiplier = 0;
     
     //Bool that determines if we're currently interpolating
     private bool areWeInterping = false;
@@ -155,9 +152,6 @@ public class RailMovementFlight : MonoBehaviour
 
         //The rotation for the next zone we're entering so we can interp to match it
         this.nextRotation = newRegionCollider_.transform.rotation;
-
-        //Setting the minimum forward thrust that this rail zone requires
-        this.zoneThrustMultiplier = newRegionCollider_.GetComponent<RegionZone>().thrustMultiplier;
 
         //Rotating our rail parent object to face the forward direction
         Quaternion lookDirection = new Quaternion();
@@ -435,9 +429,6 @@ public class RailMovementFlight : MonoBehaviour
             }
         }
 
-        //Multiplying our forward velocity by the zone's velocity multiplier
-        velocities.z = velocities.z * this.zoneThrustMultiplier;
-
         //Vector 3 to hold our XY velocities in the correct orientations based on our region
         Vector3 XYorientationVelocities = new Vector3();
         XYorientationVelocities += velocities.x * this.railRightDirection * this.railRollXYMultiplier.x;
@@ -451,7 +442,7 @@ public class RailMovementFlight : MonoBehaviour
         this.ourRigidbody.AddForce(XYorientationVelocities);
 
         //Applying the forward thrust velocity to our rail parent object's rigid body
-        this.railParentObj.velocity = ZorientationVelocity;
+        //this.railParentObj.velocity = ZorientationVelocity;
 
         //Creating a variable to hold our rigidbody's velocity values relative to our transform's local space
         Vector3 localVelocity = this.ourRigidbody.transform.InverseTransformDirection(this.ourRigidbody.velocity);

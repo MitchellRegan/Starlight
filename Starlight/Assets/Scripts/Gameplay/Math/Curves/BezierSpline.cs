@@ -396,9 +396,9 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref this.points, this.points.Length + 3);
 
         //Making it so that the newly added points are offset from the previously last point
-        this.points[this.points.Length - 3].x = point.x + 3;
-        this.points[this.points.Length - 2].x = point.x + 6;
-        this.points[this.points.Length - 1].x = point.x + 9;
+        this.points[this.points.Length - 3] = new Vector3(point.x + 3, point.y, point.z);
+        this.points[this.points.Length - 2] = new Vector3(point.x + 6, point.y, point.z);
+        this.points[this.points.Length - 1] = new Vector3(point.x + 9, point.y, point.z);
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);
