@@ -64,7 +64,7 @@ public class BezierSplineInspector : Editor
                 Handles.DrawLine(p2, p3);
 
                 //Drawing the control point to the up direction point
-                Vector3 upRotationPoint = this.ShowUpRotationPoint(i);
+                Vector3 upRotationPoint = this.ShowUpRotationPoint(i-1);
                 Handles.DrawLine(p0, upRotationPoint);
 
                 //Getting the % progress that this control point is along the spline
@@ -270,11 +270,11 @@ public class BezierSplineInspector : Editor
                 Quaternion rotationToUpPoint = Quaternion.LookRotation(forward, up);
 
                 //The center point of the disk in local space
-                Vector3 localCenterPoint = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_- 1));
-
+                Vector3 localCenterPoint = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
+                
                 //Checking to see if we're trying to move the handle for the given point
                 EditorGUI.BeginChangeCheck();
-                Quaternion rotationChange = Handles.Disc(rotationToUpPoint, localCenterPoint, forward, 1, false, 1);
+                Quaternion rotationChange = Handles.Disc(rotationToUpPoint, localCenterPoint, forward, this.spline.rotationHandleRadius, false, 1);
                 //*point = Handles.DoPositionHandle(point, this.handleRotation);
 
                 //If we're done changing the point handle, we apply the change to the curve's point
@@ -285,7 +285,19 @@ public class BezierSplineInspector : Editor
                     EditorUtility.SetDirty(this.spline);
                     //Moves the point at the given index to the handle transform's position
                     //this.spline.SetUpRotationPoint(index_, this.handleTransform.InverseTransformPoint(point));
-                    this.spline.SetUpRotationPoint(index_, Quaternion.Euler(rotationChange.eulerAngles) * (point - localCenterPoint) + localCenterPoint);
+                    /*Vector3 newPos = Vector3.Normalize(rotationChange.eulerAngles);
+                    newPos = new Vector3(newPos.x * (point.x - localCenterPoint.x),
+                                         newPos.y * (point.y - localCenterPoint.y),
+                                         newPos.z * (point.z - localCenterPoint.z));
+                    newPos += localCenterPoint;*/
+                    //this.spline.SetUpRotationPoint(index_, newPos);
+                    //Vector3 newPos = localCenterPoint + ((rotationChange * Vector3.Normalize(up))); //* this.spline.rotationHandleRadius);
+
+                    float zDiff = rotationChange.eulerAngles.z - rotationToUpPoint.eulerAngles.z;
+                    Vector3 direction = point - localCenterPoint;
+                    direction = Quaternion.Euler(new Vector3(1, 0, 0)) * direction;
+                    
+                    this.spline.SetUpRotationPoint(index_, this.spline.GetControlPoint(index_) + direction);
                 }
             }
         }

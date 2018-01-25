@@ -350,4 +350,24 @@ public class PlayerShipController : MonoBehaviour
             }
         }
     }
+
+
+    //Function called externally to toggle invincibility for this ship
+    public void ToggleIFrames(bool isInvincible_)
+    {
+        //Setting the invulnerability for the cockpit
+        this.shipCockpit.isInvulnerable = isInvincible_;
+
+        //Looping through all of our wings and setting their invincibility
+        foreach(ShipWingLogic wing in this.shipWings)
+        {
+            wing.isInvulnerable = isInvincible_;
+        }
+
+        //Looping through all of our engines and setting their invincibility
+        foreach(ShipEngineLogic enging in this.shipEngines)
+        {
+            enging.isInvulnerable = isInvincible_;
+        }
+    }
 }

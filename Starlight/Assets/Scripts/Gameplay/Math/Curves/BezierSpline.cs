@@ -5,9 +5,13 @@ using System;
 
 public class BezierSpline : MonoBehaviour
 {
+    //The width that this spline renders
+    public float splineWidth = 5;
+    //The radius of the rotation handle when shown
+    public float rotationHandleRadius = 3;
+
     //Color for the spline
     public Color splineColor = Color.red;
-    public float splineWidth = 5;
 
     //Color for the line connecting the handles
     public Color handleLineColor = Color.green;
@@ -48,8 +52,8 @@ public class BezierSpline : MonoBehaviour
     [SerializeField]
     private Vector3[] upRotationPoints =
     {
-        new Vector3(0f, 1f, 0f),
-        new Vector3(9f, 1f, 0f)
+        new Vector3(0f, 3f, 0f),
+        new Vector3(9f, 3f, 0f)
     };
 
     //Bool that determines if this spline loops back around to the start point
@@ -188,7 +192,7 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to get the Up rotation point at the given index
     public Vector3 GetUpRotationPoint(int index_)
     {
-        return this.upRotationPoints[index_ / 3];
+        return this.upRotationPoints[(index_ + 1) / 3];
     }
 
 

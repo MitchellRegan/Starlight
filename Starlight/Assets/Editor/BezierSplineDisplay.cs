@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[InitializeOnLoad]
-[CustomEditor(typeof(GameObject))]
+//[InitializeOnLoad]
+//[CustomEditor(typeof(GameObject))]
 public class BezierSplineDisplay : Editor
 {
     //The list of bezier splines that we keep rendering
@@ -12,7 +12,7 @@ public class BezierSplineDisplay : Editor
 
     
 
-    [DrawGizmo(GizmoType.NotInSelectionHierarchy)]
+    [DrawGizmo(GizmoType.NonSelected)]
     static void RenderCustomGizmo(Transform objectTransform_, GizmoType gizmoType_)
     {
         //If our list of splines to render is null, we initialize a new one
