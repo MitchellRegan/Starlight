@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MoveAlongSpline : MonoBehaviour
+[RequireComponent(typeof(Rigidbody))]
+public class MoveAlongSplineRigidBody : MonoBehaviour
 {
+    //The reference to this object's rigidbody component
+    private Rigidbody ourRigidBody;
+
     //The reference to the spline we move along
     public BezierSpline splineToFollow;
 
@@ -31,10 +35,19 @@ public class MoveAlongSpline : MonoBehaviour
     //Bool for if this object is progressing forward or backwards along this spline
     private bool isMovingForward = true;
 
-        
 
-	// Update is called once per frame
-	private void Update ()
+
+
+    //Function called the first frame this object is alive
+    private void Awake()
+    {
+        //Getting the reference to our object's rigid body component
+        this.ourRigidBody = this.GetComponent<Rigidbody>();
+    }
+
+
+    // Update is called once per frame
+    private void FixedUpdate()
     {
         //If this object is moving forward along the spline
         if (this.isMovingForward)
@@ -51,7 +64,7 @@ public class MoveAlongSpline : MonoBehaviour
                     this.currentTime = this.timeToComplete;
                 }
                 //If our end behavior is "Loop", we cycle back to the beginning
-                else if(this.endBehavior == SplineEndBehavior.Loop)
+                else if (this.endBehavior == SplineEndBehavior.Loop)
                 {
                     this.currentTime -= this.timeToComplete;
                 }
@@ -70,27 +83,26 @@ public class MoveAlongSpline : MonoBehaviour
             this.currentTime -= Time.deltaTime;
 
             //If we reach time 0, we reverse direction
-            if(this.currentTime < 0)
+            if (this.currentTime < 0)
             {
                 this.currentTime = -this.currentTime;
                 this.isMovingForward = true;
             }
         }
 
-        //Setting our transform to the correct percent along the spline based on the time completed
-        //this.transform.position += (this.splineToFollow.GetPoint(this.currentTime / this.timeToComplete) - this.transform.position) * this.interpSpeed;
-        this.transform.position = this.splineToFollow.GetPoint(this.currentTime / this.timeToComplete);
-
         //If we rotate to face the direction of the spline path
-        if(this.rotateToFollowSpline)
+        if (this.rotateToFollowSpline)
         {
             this.transform.LookAt(this.transform.position + this.splineToFollow.GetDirection(this.currentTime / this.timeToComplete));
         }
-	}
+
+        //Setting our transform to the correct percent along the spline based on the time completed
+        this.ourRigidBody.MovePosition(this.splineToFollow.GetPoint(this.currentTime / this.timeToComplete));
+    }
 
 
     //Function called externally to change the spline that this object follows
-    public void ChangeSplineToFollow(BezierSpline newSpline_, float timeToComplete_)
+    public void SetSplineToFollow(BezierSpline newSpline_, float timeToComplete_)
     {
         this.splineToFollow = newSpline_;
         this.timeToComplete = timeToComplete_;

@@ -170,47 +170,9 @@ public class RailMovementFlight : MonoBehaviour
         float zDistFromCenter = (nextRegion_.transform.localScale.z / 2) * -1;
         //Finding the position where our ship needs to meet up with the next region
         Vector3 entryPoint = nextRegion_.transform.position + (zDistFromCenter * nextRegion_.transform.forward);
-        Debug.Log("Entry point: " + entryPoint);
-
-        //Creating a bezier curve handle between the exit point for our current region and the entry point where we need to go
-        GameObject curveMidpoint = this.CreateBezierCurveHandle(exitPointTransform_.position, exitPointTransform_.rotation,
-                                                                entryPoint, nextRegion_.transform.rotation);
     }
 
-
-    //Function called from InterpToNextRegion to create a bezier curve handle game object between 2 points
-    private GameObject CreateBezierCurveHandle(Vector3 startPoint_, Quaternion startRot_, Vector3 endPoint_, Quaternion endRot_)
-    {
-        //Need to use SohCahToa trig
-        //The side C (hypotenuse) is the distance from exit point to entry point
-        //The sides A and B are equidistant, so the angle between each of them and side C is 45 degrees
-        //Soh    -->    Sin(theta) = Side A / Side C    -->    Side C * Sin(theta) = Side A
-        //Sin(theta) = Sin(45 degrees) = Sin(pi/4)
-
-        //Finding the hypotenuse length between the points
-        float hypotLength = Vector3.Distance(startPoint_, endPoint_);
-        //Finding the length of the other sides of the triangle
-        float sideABLength = Mathf.Sin(Mathf.PI / 4) * hypotLength;
-
-        //Finding the midpoint between the start and end points
-        Vector3 hypotMidpoint = (startPoint_ + endPoint_) / 2;
-
-        //Getting the quaternion rotation halfway between the start and end point rotations
-        Quaternion midpointRot = Quaternion.Slerp(startRot_, endRot_, 0.5f);
-
-        //Creating a game object to hold the transform info
-        GameObject midpointHandleObj = new GameObject();
-        midpointHandleObj.transform.position = hypotMidpoint;
-        midpointHandleObj.transform.rotation = midpointRot;
-
-        //Setting the handle's position in space where it's extruded down from it's orientation
-        midpointHandleObj.transform.position = midpointHandleObj.transform.position + (-sideABLength * midpointHandleObj.transform.up);
-
-        //Returning the midpoint handle that we've created
-        return midpointHandleObj;
-    }
-
-
+    
     //Function called every frame
     private void Update()
     {

@@ -61,6 +61,7 @@ public static class Bezier
     {
         //Making sure the time value given is between 0 and 1
         t_ = Mathf.Clamp01(t_);
+
         float oneMinusT = 1f - t_;
         return (oneMinusT * oneMinusT * oneMinusT * p0_) + 
                (3f * oneMinusT * oneMinusT * t_ * p1_) +
@@ -74,6 +75,7 @@ public static class Bezier
     {
         //Making sure the time value given is between 0 and 1
         t_ = Mathf.Clamp01(t_);
+
         float oneMinusT = 1f - t_;
         return (3f * oneMinusT * oneMinusT * (p1_ - p0_)) +
                (6f * oneMinusT * t_ * (p2_ - p1_)) +
