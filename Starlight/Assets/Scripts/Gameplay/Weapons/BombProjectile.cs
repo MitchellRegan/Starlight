@@ -39,7 +39,7 @@ public class BombProjectile : WeaponProjectile
             //We damage the object if friendly fire is on or it has a different ID from this projectile's attacker
             if (this.causeFriendlyFire || this.attackerID != collider_.gameObject.GetComponent<HealthAndArmor>().objectIDType)
             {
-                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt);
+                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt, this.ignoreIFrames);
             }
         }
 
@@ -57,7 +57,7 @@ public class BombProjectile : WeaponProjectile
             //We damage the object if friendly fire is on or it has a different ID from this projectile's attacker
             if (this.causeFriendlyFire || this.attackerID != collider_.gameObject.GetComponent<HealthAndArmor>().objectIDType)
             {
-                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt);
+                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt, this.ignoreIFrames);
                 this.DetonateBomb();
             }
         }

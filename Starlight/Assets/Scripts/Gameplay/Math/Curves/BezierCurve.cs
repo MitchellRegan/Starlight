@@ -4,6 +4,15 @@ using UnityEngine;
 
 public class BezierCurve : MonoBehaviour
 {
+    //Color for the curve
+    public Color curveColor = Color.red;
+
+    //Color for the line connecting the handles
+    public Color handleLineColor = Color.green;
+
+    //Color for the velocity lines
+    public Color velocityLineColor = Color.yellow;
+
     //The list of control points that make up this curve
     public List<Vector3> points;
 
@@ -16,7 +25,8 @@ public class BezierCurve : MonoBehaviour
         {
             new Vector3(1f, 0f, 0f),
             new Vector3(2f, 0f, 0f),
-            new Vector3(3f, 0f, 0f)
+            new Vector3(3f, 0f, 0f),
+            new Vector3(4f, 0f, 0f)
         };
     }
 
@@ -24,13 +34,21 @@ public class BezierCurve : MonoBehaviour
     //Function called externally from BezierCurveInspector.cs to access a specific handle point on our curve
     public Vector3 GetPoint(float t_)
     {
-        return this.transform.TransformPoint(Bezier.GetPoint(this.points[0], this.points[1], this.points[2], t_));
+        return this.transform.TransformPoint(Bezier.GetPoint(this.points[0], this.points[1], this.points[2], this.points[3], t_));
     }
 
 
+    //Function called externally from BezierCurveInspector.cs to get the tangent lines to the curve
     public Vector3 GetVelocity(float t_)
     {
-        return this.transform.TransformPoint(Bezier.GetFirstDerivative(this.points[0], this.points[1], this.points[2], t_)) - this.transform.position;
+        return this.transform.TransformPoint(Bezier.GetFirstDerivative(this.points[0], this.points[1], this.points[2], this.points[3], t_)) - this.transform.position;
+    }
+
+
+    //Function called externally from BezierCurveInspector.cs to get the normalized velocity
+    public Vector3 GetDirection(float t_)
+    {
+        return this.GetVelocity(t_).normalized;
     }
 }
 
@@ -38,17 +56,29 @@ public class BezierCurve : MonoBehaviour
 //Static class used by BezierCurve.cs and BezierCurveInspector.cs
 public static class Bezier
 {
-    public static Vector3 GetPoint(Vector3 p0_, Vector3 p1_, Vector3 p2_, float t_)
+    //Function to get the point along the line between p0 and p2 based on the time t
+    public static Vector3 GetPoint(Vector3 p0_, Vector3 p1_, Vector3 p2_, Vector3 p3_, float t_)
     {
-        //return Vector3.Lerp(Vector3.Lerp(p0_, p1_, t_), Vector3.Lerp(p1_, p2_, t_), t_);
+        //Making sure the time value given is between 0 and 1
         t_ = Mathf.Clamp01(t_);
+
         float oneMinusT = 1f - t_;
-        return (oneMinusT * oneMinusT * p0_) + (2f * oneMinusT * t_ * p1_) + (t_ * t_ * p2_);
+        return (oneMinusT * oneMinusT * oneMinusT * p0_) + 
+               (3f * oneMinusT * oneMinusT * t_ * p1_) +
+               (3f * oneMinusT * t_ * t_ * p2_) + 
+               (t_ * t_ * t_ * p3_);
     }
 
 
-    public static Vector3 GetFirstDerivative(Vector3 p0_, Vector3 p1_, Vector3 p2_, float t_)
+    //Function to get the rate of change of the curve
+    public static Vector3 GetFirstDerivative(Vector3 p0_, Vector3 p1_, Vector3 p2_, Vector3 p3_, float t_)
     {
-        return (2f * (1f - t_) * (p1_ - p0_)) + (2f * t_ * (p2_ - p1_));
+        //Making sure the time value given is between 0 and 1
+        t_ = Mathf.Clamp01(t_);
+
+        float oneMinusT = 1f - t_;
+        return (3f * oneMinusT * oneMinusT * (p1_ - p0_)) +
+               (6f * oneMinusT * t_ * (p2_ - p1_)) +
+               (3f * t_ * t_ * (p3_ - p2_));
     }
 }

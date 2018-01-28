@@ -246,7 +246,7 @@ public class EnemyTurret : MonoBehaviour
         //We need to guess how far along they will be using their current velocity
 
         //Getting the direction and magnitude that the velocity is facing
-        Vector3 velocityOffset = this.targetPlayer.ourRailMovement.railParentObj.velocity;
+        Vector3 velocityOffset = this.targetPlayer.ourRailMovement.railParentObj.ourRigidbody.velocity;
         //Multiplying the velocity 
         velocityOffset = velocityOffset * projectileTime;
 

@@ -17,6 +17,9 @@ public class WeaponProjectile : MonoBehaviour
     //Bool for if this attack causes friendly fire
     public bool causeFriendlyFire = false;
 
+    //Bool for if this attack ignores player ship I-frames
+    public bool ignoreIFrames = false;
+
     //The length of time this projectile is alive before dying
     public float lifetime = 5;
     
@@ -55,7 +58,7 @@ public class WeaponProjectile : MonoBehaviour
             //We damage the object if friendly fire is on or it has a different ID from this projectile's attacker
             if (this.causeFriendlyFire || this.attackerID != collider_.gameObject.GetComponent<HealthAndArmor>().objectIDType)
             {
-                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt);
+                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt, this.ignoreIFrames);
                 Destroy(this.gameObject);
             }
         }
@@ -76,7 +79,7 @@ public class WeaponProjectile : MonoBehaviour
             //We damage the object if friendly fire is on or it has a different ID from this projectile's attacker
             if (this.causeFriendlyFire || this.attackerID != collider_.gameObject.GetComponent<HealthAndArmor>().objectIDType)
             {
-                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt);
+                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt, this.ignoreIFrames);
                 Destroy(this.gameObject);
             }
         }
