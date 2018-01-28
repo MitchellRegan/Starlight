@@ -12,7 +12,7 @@ public class RailMovementFlight : MonoBehaviour
     private Rigidbody ourRigidbody;
 
     //Reference to our rail parent object's rigid body component
-    public Rigidbody railParentObj;
+    public RailParentCollisionLogic railParentObj;
 
     //Multipliers to our XY speed for when we're rolling during rail movement
     [HideInInspector]
@@ -25,6 +25,19 @@ public class RailMovementFlight : MonoBehaviour
     private float currentBoundChangeTime = 0;
     private Vector2 prevBounds = new Vector2();
     private Vector2 nextBounds = new Vector2();
+
+    [Space(8)]
+
+    //The speed multiplier for breaking
+    [Range(0.01f, 0.9f)]
+    public float breakSpeedMultiplier = 0.6f;
+    //The speed multiplier for boosting
+    [Range(1.1f, 3f)]
+    public float boostSpeedMultiplier = 1.5f;
+
+    //The interpolation speed for changing the forward velocity
+    [Range(0.01f, 0.99f)]
+    public float forwardVelocityInterp = 0.9f;
 
     [Space(8)]
 
@@ -343,6 +356,9 @@ public class RailMovementFlight : MonoBehaviour
             }
         }
 
+        //Applying our thrust input to our rail parent to determine how fast we move along the rail
+        this.railParentObj.ourSplineMoveRB.speedMultiplier += (thrustInput - this.railParentObj.ourSplineMoveRB.speedMultiplier) * this.forwardVelocityInterp;
+
         //Vector 3 to hold our XY velocities in the correct orientations based on our region
         Vector3 XYorientationVelocities = new Vector3();
         XYorientationVelocities += velocities.x * this.railParentObj.transform.right * this.railRollXYMultiplier.x;
@@ -479,17 +495,19 @@ public class RailMovementFlight : MonoBehaviour
     private float GetZThrustInput()
     {
         //Float to hold the forward thrust that the player wants to move at
-        float thrustInput = 0;
+        float thrustInput = 1;
 
         //Getting the input based on the boost input
         if (this.ourShip.isShipBoosting)
         {
-            thrustInput += 1;
+            //thrustInput += 1;
+            thrustInput = this.boostSpeedMultiplier;
         }
         //Getting the input based on the break input
         else if(this.ourShip.isShipBreaking)
         {
-            thrustInput -= 1;
+            //thrustInput -= 1;
+            thrustInput = this.breakSpeedMultiplier;
         }
 
         return thrustInput;

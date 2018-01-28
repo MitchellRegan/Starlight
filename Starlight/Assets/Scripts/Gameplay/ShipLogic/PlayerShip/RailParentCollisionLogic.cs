@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(Rigidbody))]
 public class RailParentCollisionLogic : MonoBehaviour
 {
     //The reference to our ship's RailMovementFlight component
     public PlayerShipController ourShipController;
+
+    //The reference to this object's rigidbody component
+    public Rigidbody ourRigidbody;
 
     //The reference to this object's MoveAlongSplineRigidBody component
     [HideInInspector]
@@ -17,7 +21,8 @@ public class RailParentCollisionLogic : MonoBehaviour
     //Function called on the first frame this object is alive
     private void Awake()
     {
-        //Getting the reference to this object's move along spline rigid body component
+        //Getting the reference to this object's rigid body and move along spline rigid body component
+        this.ourRigidbody = this.GetComponent<Rigidbody>();
         this.ourSplineMoveRB = this.GetComponent<MoveAlongSplineRigidBody>();
     }
 
