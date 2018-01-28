@@ -52,9 +52,9 @@ public class ShipEngineLogic : HealthAndArmor
 
 
     //Function inherited from HealthAndArmor.cs to damage this object
-    public override void DealDamage(int amountOfDamage_)
+    public override void DealDamage(int amountOfDamage_, bool ignoreIFrames_)
     {
-        base.DealDamage(amountOfDamage_);
+        base.DealDamage(amountOfDamage_, ignoreIFrames_);
         this.CalculateDamageCurves();
     }
 

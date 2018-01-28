@@ -19,6 +19,9 @@ public class ExplosionLogic : MonoBehaviour
     //Bool that determines if this explosion deals friendly fire
     public bool causeFriendlyFire = false;
 
+    //Bool that determines if this explosion ignores I-frames
+    public bool ignoreIFrames = true;
+
     //The starting and ending collider radius of this explosion
     public Vector2 startEndRadius = new Vector2(1, 5);
 
@@ -76,7 +79,7 @@ public class ExplosionLogic : MonoBehaviour
             //We damage the object if friendly fire is on or it has a different ID from this projectile's attacker
             if (this.causeFriendlyFire || this.attackerID != collider_.gameObject.GetComponent<HealthAndArmor>().objectIDType)
             {
-                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt);
+                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt, this.ignoreIFrames);
 
                 //Adding this object to our list of hit objects so we don't damage it again
                 this.hitObjects.Add(collider_.gameObject);
@@ -100,7 +103,7 @@ public class ExplosionLogic : MonoBehaviour
             //We damage the object if friendly fire is on or it has a different ID from this projectile's attacker
             if (this.causeFriendlyFire || this.attackerID != collider_.gameObject.GetComponent<HealthAndArmor>().objectIDType)
             {
-                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt);
+                collider_.gameObject.GetComponent<HealthAndArmor>().DealDamage(this.damageDealt, this.ignoreIFrames);
 
                 //Adding this object to our list of hit objects so we don't damage it again
                 this.hitObjects.Add(collider_.gameObject);

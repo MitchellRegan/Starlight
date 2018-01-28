@@ -16,6 +16,10 @@ public class HealthAndArmor : MonoBehaviour
     //Bool that determines if this object is invulnerable
     public bool isInvulnerable = false;
 
+    //Bool that determines if this object is currently having I-frames temporary invincibility
+    [HideInInspector]
+    public bool inIFrames = false;
+
     [Space(8)]
 
     //The maximum shield value this object has
@@ -71,10 +75,10 @@ public class HealthAndArmor : MonoBehaviour
 
 
     //Function called externally to damage this object
-    public virtual void DealDamage(int amountOfDamage_)
+    public virtual void DealDamage(int amountOfDamage_, bool ignoreIFrames_)
     {
-        //If the amount is less than 1 or we're invulnerable, nothing happens
-        if(amountOfDamage_ < 1 || this.isInvulnerable)
+        //If the amount is less than 1, we're invulnerable, or we're in I-frames that aren't ignored, nothing happens
+        if(amountOfDamage_ < 1 || this.isInvulnerable || (this.inIFrames && !ignoreIFrames_))
         {
             return;
         }
