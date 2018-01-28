@@ -56,11 +56,6 @@ public class RailMovementFlight : MonoBehaviour
     [Range(0.1f, 0.99f)]
     public float yVelocityDrag = 0.9f;
 
-    //The forward, up, and right directions that we're moving along
-    private Vector3 railForwardDirection = Vector3.forward;
-    private Vector3 railUpDirection = Vector3.up;
-    private Vector3 railRightDirection = Vector3.right;
-
     //The width and height of the designated flight zone of our current region
     private Vector2 flightBoundingBox;
     
@@ -68,20 +63,6 @@ public class RailMovementFlight : MonoBehaviour
     private bool areWeInterping = false;
     //Float that determines how fast we interp positions
     private float interpSpeed = 0.8f;
-    //The transform of the region we're entering
-    private Transform nextRegionTransform;
-
-    //The forward, up, and right directions that we were moving along in our previous rail zone
-    private Vector3 prevRailForward = new Vector3();
-    private Vector3 prevRailUp = new Vector3();
-    private Vector3 prevRailRight = new Vector3();
-    //The rotation that we were facing in our previous rail zone
-    private Quaternion prevRotation = new Quaternion();
-
-    //The forward, up, and right directions that we will be moving along in our next rail zone
-    private Vector3 nextRailForward = new Vector3();
-    private Vector3 nextRailUp = new Vector3();
-    private Vector3 nextRailRight = new Vector3();
     //The rotation that we will be facing in our next rail zone
     private Quaternion nextRotation = new Quaternion();
     
@@ -95,11 +76,6 @@ public class RailMovementFlight : MonoBehaviour
     {
         //Getting the reference to our rigidbody component
         this.ourRigidbody = this.GetComponent<Rigidbody>();
-
-        //Setting our orientation directions by default
-        this.railUpDirection = this.transform.up;
-        this.railForwardDirection = this.transform.forward;
-        this.railRightDirection = this.transform.right;
         
         this.areWeInterping = false;
     }
@@ -142,9 +118,6 @@ public class RailMovementFlight : MonoBehaviour
         this.prevBounds = this.flightBoundingBox;
         this.nextBounds = new Vector2(newRegionCollider_.transform.localScale.x, newRegionCollider_.transform.localScale.y);
 
-        //Saving this region's transform for interpolation
-        this.nextRegionTransform = newRegionCollider_.transform;
-
         //Finding the length of the region so we know how far back the collider is from the center point
         float zDistFromCenter = (newRegionCollider_.transform.localScale.z / 2) * -1;
         //Finding the position where our ship needs to meet up with the collider's center
@@ -153,23 +126,8 @@ public class RailMovementFlight : MonoBehaviour
         //The rotation for the next zone we're entering so we can interp to match it
         this.nextRotation = newRegionCollider_.transform.rotation;
 
-        //Rotating our rail parent object to face the forward direction
-        Quaternion lookDirection = new Quaternion();
-        lookDirection.SetLookRotation(this.railForwardDirection, this.railUpDirection);
-        this.railParentObj.transform.rotation = lookDirection;
-
         //Starting our interpolation
         this.areWeInterping = true;
-    }
-
-
-    //Function called from RailParentCollisionLogic.OnTriggerExit to start interpolating our root object to the next region
-    public void InterpToNextRegion(Transform exitPointTransform_, RegionZone nextRegion_)
-    {
-        //Finding the length of the region so we know how far back the collider is from the center point
-        float zDistFromCenter = (nextRegion_.transform.localScale.z / 2) * -1;
-        //Finding the position where our ship needs to meet up with the next region
-        Vector3 entryPoint = nextRegion_.transform.position + (zDistFromCenter * nextRegion_.transform.forward);
     }
 
     
@@ -253,15 +211,9 @@ public class RailMovementFlight : MonoBehaviour
             //Interpolating our rail parent's rotation to match the rotation of the zone we're entering
             this.railParentObj.transform.rotation = Quaternion.Slerp(this.railParentObj.transform.rotation, this.nextRotation, Time.time * 0.025f);
 
-            //Setting our directions based on the rail parent's current rotation
-            this.railForwardDirection = this.railParentObj.transform.forward;
-            this.railUpDirection = this.railParentObj.transform.up;
-            this.railRightDirection = this.railParentObj.transform.right;
-
             //Unparenting our ship from our rail parent object
             this.transform.SetParent(this.transform.parent.parent);
             //Finding the center XY position in relative space of the new region collider that's at the beginning of the collision Z distance
-            this.railParentObj.transform.SetParent(this.nextRegionTransform.parent);
             this.railParentObj.transform.localPosition = new Vector3(this.railParentObj.transform.localPosition.x * this.interpSpeed, 
                                                                      this.railParentObj.transform.localPosition.y * this.interpSpeed,
                                                                      this.railParentObj.transform.localPosition.z);
@@ -393,18 +345,11 @@ public class RailMovementFlight : MonoBehaviour
 
         //Vector 3 to hold our XY velocities in the correct orientations based on our region
         Vector3 XYorientationVelocities = new Vector3();
-        XYorientationVelocities += velocities.x * this.railRightDirection * this.railRollXYMultiplier.x;
-        XYorientationVelocities += velocities.y * this.railUpDirection * this.railRollXYMultiplier.y;
-
-        //Vector 3 to hold our Z velocity in the correct orientation based on our region
-        Vector3 ZorientationVelocity = new Vector3();
-        ZorientationVelocity += velocities.z * this.railForwardDirection;
-
+        XYorientationVelocities += velocities.x * this.railParentObj.transform.right * this.railRollXYMultiplier.x;
+        XYorientationVelocities += velocities.y * this.railParentObj.transform.up * this.railRollXYMultiplier.y;
+        
         //Setting the movement and thrust velocities based on our relative direction
         this.ourRigidbody.AddForce(XYorientationVelocities);
-
-        //Applying the forward thrust velocity to our rail parent object's rigid body
-        //this.railParentObj.velocity = ZorientationVelocity;
 
         //Creating a variable to hold our rigidbody's velocity values relative to our transform's local space
         Vector3 localVelocity = this.ourRigidbody.transform.InverseTransformDirection(this.ourRigidbody.velocity);

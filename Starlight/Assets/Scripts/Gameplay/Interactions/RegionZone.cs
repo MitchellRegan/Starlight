@@ -18,7 +18,4 @@ public class RegionZone : MonoBehaviour
 
     //The amount of time that it takes to complete this rail zone
     public float timeToFinishSpline = 10;
-
-    //UnityEvent called when the player hits this zone's collider
-    public UnityEvent onCollisionEvent;
 }
