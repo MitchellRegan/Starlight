@@ -25,9 +25,9 @@ public class BezierSpline : MonoBehaviour
     private Vector3[] points =
     {
         new Vector3(0f, 0f, 0f),
-        new Vector3(3f, 0f, 0f),
-        new Vector3(6f, 0f, 0f),
-        new Vector3(9f, 0f, 0f)
+        new Vector3(0f, 0f, 3f),
+        new Vector3(0f, 0f, 6f),
+        new Vector3(0f, 0f, 9f)
     };
 
     //Enum for what mode the control points will be in
@@ -84,11 +84,6 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to get the position of a control point at the given index
     public Vector3 GetControlPoint(int index_)
     {
-        if(index_ > this.points.Length - 1)
-        {
-            Debug.Log("Index out of bounds. INDEX: " + index_ + ", Length: " + this.points.Length);
-            return this.points[this.points.Length - 1];
-        }
         return this.points[index_];
     }
 
@@ -161,10 +156,6 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to get the control point mode for the point at the given index
     public BezierControlPointMode GetControlPointMode(int index_)
     {
-        if(index_ > this.points.Length - 1)
-        {
-            return this.modes[this.modes.Length - 1];
-        }
         return this.modes[(index_ + 1) / 3];
     }
 
@@ -405,9 +396,9 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref this.points, this.points.Length + 3);
 
         //Making it so that the newly added points are offset from the previously last point
-        this.points[this.points.Length - 3] = new Vector3(point.x + 3, point.y, point.z);
-        this.points[this.points.Length - 2] = new Vector3(point.x + 6, point.y, point.z);
-        this.points[this.points.Length - 1] = new Vector3(point.x + 9, point.y, point.z);
+        this.points[this.points.Length - 3] = new Vector3(point.x, point.y, point.z + 3);
+        this.points[this.points.Length - 2] = new Vector3(point.x, point.y, point.z + 6);
+        this.points[this.points.Length - 1] = new Vector3(point.x, point.y, point.z + 9);
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);
