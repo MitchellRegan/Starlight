@@ -389,16 +389,19 @@ public class BezierSpline : MonoBehaviour
     //Function called externally from BezierSplineInspector to add 3 new points to our spline curve
     public void AddCurve()
     {
+        //Getting the forward direction of the last point
+        Vector3 lastPointForward = this.GetDirection(1);
+
         //Getting the last point on our spline
         Vector3 point = this.points[this.points.Length - 1];
 
         //Resizing our points array to add 3 more
         Array.Resize(ref this.points, this.points.Length + 3);
 
-        //Making it so that the newly added points are offset from the previously last point
-        this.points[this.points.Length - 3] = new Vector3(point.x, point.y, point.z + 3);
-        this.points[this.points.Length - 2] = new Vector3(point.x, point.y, point.z + 6);
-        this.points[this.points.Length - 1] = new Vector3(point.x, point.y, point.z + 9);
+        //Making it so that the newly added points are offset from the previously last point using the forward direction
+        this.points[this.points.Length - 3] = point + (lastPointForward * 3);
+        this.points[this.points.Length - 2] = point + (lastPointForward * 6);
+        this.points[this.points.Length - 1] = point + (lastPointForward * 9);
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);
