@@ -8,6 +8,8 @@ public class BezierSplineInspector : Editor
 {
     //Bool that determines if we display the transform handles for each spline point
     private static bool showHandles = true;
+    //Bool that determines if we display the rotation handles for each spline point
+    private static bool showRotationHandles = true;
     //Bool that determines if we display the lines for the spline curve velocity
     private static bool showVelocityLines = false;
 
@@ -36,6 +38,17 @@ public class BezierSplineInspector : Editor
 
 
 
+    //Function called when this inspector is initialized
+    private void Awake()
+    {
+        //If the BezierSplineDisplay.cs' list of splines to show is null, we initialize a new list
+        if(BezierSplineDisplay.splinesToAlwaysRender == null)
+        {
+            BezierSplineDisplay.splinesToAlwaysRender = new List<BezierSpline>();
+        }
+    }
+
+
     //Function called when the GUI is displayed
     private void OnSceneGUI()
     {
@@ -62,17 +75,21 @@ public class BezierSplineInspector : Editor
                 Handles.color = this.spline.handleLineColor;
                 Handles.DrawLine(p0, p1);
                 Handles.DrawLine(p2, p3);
+            }
 
+            //If we are supposed to draw the rotation handles for the Up rotation points
+            if(showRotationHandles)
+            {
                 //Drawing the control point to the up direction point
-                Vector3 upRotationPoint = this.ShowUpRotationPoint(i-1);
+                Vector3 upRotationPoint = this.ShowUpRotationPoint(i - 1);
                 Handles.DrawLine(p0, upRotationPoint);
 
                 //Getting the % progress that this control point is along the spline
-                float progress = (float)(i -1) / (float)(this.spline.ControlPointCount - 1);
-                
+                float progress = (float)(i - 1) / (float)(this.spline.ControlPointCount - 1);
+
                 //Getting the forward direction of the control point along the spline
                 Vector3 forward = this.spline.GetDirection(progress);
-                
+
                 //Drawing a circle around the control point
                 //Handles.DrawWireArc(p0, forward, upRotationPoint, 360, 1f);
             }
@@ -84,8 +101,8 @@ public class BezierSplineInspector : Editor
             p0 = p3;
         }
 
-        //If we draw handles, we need to draw the loop for the last 
-        if(showHandles && !this.spline.Loop)
+        //If we draw rotation handles, we need to draw the handle for the last point since it gets cut off in the loop above
+        if(showRotationHandles && !this.spline.Loop)
         {
             //Drawing the control point to the up direction point
             Vector3 upRotationPoint = this.ShowUpRotationPoint(this.spline.ControlPointCount - 1);
@@ -140,6 +157,8 @@ public class BezierSplineInspector : Editor
 
         //Creating a GUI toggle for if we should show the transform handles for points
         showHandles = GUILayout.Toggle(showHandles, "Show Handles");
+        //Creating a GUI toggle for if we should show the rotation control handles for points
+        showRotationHandles = GUILayout.Toggle(showRotationHandles, "Show Rotation Handles");
         //Creating a GUI toggle for if we should show the velocity lines for the curves
         showVelocityLines = GUILayout.Toggle(showVelocityLines, "Show Velocity");
 
@@ -151,6 +170,19 @@ public class BezierSplineInspector : Editor
             //Adds new points to the end of our spline
             this.spline.AddCurve();
             EditorUtility.SetDirty(this.spline);
+        }
+        
+        //If we're selecting a control point and not a rotation point
+        if(!this.isSelectedPointRotation && this.selectedIndex % 3 == 0)
+        {
+            //Creating a GUI button to delete a selected control point
+            if(GUILayout.Button("Delete Control Point"))
+            {
+                //Tells our spline to remove the selected control point
+                this.spline.RemoveControlPoint(this.selectedIndex);
+                //Selecting the spline's starting index
+                this.selectedIndex = 0;
+            }
         }
 
         //If this curve isn't in our list of splines to show
@@ -182,12 +214,14 @@ public class BezierSplineInspector : Editor
         float pickSize = 0.06f;
 
         //The position of the point we return
+        //Debug.Log("Show point get control point 1. INDEX: " + index_);
         Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
 
         //If we show this spline's handles or not
         if (showHandles)
         {
             //Setting our control point handle's color based on the control mode
+            //Debug.Log("Show point get control point 2. INDEX: " + index_);
             Handles.color = this.modeColors[(int)this.spline.GetControlPointMode(index_)];
 
             float size = HandleUtility.GetHandleSize(point);
@@ -238,8 +272,8 @@ public class BezierSplineInspector : Editor
         //The position of the point we return relative to our handle transform
         Vector3 point = this.handleTransform.TransformPoint(this.spline.GetUpRotationPoint(index_));
 
-        //If we show this spline's handles
-        if(showHandles)
+        //If we show this spline's rotation handles
+        if(showRotationHandles)
         {
             //Setting our control point handle's color to the handle line color
             Handles.color = this.spline.handleLineColor;

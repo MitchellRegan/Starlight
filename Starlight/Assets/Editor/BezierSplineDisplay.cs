@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-//[InitializeOnLoad]
-//[CustomEditor(typeof(GameObject))]
+[InitializeOnLoad]
 public class BezierSplineDisplay : Editor
 {
     //The list of bezier splines that we keep rendering
