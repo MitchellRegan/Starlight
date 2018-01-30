@@ -260,27 +260,24 @@ public class BezierSplineInspector : Editor
         {
             //Setting our control point handle's color to the handle line color
             Handles.color = this.spline.handleLineColor;
+            
+            //Getting the rotation handle point to toggle the rotation
+            Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
+            point += pointOrientation * new Vector3(0, this.spline.rotationHandleRadius, 0);
 
-            //If this rotation handle isn't selected, we draw a node for the user to click
-            if (!this.isSelectedPointRotation || this.selectedIndex != index_)
+            float size = HandleUtility.GetHandleSize(point);
+
+            //Creating a handle button to designate the selected point index
+            Handles.DrawLine(point, this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_)));
+            if (Handles.Button(point, this.handleRotation, size * handleSize, size * pickSize, Handles.DotCap))
             {
-                //Getting the rotation handle point to toggle the rotation
-                Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
-                point += pointOrientation * new Vector3(0, this.spline.rotationHandleRadius, 0);
-
-                float size = HandleUtility.GetHandleSize(point);
-
-                //Creating a handle button to designate the selected point index
-                Handles.DrawLine(point, this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_)));
-                if (Handles.Button(point, this.handleRotation, size * handleSize, size * pickSize, Handles.DotCap))
-                {
-                    this.selectedIndex = index_;
-                    this.isSelectedPointRotation = true;
-                    this.Repaint();
-                }
+                this.selectedIndex = index_;
+                this.isSelectedPointRotation = true;
+                this.Repaint();
             }
+
             //If the selected point index is the one we're clicking and we're clicking a rotation point, we can move it
-            else if (this.selectedIndex == index_ && this.isSelectedPointRotation)
+            if (this.selectedIndex == index_ && this.isSelectedPointRotation)
             {
                 //Getting the forward direction of the control point along the spline
                 Vector3 forward = pointOrientation * Vector3.forward;
@@ -295,7 +292,7 @@ public class BezierSplineInspector : Editor
                 //Checking to see if we're trying to move the handle for the given point
                 EditorGUI.BeginChangeCheck();
                 //Quaternion rotationChange = Handles.DoRotationHandle(pointOrientation, localCenterPoint);
-                Quaternion rotationChange = Handles.Disc(localRot, localCenterPoint, up, this.spline.rotationHandleRadius, false, 0);
+                Quaternion rotationChange = Handles.Disc(localRot, localCenterPoint, forward, this.spline.rotationHandleRadius, false, 0);
 
                 //If we're done changing the point handle, we apply the change to the curve's point
                 if (EditorGUI.EndChangeCheck())
