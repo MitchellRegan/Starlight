@@ -37,6 +37,16 @@ public class MoveAlongSplineRigidBody : MonoBehaviour
 
 
 
+    //Accessor function for getting the current amount of time that this object has already traveled along the spline
+    public float CurrentSplineTime
+    {
+        get
+        {
+            return this.currentTime;
+        }
+    }
+
+
 
     //Function called the first frame this object is alive
     private void Awake()

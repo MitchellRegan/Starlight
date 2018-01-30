@@ -25,9 +25,9 @@ public class BezierSpline : MonoBehaviour
     private Vector3[] points =
     {
         new Vector3(0f, 0f, 0f),
-        new Vector3(3f, 0f, 0f),
-        new Vector3(6f, 0f, 0f),
-        new Vector3(9f, 0f, 0f)
+        new Vector3(0f, 0f, 3f),
+        new Vector3(0f, 0f, 6f),
+        new Vector3(0f, 0f, 9f)
     };
 
     //Enum for what mode the control points will be in
@@ -50,10 +50,10 @@ public class BezierSpline : MonoBehaviour
     //An array of points that determine the Up direction for objects traveling along this spline
     [HideInInspector]
     [SerializeField]
-    private Vector3[] upRotationPoints =
+    private Quaternion[] controlPointOrientations =
     {
-        new Vector3(0f, 3f, 0f),
-        new Vector3(9f, 3f, 0f)
+        new Quaternion(),
+        new Quaternion()
     };
 
     //Bool that determines if this spline loops back around to the start point
@@ -84,11 +84,6 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to get the position of a control point at the given index
     public Vector3 GetControlPoint(int index_)
     {
-        if(index_ > this.points.Length - 1)
-        {
-            Debug.Log("Index out of bounds. INDEX: " + index_ + ", Length: " + this.points.Length);
-            return this.points[this.points.Length - 1];
-        }
         return this.points[index_];
     }
 
@@ -112,7 +107,6 @@ public class BezierSpline : MonoBehaviour
                     this.points[1] += delta;
                     this.points[this.points.Length - 1] = point_;
                     this.points[this.points.Length - 2] += delta;
-                    this.upRotationPoints[0] += delta;
                 }
                 //If this control point is the last point in the spline
                 else if(index_ == this.points.Length - 1)
@@ -121,7 +115,6 @@ public class BezierSpline : MonoBehaviour
                     this.points[0] = point_;
                     this.points[1] += delta;
                     this.points[this.points.Length - 1] += delta;
-                    this.upRotationPoints[this.upRotationPoints.Length - 1] += delta;
                 }
                 //If this control point is somewhere between the start and end points
                 else
@@ -129,7 +122,6 @@ public class BezierSpline : MonoBehaviour
                     //Moving both of these control point's handles
                     this.points[index_ - 1] += delta;
                     this.points[index_ + 1] += delta;
-                    this.upRotationPoints[(index_ + 1) / 3] += delta;
                 }
             }
             //If this spline doesn't loop
@@ -147,8 +139,6 @@ public class BezierSpline : MonoBehaviour
                     //We move the next control point handle the same distance as this control point
                     this.points[index_ + 1] += delta;
                 }
-
-                this.upRotationPoints[(index_ + 1) / 3] += delta;
             }
         }
 
@@ -161,10 +151,6 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to get the control point mode for the point at the given index
     public BezierControlPointMode GetControlPointMode(int index_)
     {
-        if(index_ > this.points.Length - 1)
-        {
-            return this.modes[this.modes.Length - 1];
-        }
         return this.modes[(index_ + 1) / 3];
     }
 
@@ -198,15 +184,15 @@ public class BezierSpline : MonoBehaviour
     }
 
 
-    //Accessor function to get the Up rotation point at the given index
-    public Vector3 GetUpRotationPoint(int index_)
+    //Accessor function to get the orientation at the given index
+    public Quaternion GetPointOrientation(int index_)
     {
-        return this.upRotationPoints[(index_ + 1) / 3];
+        return this.controlPointOrientations[(index_ + 1) / 3];
     }
 
 
-    //Accessor function to set the Up rotatino point at the given index
-    public void SetUpRotationPoint(int index_, Vector3 point_)
+    //Accessor function to set the orientation at the given index
+    public void SetPointOrientation(int index_, Quaternion newOrientation_)
     {
         //Finding the control point at the given index so we can find out the direction it's facing
         int controlPointIndex = (index_ + 1) / 3;
@@ -216,8 +202,9 @@ public class BezierSpline : MonoBehaviour
 
         //Getting the forward direction of the control point along the spline
         Vector3 forward = this.GetDirection(progress);
+        Quaternion newOrientation = Quaternion.LookRotation(forward, newOrientation_ * Vector3.up);
 
-        this.upRotationPoints[controlPointIndex] = point_;//Vector3.ProjectOnPlane(point_, forward);
+        this.controlPointOrientations[controlPointIndex] = newOrientation;
     }
 
 
@@ -398,26 +385,28 @@ public class BezierSpline : MonoBehaviour
     //Function called externally from BezierSplineInspector to add 3 new points to our spline curve
     public void AddCurve()
     {
+        //Getting the forward direction of the last point
+        Vector3 lastPointForward = this.GetDirection(1);
+
         //Getting the last point on our spline
         Vector3 point = this.points[this.points.Length - 1];
 
         //Resizing our points array to add 3 more
         Array.Resize(ref this.points, this.points.Length + 3);
 
-        //Making it so that the newly added points are offset from the previously last point
-        this.points[this.points.Length - 3] = new Vector3(point.x + 3, point.y, point.z);
-        this.points[this.points.Length - 2] = new Vector3(point.x + 6, point.y, point.z);
-        this.points[this.points.Length - 1] = new Vector3(point.x + 9, point.y, point.z);
+        //Making it so that the newly added points are offset from the previously last point using the forward direction
+        this.points[this.points.Length - 3] = point + (lastPointForward * 3);
+        this.points[this.points.Length - 2] = point + (lastPointForward * 6);
+        this.points[this.points.Length - 1] = point + (lastPointForward * 9);
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);
         this.modes[this.modes.Length - 1] = this.modes[modes.Length - 2];
 
-        //Adding a new up rotation point
-        Array.Resize(ref this.upRotationPoints, this.upRotationPoints.Length + 1);
-        //Getting the distance difference that the previously last up rotation point is from the previously last control point
-        Vector3 distDiff = this.upRotationPoints[this.upRotationPoints.Length - 2] - this.points[this.points.Length - 4];
-        this.upRotationPoints[this.upRotationPoints.Length - 1] = this.points[this.points.Length -1] + distDiff;
+        //Adding a new orientation for the added point
+        Array.Resize(ref this.controlPointOrientations, this.controlPointOrientations.Length + 1);
+        //Setting the orientation for the added point to face the forward direction we were just using
+        this.controlPointOrientations[this.controlPointOrientations.Length - 1] = Quaternion.Euler(lastPointForward);
 
         //Making sure the added handles are behaving correctly
         this.EnforceMode(this.points.Length - 4);
@@ -427,7 +416,7 @@ public class BezierSpline : MonoBehaviour
         {
             this.points[this.points.Length - 1] = this.points[0];
             this.modes[this.modes.Length - 1] = this.modes[0];
-            this.upRotationPoints[this.upRotationPoints.Length - 1] = this.upRotationPoints[0];
+            this.controlPointOrientations[this.controlPointOrientations.Length - 1] = this.controlPointOrientations[0];
             this.EnforceMode(0);
         }
     }
@@ -470,18 +459,16 @@ public class BezierSpline : MonoBehaviour
             this.modes = newModesArray;
 
             //Creating a new array of up direction points that will not have the removed point
-            Vector3[] newUpDirectionArray = { };
-            Array.Resize(ref newUpDirectionArray, this.upRotationPoints.Length - 1);
+            Quaternion[] newOrientationArray = { };
+            Array.Resize(ref newOrientationArray, this.controlPointOrientations.Length - 1);
             //Looping through our current array of up direction points and copying all but the last one
-            for (int u = 0; u < newUpDirectionArray.Length; ++u)
+            for (int u = 0; u < newOrientationArray.Length; ++u)
             {
-                Vector3 newUpDirection = new Vector3(this.upRotationPoints[u + 1].x,
-                                                     this.upRotationPoints[u + 1].y,
-                                                     this.upRotationPoints[u + 1].z);
-                newUpDirectionArray[u] = newUpDirection;
+                Quaternion newUpDirection = this.controlPointOrientations[u + 1];
+                newOrientationArray[u] = newUpDirection;
             }
             //Setting our up direction points array to the new, shorter array
-            this.upRotationPoints = newUpDirectionArray;
+            this.controlPointOrientations = newOrientationArray;
         }
         //If we're removing the last control point in the spline
         else if(index_ == this.points.Length - 1)
@@ -493,7 +480,7 @@ public class BezierSpline : MonoBehaviour
             Array.Resize(ref this.modes, this.points.Length - 1);
 
             //Removing the last up rotation point
-            Array.Resize(ref this.upRotationPoints, this.points.Length - 1);
+            Array.Resize(ref this.controlPointOrientations, this.points.Length - 1);
         }
         //If we're removing a control point somewhere in the middle
         else
@@ -547,11 +534,11 @@ public class BezierSpline : MonoBehaviour
             this.modes = newModesArray;
 
             //Creating a new array of up direction points that will not have the removed point
-            Vector3[] newUpDirectionArray = { };
-            Array.Resize(ref newUpDirectionArray, this.upRotationPoints.Length - 1);
+            Quaternion[] newOrientationArray = { };
+            Array.Resize(ref newOrientationArray, this.controlPointOrientations.Length - 1);
             //Looping through our current array of up direction points and copying all but the removed one
             int upRotOffset = 0;
-            for (int u = 0; u + upRotOffset < this.upRotationPoints.Length; ++u)
+            for (int u = 0; u + upRotOffset < this.controlPointOrientations.Length; ++u)
             {
                 //If the current up rotation point is the one we're removing, we ignore it and increase the offset
                 if (u + upRotOffset == (index_ + 1) / 3)
@@ -562,11 +549,11 @@ public class BezierSpline : MonoBehaviour
                 //If the current up rotation point isn't the one we're removing, we add it to the new array
                 else
                 {
-                    newUpDirectionArray[u] = this.upRotationPoints[u + upRotOffset];
+                    newOrientationArray[u] = this.controlPointOrientations[u + upRotOffset];
                 }
             }
             //Setting our up direction points array to the new, shorter array
-            this.upRotationPoints = newUpDirectionArray;
+            this.controlPointOrientations = newOrientationArray;
         }
     }
 }
