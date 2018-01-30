@@ -8,6 +8,8 @@ public class BezierSplineInspector : Editor
 {
     //Bool that determines if we display the transform handles for each spline point
     private static bool showHandles = true;
+    //Bool that determines if we display the rotation handles for each spline point
+    private static bool showRotationHandles = true;
     //Bool that determines if we display the lines for the spline curve velocity
     private static bool showVelocityLines = false;
 
@@ -36,6 +38,17 @@ public class BezierSplineInspector : Editor
 
 
 
+    //Function called when this inspector is initialized
+    private void Awake()
+    {
+        //If the BezierSplineDisplay.cs' list of splines to show is null, we initialize a new list
+        if(BezierSplineDisplay.splinesToAlwaysRender == null)
+        {
+            BezierSplineDisplay.splinesToAlwaysRender = new List<BezierSpline>();
+        }
+    }
+
+
     //Function called when the GUI is displayed
     private void OnSceneGUI()
     {
@@ -62,19 +75,14 @@ public class BezierSplineInspector : Editor
                 Handles.color = this.spline.handleLineColor;
                 Handles.DrawLine(p0, p1);
                 Handles.DrawLine(p2, p3);
+            }
 
+            //If we are supposed to draw the rotation handles for the Up rotation points
+            if(showRotationHandles)
+            {
                 //Drawing the control point to the up direction point
-                Vector3 upRotationPoint = this.ShowUpRotationPoint(i-1);
-                Handles.DrawLine(p0, upRotationPoint);
-
-                //Getting the % progress that this control point is along the spline
-                float progress = (float)(i -1) / (float)(this.spline.ControlPointCount - 1);
-                
-                //Getting the forward direction of the control point along the spline
-                Vector3 forward = this.spline.GetDirection(progress);
-                
-                //Drawing a circle around the control point
-                //Handles.DrawWireArc(p0, forward, upRotationPoint, 360, 1f);
+                Quaternion pointOrientation = this.ShowPointOrientation(i - 1);
+                //Handles.DoRotationHandle(pointOrientation, p0);
             }
 
             //Drawing the bezier curve
@@ -84,18 +92,12 @@ public class BezierSplineInspector : Editor
             p0 = p3;
         }
 
-        //If we draw handles, we need to draw the loop for the last 
-        if(showHandles && !this.spline.Loop)
+        //If we draw rotation handles, we need to draw the handle for the last point since it gets cut off in the loop above
+        if(showRotationHandles && !this.spline.Loop)
         {
             //Drawing the control point to the up direction point
-            Vector3 upRotationPoint = this.ShowUpRotationPoint(this.spline.ControlPointCount - 1);
-            Handles.DrawLine(p0, upRotationPoint);
-
-            //Getting the forward direction of the control point along the spline
-            Vector3 forward = this.spline.GetDirection(1);
-            //Debug.Log("Index " + i + " progress: " + progress + ", Direction: " + forward);
-            //Drawing a circle around the control point
-            //Handles.DrawWireArc(p0, forward, upRotationPoint, 360, 1f);
+            Quaternion pointOrientation = this.ShowPointOrientation(this.spline.ControlPointCount - 1);
+            //Handles.DoRotationHandle(pointOrientation, p0);
         }
 
         //If we show the velocity lines, we draw them
@@ -140,6 +142,8 @@ public class BezierSplineInspector : Editor
 
         //Creating a GUI toggle for if we should show the transform handles for points
         showHandles = GUILayout.Toggle(showHandles, "Show Handles");
+        //Creating a GUI toggle for if we should show the rotation control handles for points
+        showRotationHandles = GUILayout.Toggle(showRotationHandles, "Show Rotation Handles");
         //Creating a GUI toggle for if we should show the velocity lines for the curves
         showVelocityLines = GUILayout.Toggle(showVelocityLines, "Show Velocity");
 
@@ -151,6 +155,19 @@ public class BezierSplineInspector : Editor
             //Adds new points to the end of our spline
             this.spline.AddCurve();
             EditorUtility.SetDirty(this.spline);
+        }
+        
+        //If we're selecting a control point and not a rotation point
+        if(!this.isSelectedPointRotation && this.selectedIndex % 3 == 0)
+        {
+            //Creating a GUI button to delete a selected control point
+            if(GUILayout.Button("Delete Control Point"))
+            {
+                //Tells our spline to remove the selected control point
+                this.spline.RemoveControlPoint(this.selectedIndex);
+                //Selecting the spline's starting index
+                this.selectedIndex = 0;
+            }
         }
 
         //If this curve isn't in our list of splines to show
@@ -229,25 +246,29 @@ public class BezierSplineInspector : Editor
     }
 
 
-    //Function called from OnSceneGUI to display the transforms for each up rotation point
-    private Vector3 ShowUpRotationPoint(int index_)
+    //Function called from OnSceneGUI to display the rotation for the given control point
+    private Quaternion ShowPointOrientation(int index_)
     {
         float handleSize = 0.06f;
         float pickSize = 0.06f;
 
-        //The position of the point we return relative to our handle transform
-        Vector3 point = this.handleTransform.TransformPoint(this.spline.GetUpRotationPoint(index_));
+        //Getting the rotation orientation for the point at the given index
+        Quaternion pointOrientation = this.spline.GetPointOrientation(index_);
 
-        //If we show this spline's handles
-        if(showHandles)
+        //If we show this spline's rotation handles
+        if(showRotationHandles)
         {
             //Setting our control point handle's color to the handle line color
             Handles.color = this.spline.handleLineColor;
+            
+            //Getting the rotation handle point to toggle the rotation
+            Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
+            point += pointOrientation * new Vector3(0, this.spline.rotationHandleRadius, 0);
 
-            //Setting the handle size
             float size = HandleUtility.GetHandleSize(point);
 
             //Creating a handle button to designate the selected point index
+            Handles.DrawLine(point, this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_)));
             if (Handles.Button(point, this.handleRotation, size * handleSize, size * pickSize, Handles.DotCap))
             {
                 this.selectedIndex = index_;
@@ -258,51 +279,33 @@ public class BezierSplineInspector : Editor
             //If the selected point index is the one we're clicking and we're clicking a rotation point, we can move it
             if (this.selectedIndex == index_ && this.isSelectedPointRotation)
             {
-                //Getting the % progress that this control point is along the spline
-                float progress = (float)(index_) / (float)(this.spline.ControlPointCount - 1);
-
                 //Getting the forward direction of the control point along the spline
-                Vector3 forward = this.spline.GetDirection(progress);
+                Vector3 forward = pointOrientation * Vector3.forward;
                 //Getting the Up direction of the control point based on this up rotation point
-                Vector3 up = Vector3.Normalize(point - this.spline.GetControlPoint(index_));
-
-                //Getting the rotation value for the direction this point is facing based on the forward and up rotations
-                Quaternion rotationToUpPoint = Quaternion.LookRotation(forward, up);
+                Vector3 up = pointOrientation * Vector3.up;
 
                 //The center point of the disk in local space
                 Vector3 localCenterPoint = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
-                
+
+                Quaternion localRot = pointOrientation * Quaternion.Inverse(this.handleTransform.rotation);
+
                 //Checking to see if we're trying to move the handle for the given point
                 EditorGUI.BeginChangeCheck();
-                Quaternion rotationChange = Handles.Disc(rotationToUpPoint, localCenterPoint, forward, this.spline.rotationHandleRadius, false, 1);
-                //*point = Handles.DoPositionHandle(point, this.handleRotation);
+                //Quaternion rotationChange = Handles.DoRotationHandle(pointOrientation, localCenterPoint);
+                Quaternion rotationChange = Handles.Disc(localRot, localCenterPoint, forward, this.spline.rotationHandleRadius, false, 0);
 
                 //If we're done changing the point handle, we apply the change to the curve's point
                 if (EditorGUI.EndChangeCheck())
                 {
                     //Sets the spline to dirty so that we can save changes
-                    Undo.RecordObject(this.spline, "Rotate Up Point");
+                    Undo.RecordObject(this.spline, "Rotate Point");
                     EditorUtility.SetDirty(this.spline);
-                    //Moves the point at the given index to the handle transform's position
-                    //this.spline.SetUpRotationPoint(index_, this.handleTransform.InverseTransformPoint(point));
-                    /*Vector3 newPos = Vector3.Normalize(rotationChange.eulerAngles);
-                    newPos = new Vector3(newPos.x * (point.x - localCenterPoint.x),
-                                         newPos.y * (point.y - localCenterPoint.y),
-                                         newPos.z * (point.z - localCenterPoint.z));
-                    newPos += localCenterPoint;*/
-                    //this.spline.SetUpRotationPoint(index_, newPos);
-                    //Vector3 newPos = localCenterPoint + ((rotationChange * Vector3.Normalize(up))); //* this.spline.rotationHandleRadius);
-
-                    float zDiff = rotationChange.eulerAngles.z - rotationToUpPoint.eulerAngles.z;
-                    Vector3 direction = point - localCenterPoint;
-                    direction = Quaternion.Euler(new Vector3(1, 0, 0)) * direction;
-                    
-                    this.spline.SetUpRotationPoint(index_, this.spline.GetControlPoint(index_) + direction);
+                    this.spline.SetPointOrientation(index_, rotationChange);
                 }
             }
         }
 
-        return point;
+        return pointOrientation;
     }
 
 
