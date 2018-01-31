@@ -9,6 +9,17 @@ public class BezierSpline : MonoBehaviour
     public float splineWidth = 5;
     //The radius of the rotation handle when shown
     public float rotationHandleRadius = 3;
+    //The size of the control point handles when shown
+    public float controlPointHandleSize = 0.06f;
+
+    [Space(8)]
+
+    //The time increment along the spline for BezierSplineInspector.cs to draw a node on
+    public float timeIncrementDisplay = 6;
+    //The total amount of time that it will take to move along this spline for BezierSplineInspector.cs to use
+    public float totalTimeDisplay = 60;
+
+    [Space(8)]
 
     //Color for the spline
     public Color splineColor = Color.red;
@@ -16,8 +27,11 @@ public class BezierSpline : MonoBehaviour
     //Color for the line connecting the handles
     public Color handleLineColor = Color.green;
 
-    //Color for the velocity lines
+    //Color for the rotation handle lines
     public Color rotationLineColor = Color.blue;
+
+    //Color for the time increment nodes
+    public Color timeIncrementColor = Color.black;
 
     //The list of control points that make up this spline
     [HideInInspector]
@@ -413,7 +427,9 @@ public class BezierSpline : MonoBehaviour
     public void AddCurve()
     {
         //Getting the forward direction of the last point
-        Vector3 lastPointForward = this.GetDirection(1);
+        Vector3 lastPointForward = (this.points[this.points.Length - 1]);
+        lastPointForward -= (this.points[this.points.Length - 2]);
+        lastPointForward = Vector3.Normalize(lastPointForward);
 
         //Getting the last point on our spline
         Vector3 point = this.points[this.points.Length - 1];
@@ -422,13 +438,9 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref this.points, this.points.Length + 3);
 
         //Making it so that the newly added points are offset from the previously last point using the forward direction
-        /*this.points[this.points.Length - 3] = point + (lastPointForward * 3);
-        this.points[this.points.Length - 2] = point + (lastPointForward * 6);
-        this.points[this.points.Length - 1] = point + (lastPointForward * 9);*/
-        Quaternion lastPointOrientation = this.controlPointOrientations[this.controlPointOrientations.Length - 1];
-        this.points[this.points.Length - 3] = point + (lastPointOrientation * new Vector3(0, 0, -3));
-        this.points[this.points.Length - 2] = point + (lastPointOrientation * new Vector3(0, 0, -6));
-        this.points[this.points.Length - 1] = point + (lastPointOrientation * new Vector3(0, 0, -9));
+        this.points[this.points.Length - 3] = point + (lastPointForward * 5);
+        this.points[this.points.Length - 2] = point + (lastPointForward * 10);
+        this.points[this.points.Length - 1] = point + (lastPointForward * 15);
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);

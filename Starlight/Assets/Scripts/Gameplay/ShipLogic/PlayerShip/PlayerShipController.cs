@@ -326,8 +326,8 @@ public class PlayerShipController : MonoBehaviour
         if(collider_.gameObject.GetComponent<RegionZone>())
         {
             //If the region zone effects this player
-            if ((collider_.gameObject.GetComponent<RegionZone>().effectPlayer1 && this.playerController == Players.P1) ||
-                (collider_.gameObject.GetComponent<RegionZone>().effectPlayer2 && this.playerController == Players.P2))
+            if ((collider_.gameObject.GetComponent<RegionZone>().affectPlayer1 && this.playerController == Players.P1) ||
+                (collider_.gameObject.GetComponent<RegionZone>().affectPlayer2 && this.playerController == Players.P2))
             {
                 //If the region has rail movement
                 /*if (collider_.gameObject.GetComponent<RegionZone>().movementType == RegionZone.RegionMovement.Rail)
