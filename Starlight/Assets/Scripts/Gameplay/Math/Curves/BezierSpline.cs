@@ -17,7 +17,7 @@ public class BezierSpline : MonoBehaviour
     public Color handleLineColor = Color.green;
 
     //Color for the velocity lines
-    public Color velocityLineColor = Color.yellow;
+    public Color rotationLineColor = Color.blue;
 
     //The list of control points that make up this spline
     [HideInInspector]
