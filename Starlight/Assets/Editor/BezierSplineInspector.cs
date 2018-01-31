@@ -12,6 +12,8 @@ public class BezierSplineInspector : Editor
     private static bool showRotationHandles = false;
     //Bool that determines if we display the time increments for traveling along the spline
     private static bool showTimeIncrements = false;
+    //Bool that determines if we display the bounding box along the different paths
+    private static bool showBoundingBox = false;
 
     //Array of colors that we use to color control point handles based on their mode
     private Color[] modeColors =
@@ -111,7 +113,7 @@ public class BezierSplineInspector : Editor
                 //Getting the percent progress that this time increment is along the spline
                 float progress = t / this.spline.totalTimeDisplay;
                 //Getting the point in space relative to our transform handle
-                Vector3 point = (this.spline.GetPoint(progress));
+                Vector3 point = this.spline.GetPoint(progress);
 
                 //Drawing a button at the point in space
                 float size = HandleUtility.GetHandleSize(point);
@@ -120,6 +122,39 @@ public class BezierSplineInspector : Editor
 
                 //Drawing text next to the button so we know which point is at which time
                 Handles.Label(point, ("" + t));
+            }
+        }
+
+        //If we draw the bounding boxes, we need to loop through each box to display along the selected spline
+        if(showBoundingBox)
+        {
+            Handles.color = this.spline.boundingBoxColor;
+
+            //Looping through the number of times that our spline designates
+            for(int b = 1; b < this.spline.numBoundingBoxToDisplay + 1; ++b)
+            {
+                //Getting the percent progress this bounding box is along the spline
+                float progress = (1f * b) / (1f * this.spline.numBoundingBoxToDisplay);
+                //Getting the point in space relative to our transform handle
+                Vector3 point = (this.spline.GetPoint(progress));
+                //Getting the rotation orientation at the given point
+                Quaternion pointOrientation = this.spline.GetOrientation(progress);
+
+                //Shorter variables for the x and y values of the bounding box
+                float x = this.spline.boundingBoxDisplay.x / 2;
+                float y = this.spline.boundingBoxDisplay.y / 2;
+
+                //Getting each of the corner positions that the rectangle will be confined to
+                Vector3 topLeft = point + (pointOrientation * new Vector3(-x, y, 0));
+                Vector3 topRight = point + (pointOrientation * new Vector3(x, y, 0));
+                Vector3 botLeft = point + (pointOrientation * new Vector3(-x, -y, 0));
+                Vector3 botRight = point + (pointOrientation * new Vector3(x, -y, 0));
+
+                //Drawing a rectangle using the point orientation and our spline's bounding box sizes
+                Handles.DrawLine(topLeft, topRight);//Top
+                Handles.DrawLine(botLeft, botRight);//Bottom
+                Handles.DrawLine(topLeft, botLeft);//Left
+                Handles.DrawLine(topRight, botRight);//Right
             }
         }
 
@@ -200,6 +235,14 @@ public class BezierSplineInspector : Editor
         //Creating a GUI toggle for if we should show the time incriments along the spline
         EditorGUI.BeginChangeCheck();
         showTimeIncrements = GUILayout.Toggle(showTimeIncrements, "Show Time Increments");
+        if(EditorGUI.EndChangeCheck())
+        {
+            this.Repaint();
+        }
+
+        //Creating a GUI toggle for if we should show the bounding boxes along the spline
+        EditorGUI.BeginChangeCheck();
+        showBoundingBox = GUILayout.Toggle(showBoundingBox, "Show Bounding Boxes");
         if(EditorGUI.EndChangeCheck())
         {
             this.Repaint();

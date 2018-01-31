@@ -14,6 +14,16 @@ public class BezierSpline : MonoBehaviour
 
     [Space(8)]
 
+    //The distance that added control points are set to when created
+    public float addedPointDistance = 10;
+    //The bounding box width and height for BezierSplineInspector.cs to display
+    public Vector2 boundingBoxDisplay = new Vector2(30, 12);
+    //The number of bounding boxes that BezierSplineInspector.cs will display
+    [Range(1, 100)]
+    public int numBoundingBoxToDisplay = 15;
+
+    [Space(8)]
+
     //The time increment along the spline for BezierSplineInspector.cs to draw a node on
     public float timeIncrementDisplay = 6;
     //The total amount of time that it will take to move along this spline for BezierSplineInspector.cs to use
@@ -32,6 +42,9 @@ public class BezierSpline : MonoBehaviour
 
     //Color for the time increment nodes
     public Color timeIncrementColor = Color.black;
+
+    //Color for the bounding box lines
+    public Color boundingBoxColor = Color.magenta;
 
     //The list of control points that make up this spline
     [HideInInspector]
@@ -276,6 +289,13 @@ public class BezierSpline : MonoBehaviour
             t_ = 1f;
             i = this.points.Length - 4;
         }
+        //If the percent along the spline is at or below 0%, we find the starting point of the first curve
+        else if(t_ <= 0)
+        {
+            t_ = 0f;
+            i = 0;
+            return this.transform.TransformPoint(this.points[0]);
+        }
         //Otherwise we find the starting point of the curve that's at the percent given
         else
         {
@@ -332,6 +352,56 @@ public class BezierSpline : MonoBehaviour
     public Vector3 GetDirection(float t_)
     {
         return this.GetVelocity(t_).normalized;
+    }
+
+
+    //Function called externally from BezierSplineInspector.cs to get the orientation at the given percent
+    public Quaternion GetOrientation(float t_)
+    {
+        //Float to hold the percent of the starting point of the curve we're going to find the point along
+        float firstPointPercent;
+        //Float to hold the percent of the end point of the curve we're going to find the point along
+        float secondPointPercent;
+
+        //Getting the orientations for each of the control points on the curve
+        Quaternion firstOrientation;
+        Quaternion secondOrientation;
+
+        //If the percent along the spline is above 100%, we find the starting point of the last curve
+        if (t_ >= 1f)
+        {
+            t_ = 1f;
+            //Getting the percent points along the spline that our given percent is between
+            firstPointPercent = (1f * (this.points.Length - 4)) / (1f * (this.points.Length - 1));
+            secondPointPercent = 1f;
+            //Getting the orientations for each of the control points in the curve
+            firstOrientation = this.GetPointOrientation(this.points.Length - 4);
+            secondOrientation = this.GetPointOrientation(this.points.Length - 1);
+        }
+        //Otherwise we find the starting point of the curve that's at the percent given
+        else
+        {
+            //Finding which curve is at the percent
+            t_ = Mathf.Clamp01(t_) * this.CurveCount;
+            int firstPoint = (int)t_;
+            //Finding the index of the first point along that curve
+            t_ -= firstPoint;
+            firstPoint *= 3;
+
+            //Getting the percent points along the spline that our given percent is between
+            firstPointPercent = (1f * firstPoint) / (1f * (this.points.Length - 1));
+            secondPointPercent = (1f * (firstPoint + 3)) / (1f * (this.points.Length - 1));
+
+            //Getting the orientations for each of the control points in the curve
+            firstOrientation = this.GetPointOrientation(firstPoint);
+            secondOrientation = this.GetPointOrientation(firstPoint + 3);
+        }
+
+        //Getting the percent that the given point is between these two rotations
+        float orientationPercent = (t_ - firstPointPercent) / (secondPointPercent - firstPointPercent);
+
+        //Getting the Quaternion orientation between the two points at the orientation percent
+        return Quaternion.Lerp(firstOrientation, secondOrientation, orientationPercent);
     }
 
 
@@ -438,9 +508,9 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref this.points, this.points.Length + 3);
 
         //Making it so that the newly added points are offset from the previously last point using the forward direction
-        this.points[this.points.Length - 3] = point + (lastPointForward * 5);
-        this.points[this.points.Length - 2] = point + (lastPointForward * 10);
-        this.points[this.points.Length - 1] = point + (lastPointForward * 15);
+        this.points[this.points.Length - 3] = point + (lastPointForward * this.addedPointDistance);
+        this.points[this.points.Length - 2] = point + (lastPointForward * this.addedPointDistance * 2);
+        this.points[this.points.Length - 1] = point + (lastPointForward * this.addedPointDistance * 3);
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);
@@ -449,7 +519,7 @@ public class BezierSpline : MonoBehaviour
         //Adding a new orientation for the added point
         Array.Resize(ref this.controlPointOrientations, this.controlPointOrientations.Length + 1);
         //Setting the orientation for the added point to face the forward direction we were just using
-        this.controlPointOrientations[this.controlPointOrientations.Length - 1] = Quaternion.Euler(lastPointForward);
+        this.controlPointOrientations[this.controlPointOrientations.Length - 1] = Quaternion.LookRotation(this.GetControlPoint(this.points.Length - 1) - this.GetControlPoint(this.points.Length - 2));
 
         //Making sure the added handles are behaving correctly
         this.EnforceMode(this.points.Length - 4);
@@ -458,7 +528,6 @@ public class BezierSpline : MonoBehaviour
         if(this.loop)
         {
             this.points[this.points.Length - 1] = this.points[0];
-            Debug.Log("Moo");
             this.modes[this.modes.Length - 1] = this.modes[0];
             this.controlPointOrientations[this.controlPointOrientations.Length - 1] = this.controlPointOrientations[0];
             this.EnforceMode(0);
