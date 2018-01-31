@@ -6,6 +6,9 @@ using UnityEditor;
 [CustomEditor(typeof(BezierSpline))]
 public class BezierSplineInspector : Editor
 {
+    //Float that determines the size of the handles for splines
+    private static float handleSize = 0.06f;
+
     //Bool that determines if we display the transform handles for each spline point
     private static bool showHandles = true;
     //Bool that determines if we display the rotation handles for each spline point
@@ -121,6 +124,16 @@ public class BezierSplineInspector : Editor
         //Getting the selected spline reference
         this.spline = target as BezierSpline;
 
+        //Checking for any changes with the spline handle size float
+        EditorGUI.BeginChangeCheck();
+        float newHandleSize = EditorGUILayout.FloatField("Handle Size", handleSize);
+        //If the handle size was changed
+        if(EditorGUI.EndChangeCheck())
+        {
+            //We set the new handle size
+            handleSize = newHandleSize;
+        }
+
         //Checking for any changes with the selected spline's "loop" variable
         EditorGUI.BeginChangeCheck();
         bool loop = EditorGUILayout.Toggle("Loop Spline", this.spline.Loop);
@@ -195,9 +208,6 @@ public class BezierSplineInspector : Editor
     //Function called from OnSceneGUI to display the transforms for each point
     private Vector3 ShowPoint(int index_)
     {
-        float handleSize = 0.06f;
-        float pickSize = 0.06f;
-
         //The position of the point we return
         Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
 
@@ -216,7 +226,7 @@ public class BezierSplineInspector : Editor
             }
 
             //Creating a handle button to designate the selected point index
-            if(Handles.Button(point, this.handleRotation, size * handleSize, size * pickSize, Handles.DotCap))
+            if(Handles.Button(point, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
             {
                 this.selectedIndex = index_;
                 this.isSelectedPointRotation = false;
@@ -249,9 +259,6 @@ public class BezierSplineInspector : Editor
     //Function called from OnSceneGUI to display the rotation for the given control point
     private Quaternion ShowPointOrientation(int index_)
     {
-        float handleSize = 0.06f;
-        float pickSize = 0.06f;
-
         //Getting the rotation orientation for the point at the given index
         Quaternion pointOrientation = this.spline.GetPointOrientation(index_);
 
@@ -269,7 +276,7 @@ public class BezierSplineInspector : Editor
 
             //Creating a handle button to designate the selected point index
             Handles.DrawLine(point, this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_)));
-            if (Handles.Button(point, this.handleRotation, size * handleSize, size * pickSize, Handles.DotCap))
+            if (Handles.Button(point, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
             {
                 this.selectedIndex = index_;
                 this.isSelectedPointRotation = true;
@@ -287,7 +294,7 @@ public class BezierSplineInspector : Editor
                 //The center point of the disk in local space
                 Vector3 localCenterPoint = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
 
-                Quaternion localRot = pointOrientation * Quaternion.Inverse(this.handleTransform.rotation);
+                Quaternion localRot = pointOrientation * this.handleTransform.rotation;
 
                 //Checking to see if we're trying to move the handle for the given point
                 EditorGUI.BeginChangeCheck();

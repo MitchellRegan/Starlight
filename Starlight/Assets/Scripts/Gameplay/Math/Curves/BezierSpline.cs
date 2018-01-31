@@ -335,39 +335,66 @@ public class BezierSpline : MonoBehaviour
         }
 
         //Ints to hold the indices of the points that are fixed (not moving) and the enforced point (made to follow the control point mode)
-        int middleIndex = modeIndex * 3;
-        int fixedIndex;
-        int enforcedIndex;
+        int middleIndex = modeIndex * 3; //Index of the control point
+        int fixedIndex = -1;
+        int enforcedIndex = -1;
 
-        //Finding the index of the fixed point and the point that will be enforced
+        //If the index of the handle we're moving is behind the control point
         if(index_ <= middleIndex)
         {
             fixedIndex = middleIndex - 1;
-            if(fixedIndex < 0)
+            //If we have to loop back around, we select the handle for the last control point
+            if(fixedIndex < 0 && this.loop)
             {
                 fixedIndex = this.points.Length - 2;
             }
             enforcedIndex = middleIndex + 1;
+            //If we have to loop back around, we select the handle for the first control point
             if(enforcedIndex >= this.points.Length)
             {
-                enforcedIndex = 1;
+                if (this.loop)
+                {
+                    enforcedIndex = 1;
+                }
+                else
+                {
+                    enforcedIndex = -1;
+                }
             }
         }
+        //If the index of the handle we're moving is in front of the control point
         else
         {
             fixedIndex = middleIndex + 1;
-            if(fixedIndex >= this.points.Length)
+            //If we have to loop back around, we select the handle for the first control point
+            if(fixedIndex >= this.points.Length && this.loop)
             {
                 fixedIndex = 1;
             }
             enforcedIndex = middleIndex - 1;
-            if(fixedIndex < 0)
+            //If we have to loop back around, we select the handle for the last control point
+            if(enforcedIndex < 0)
             {
-                enforcedIndex = this.points.Length - 2;
+                if (this.loop)
+                {
+                    enforcedIndex = this.points.Length - 2;
+                }
+                else
+                {
+                    enforcedIndex = -1;
+                }
             }
         }
+        
+        //If the fixed index is invalid due to not looping, we do nothing
+        if (fixedIndex < 0 || enforcedIndex < 0)
+        {
+            return;
+        }
 
+        //Getting the position of the control point
         Vector3 middle = this.points[middleIndex];
+
         Vector3 enforcedTangent = middle - this.points[fixedIndex];
         this.points[enforcedIndex] = middle + enforcedTangent;
 
@@ -395,13 +422,17 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref this.points, this.points.Length + 3);
 
         //Making it so that the newly added points are offset from the previously last point using the forward direction
-        this.points[this.points.Length - 3] = point + (lastPointForward * 3);
+        /*this.points[this.points.Length - 3] = point + (lastPointForward * 3);
         this.points[this.points.Length - 2] = point + (lastPointForward * 6);
-        this.points[this.points.Length - 1] = point + (lastPointForward * 9);
+        this.points[this.points.Length - 1] = point + (lastPointForward * 9);*/
+        Quaternion lastPointOrientation = this.controlPointOrientations[this.controlPointOrientations.Length - 1];
+        this.points[this.points.Length - 3] = point + (lastPointOrientation * new Vector3(0, 0, -3));
+        this.points[this.points.Length - 2] = point + (lastPointOrientation * new Vector3(0, 0, -6));
+        this.points[this.points.Length - 1] = point + (lastPointOrientation * new Vector3(0, 0, -9));
 
         //Adding a new mode control type to the newly added point
         Array.Resize(ref this.modes, this.modes.Length + 1);
-        this.modes[this.modes.Length - 1] = this.modes[modes.Length - 2];
+        this.modes[this.modes.Length - 1] = BezierControlPointMode.Aligned;
 
         //Adding a new orientation for the added point
         Array.Resize(ref this.controlPointOrientations, this.controlPointOrientations.Length + 1);
@@ -415,6 +446,7 @@ public class BezierSpline : MonoBehaviour
         if(this.loop)
         {
             this.points[this.points.Length - 1] = this.points[0];
+            Debug.Log("Moo");
             this.modes[this.modes.Length - 1] = this.modes[0];
             this.controlPointOrientations[this.controlPointOrientations.Length - 1] = this.controlPointOrientations[0];
             this.EnforceMode(0);
