@@ -6,13 +6,12 @@ using UnityEditor;
 [CustomEditor(typeof(BezierSpline))]
 public class BezierSplineInspector : Editor
 {
-    //Float that determines the size of the handles for splines
-    private static float handleSize = 0.06f;
-
     //Bool that determines if we display the transform handles for each spline point
     private static bool showHandles = true;
     //Bool that determines if we display the rotation handles for each spline point
-    private static bool showRotationHandles = true;
+    private static bool showRotationHandles = false;
+    //Bool that determines if we display the time increments for traveling along the spline
+    private static bool showTimeIncrements = false;
 
     //Array of colors that we use to color control point handles based on their mode
     private Color[] modeColors =
@@ -101,6 +100,29 @@ public class BezierSplineInspector : Editor
             //Handles.DoRotationHandle(pointOrientation, p0);
         }
 
+        //If we draw time increments, we need to loop through each time increment for the selected spline
+        if(showTimeIncrements)
+        {
+            Handles.color = this.spline.timeIncrementColor;
+
+            //Starting the increment on the first step since we know where time 0 is
+            for(float t = this.spline.timeIncrementDisplay; t <= this.spline.totalTimeDisplay; t += this.spline.timeIncrementDisplay)
+            {
+                //Getting the percent progress that this time increment is along the spline
+                float progress = t / this.spline.totalTimeDisplay;
+                //Getting the point in space relative to our transform handle
+                Vector3 point = (this.spline.GetPoint(progress));
+
+                //Drawing a button at the point in space
+                float size = HandleUtility.GetHandleSize(point);
+                float handleSize = this.spline.controlPointHandleSize / 3;
+                Handles.Button(point, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap);
+
+                //Drawing text next to the button so we know which point is at which time
+                Handles.Label(point, ("" + t));
+            }
+        }
+
         //If we press the F key, we need to override and focus the camera on the selected point
         if (Event.current.keyCode == KeyCode.F)
         {
@@ -131,12 +153,12 @@ public class BezierSplineInspector : Editor
 
         //Checking for any changes with the spline handle size float
         EditorGUI.BeginChangeCheck();
-        float newHandleSize = EditorGUILayout.FloatField("Handle Size", handleSize);
+        float newHandleSize = EditorGUILayout.FloatField("Handle Size", this.spline.controlPointHandleSize);
         //If the handle size was changed
         if(EditorGUI.EndChangeCheck())
         {
             //We set the new handle size
-            handleSize = newHandleSize;
+            this.spline.controlPointHandleSize = newHandleSize;
         }
 
         //Checking for any changes with the selected spline's "loop" variable
@@ -170,6 +192,14 @@ public class BezierSplineInspector : Editor
         //Creating a GUI toggle for if we should show the rotation control handles for points
         EditorGUI.BeginChangeCheck();
         showRotationHandles = GUILayout.Toggle(showRotationHandles, "Show Rotation Handles");
+        if(EditorGUI.EndChangeCheck())
+        {
+            this.Repaint();
+        }
+
+        //Creating a GUI toggle for if we should show the time incriments along the spline
+        EditorGUI.BeginChangeCheck();
+        showTimeIncrements = GUILayout.Toggle(showTimeIncrements, "Show Time Increments");
         if(EditorGUI.EndChangeCheck())
         {
             this.Repaint();
@@ -243,6 +273,7 @@ public class BezierSplineInspector : Editor
             }
 
             //Creating a handle button to designate the selected point index
+            float handleSize = this.spline.controlPointHandleSize;
             if(Handles.Button(point, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
             {
                 this.selectedIndex = index_;
@@ -292,6 +323,7 @@ public class BezierSplineInspector : Editor
             float size = HandleUtility.GetHandleSize(point);
 
             //Creating a handle button to designate the selected point index
+            float handleSize = this.spline.controlPointHandleSize;
             Handles.DrawLine(point, this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_)));
             if (Handles.Button(point, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
             {
