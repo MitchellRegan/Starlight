@@ -13,8 +13,6 @@ public class BezierSplineInspector : Editor
     private static bool showHandles = true;
     //Bool that determines if we display the rotation handles for each spline point
     private static bool showRotationHandles = true;
-    //Bool that determines if we display the lines for the spline curve velocity
-    private static bool showVelocityLines = false;
 
     //Array of colors that we use to color control point handles based on their mode
     private Color[] modeColors =
@@ -103,10 +101,17 @@ public class BezierSplineInspector : Editor
             //Handles.DoRotationHandle(pointOrientation, p0);
         }
 
-        //If we show the velocity lines, we draw them
-        if (showVelocityLines)
+        //If we press the F key, we need to override and focus the camera on the selected point
+        if (Event.current.keyCode == KeyCode.F)
         {
-            this.ShowDirections();
+            //If we have a selected control point
+            if (this.selectedIndex > 1)
+            {
+                Event.current.Use();
+                //Making the scene view camera focus on the selected control point
+                Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(this.selectedIndex));
+                SceneView.lastActiveSceneView.LookAt(point);
+            }
         }
     }
 
@@ -145,6 +150,7 @@ public class BezierSplineInspector : Editor
             EditorUtility.SetDirty(this.spline);
             //Telling the selected spline to loop back to the first control point
             this.spline.Loop = loop;
+            this.Repaint();
         }
 
         //If we have a valid selected point index, we can allow the user to edit the selected handle's position with text
@@ -154,11 +160,20 @@ public class BezierSplineInspector : Editor
         }
 
         //Creating a GUI toggle for if we should show the transform handles for points
+        EditorGUI.BeginChangeCheck();
         showHandles = GUILayout.Toggle(showHandles, "Show Handles");
+        if(EditorGUI.EndChangeCheck())
+        {
+            this.Repaint();
+        }
+
         //Creating a GUI toggle for if we should show the rotation control handles for points
+        EditorGUI.BeginChangeCheck();
         showRotationHandles = GUILayout.Toggle(showRotationHandles, "Show Rotation Handles");
-        //Creating a GUI toggle for if we should show the velocity lines for the curves
-        showVelocityLines = GUILayout.Toggle(showVelocityLines, "Show Velocity");
+        if(EditorGUI.EndChangeCheck())
+        {
+            this.Repaint();
+        }
 
         //Creating a GUI button to add a curve to our spline
         if (GUILayout.Button("Add Curve"))
@@ -168,6 +183,7 @@ public class BezierSplineInspector : Editor
             //Adds new points to the end of our spline
             this.spline.AddCurve();
             EditorUtility.SetDirty(this.spline);
+            this.Repaint();
         }
         
         //If we're selecting a control point and not a rotation point
@@ -180,6 +196,7 @@ public class BezierSplineInspector : Editor
                 this.spline.RemoveControlPoint(this.selectedIndex);
                 //Selecting the spline's starting index
                 this.selectedIndex = 0;
+                this.Repaint();
             }
         }
 
@@ -266,7 +283,7 @@ public class BezierSplineInspector : Editor
         if(showRotationHandles)
         {
             //Setting our control point handle's color to the handle line color
-            Handles.color = this.spline.handleLineColor;
+            Handles.color = this.spline.rotationLineColor;
             
             //Getting the rotation handle point to toggle the rotation
             Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
@@ -314,28 +331,7 @@ public class BezierSplineInspector : Editor
 
         return pointOrientation;
     }
-
-
-    //Function called from OnSceneGUI to draw the velocity lines along the curves
-    private void ShowDirections()
-    {
-        //Constant float to scale the curve
-        float directionScale = 0.5f;
-
-        //Drawing the velocity lines for each point
-        Handles.color = this.spline.velocityLineColor;
-        Vector3 point = this.spline.GetPoint(0f);
-        Handles.DrawLine(point, point + this.spline.GetDirection(0f) * directionScale);
-
-        //Looping through each step in the curve
-        int steps = stepsPerCurve * this.spline.CurveCount;
-        for (int i = 1; i <= steps; i++)
-        {
-            point = this.spline.GetPoint(i / (float)steps);
-            Handles.DrawLine(point, point + this.spline.GetDirection(i / (float)steps * directionScale));
-        }
-    }
-
+    
 
     //Function called from OnInspectorGUI that lets us edit the selected control point's position with text
     private void DrawSelectedPointInspector()
