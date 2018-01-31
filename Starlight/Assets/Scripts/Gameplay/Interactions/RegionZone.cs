@@ -10,8 +10,8 @@ public class RegionZone : MonoBehaviour
     public RegionMovement movementType = RegionMovement.Rail;
 
     //Bools for which player this region effects
-    public bool effectPlayer1 = true;
-    public bool effectPlayer2 = true;
+    public bool affectPlayer1 = true;
+    public bool affectPlayer2 = true;
 
     //If this is a rail zone, we need to designate which rail zone the player will follow
     public BezierSpline railZoneSplineToFollow;

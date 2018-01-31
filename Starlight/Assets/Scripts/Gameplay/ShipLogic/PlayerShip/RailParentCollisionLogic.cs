@@ -37,8 +37,8 @@ public class RailParentCollisionLogic : MonoBehaviour
             RegionZone newRegion = collider_.gameObject.GetComponent<RegionZone>();
 
             //If the region zone effects this player
-            if ((newRegion.effectPlayer1 && this.ourShipController.playerController == Players.P1) ||
-                (newRegion.effectPlayer2 && this.ourShipController.playerController == Players.P2))
+            if ((newRegion.affectPlayer1 && this.ourShipController.playerController == Players.P1) ||
+                (newRegion.affectPlayer2 && this.ourShipController.playerController == Players.P2))
             {
                 //If the region has rail movement
                 if (newRegion.movementType == RegionZone.RegionMovement.Rail)
