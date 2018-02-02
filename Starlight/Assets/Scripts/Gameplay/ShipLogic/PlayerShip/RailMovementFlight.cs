@@ -143,6 +143,19 @@ public class RailMovementFlight : MonoBehaviour
         this.areWeInterping = true;
     }
 
+
+    //Function called from RailParentCollisionLogic.OnTriggerEnter to change our bounding boxes to match the new ones
+    public void SetNewBoundingBox(Vector2 newBounds_)
+    {
+        //Setting the time it takes to change bound sizes
+        this.currentBoundChangeTime = this.changeBoundsTime;
+
+        //Setting the previous bounds to the ones we're currently using
+        this.prevBounds = new Vector2(this.flightBoundingBox.x, this.flightBoundingBox.y);
+        //Setting the next bounds to the new bounds given
+        this.nextBounds = newBounds_;
+    }
+
     
     //Function called every frame
     private void Update()

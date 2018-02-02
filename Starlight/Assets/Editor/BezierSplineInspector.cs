@@ -138,7 +138,7 @@ public class BezierSplineInspector : Editor
                 //Getting the point in space relative to our transform handle
                 Vector3 point = (this.spline.GetPoint(progress));
                 //Getting the rotation orientation at the given point
-                Quaternion pointOrientation = this.spline.GetOrientation(progress);
+                Quaternion pointOrientation = this.spline.GetOrientationAtPercent(progress);
 
                 //Shorter variables for the x and y values of the bounding box
                 float x = this.spline.boundingBoxDisplay.x / 2;
@@ -155,6 +155,41 @@ public class BezierSplineInspector : Editor
                 Handles.DrawLine(botLeft, botRight);//Bottom
                 Handles.DrawLine(topLeft, botLeft);//Left
                 Handles.DrawLine(topRight, botRight);//Right
+
+                //Setting the handle color to black to draw lines 
+                /*Handles.color = Color.red;
+                Vector3 cameraPos = SceneView.lastActiveSceneView.camera.transform.position;
+
+                //If the top left corner is behind an object, we draw the lines as the error color
+                if(!Physics.Raycast(new Ray(cameraPos, topLeft)))
+                {
+                    Handles.Button(topLeft, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
+                    Handles.DrawLine(topLeft, topRight);
+                    Handles.DrawLine(topLeft, botLeft);
+                }
+                //If the top right corner is behind an object, we draw the lines as the error color
+                if (!Physics.Raycast(new Ray(cameraPos, topRight)))
+                {
+                    Handles.Button(topRight, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
+                    Handles.DrawLine(topLeft, topRight);
+                    Handles.DrawLine(topRight, botRight);
+                }
+                //If the bottom left corner is behind an object, we draw the lines as the error color
+                if (!Physics.Raycast(new Ray(cameraPos, botLeft)))
+                {
+                    Handles.Button(botLeft, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
+                    Handles.DrawLine(botLeft, botRight);
+                    Handles.DrawLine(botLeft, topLeft);
+                }
+                //If the bottom right corner is behind an object, we draw the lines as the error color
+                if (!Physics.Raycast(new Ray(cameraPos, botRight)))
+                {
+                    Handles.Button(botRight, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
+                    Handles.DrawLine(botRight, botLeft);
+                    Handles.DrawLine(topRight, botRight);
+                }
+
+                Handles.color = this.spline.boundingBoxColor;*/
             }
         }
 
@@ -304,8 +339,16 @@ public class BezierSplineInspector : Editor
         //If we show this spline's handles or not
         if (showHandles)
         {
-            //Setting our control point handle's color based on the control mode
-            Handles.color = this.modeColors[(int)this.spline.GetControlPointMode(index_)];
+            //If the point is a control point, we use the handle color
+            if (index_ % 3 == 0)
+            {
+                Handles.color = this.spline.handleLineColor;
+            }
+            //If the point is a handle, we set the handle's color based on the control mode
+            else
+            {
+                Handles.color = this.modeColors[(int)this.spline.GetControlPointMode(index_)];
+            }
 
             float size = HandleUtility.GetHandleSize(point);
 

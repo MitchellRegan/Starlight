@@ -56,5 +56,22 @@ public class RailParentCollisionLogic : MonoBehaviour
                 }
             }
         }
+        //If the object hit has a ChangeRailBoundingBox.cs component, we change our bounding box
+        else if(collider_.gameObject.GetComponent<ChangeRailBoundingBox>())
+        {
+            //Making sure this ship is using the rail movement, because the bounding box means nothing in free
+            if(this.ourShipController.ourRailMovement.enabled)
+            {
+                ChangeRailBoundingBox newBounds = collider_.gameObject.GetComponent<ChangeRailBoundingBox>();
+
+                //If the bounding box affects this ship
+                if ((newBounds.affectPlayer1 && this.ourShipController.playerController == Players.P1) ||
+                    (newBounds.affectPlayer2 && this.ourShipController.playerController == Players.P2))
+                {
+                    //Setting our ship's new bounding box size
+                    this.ourShipController.ourRailMovement.SetNewBoundingBox(collider_.gameObject.GetComponent<ChangeRailBoundingBox>().newBoundingBox);
+                }
+            }
+        }
     }
 }
