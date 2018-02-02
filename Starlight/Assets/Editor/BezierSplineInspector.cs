@@ -128,10 +128,8 @@ public class BezierSplineInspector : Editor
         //If we draw the bounding boxes, we need to loop through each box to display along the selected spline
         if(showBoundingBox)
         {
-            Handles.color = this.spline.boundingBoxColor;
-
             //Looping through the number of times that our spline designates
-            for(int b = 1; b < this.spline.numBoundingBoxToDisplay + 1; ++b)
+            for (int b = 1; b < this.spline.numBoundingBoxToDisplay + 1; ++b)
             {
                 //Getting the percent progress this bounding box is along the spline
                 float progress = (1f * b) / (1f * this.spline.numBoundingBoxToDisplay);
@@ -144,55 +142,43 @@ public class BezierSplineInspector : Editor
                 float x = this.spline.boundingBoxDisplay.x / 2;
                 float y = this.spline.boundingBoxDisplay.y / 2;
 
-                //Getting each of the corner positions that the rectangle will be confined to
-                Vector3 topLeft = point + (pointOrientation * new Vector3(-x, y, 0));
-                Vector3 topRight = point + (pointOrientation * new Vector3(x, y, 0));
-                Vector3 botLeft = point + (pointOrientation * new Vector3(-x, -y, 0));
-                Vector3 botRight = point + (pointOrientation * new Vector3(x, -y, 0));
+                //Creating the array of points for the stretched cube mesh to create and render
+                Vector3[] cubeVerts =
+                {
+                (pointOrientation * new Vector3(-x, -y, 0)),//Bottom left
+                (pointOrientation * new Vector3(x, -y, 0)),//Bottom right
+                (pointOrientation * new Vector3(x, y, 0)),//Top right
+                (pointOrientation * new Vector3(-x, y, 0))//Top left
+            };
 
-                //Drawing a rectangle using the point orientation and our spline's bounding box sizes
-                Handles.DrawLine(topLeft, topRight);//Top
-                Handles.DrawLine(botLeft, botRight);//Bottom
-                Handles.DrawLine(topLeft, botLeft);//Left
-                Handles.DrawLine(topRight, botRight);//Right
+                //Creating the array of triangles that compose the mesh
+                int[] cubeTriangles =
+                {
+                0,2,1,//Front face
+                0,3,2,
 
-                //Setting the handle color to black to draw lines 
-                /*Handles.color = Color.red;
-                Vector3 cameraPos = SceneView.lastActiveSceneView.camera.transform.position;
+                0,1,2,//Back face
+                0,2,3
+            };
 
-                //If the top left corner is behind an object, we draw the lines as the error color
-                if(!Physics.Raycast(new Ray(cameraPos, topLeft)))
+                //Creating a mesh out of the verts and triangles
+                Mesh boundingBoxMesh = new Mesh();
+                boundingBoxMesh.vertices = cubeVerts;
+                boundingBoxMesh.triangles = cubeTriangles;
+                boundingBoxMesh.RecalculateNormals();
+
+                //Getting the material from our spline and setting the color
+                Material mat = this.spline.boundingBoxMaterial;
+                if (mat != null)
                 {
-                    Handles.Button(topLeft, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
-                    Handles.DrawLine(topLeft, topRight);
-                    Handles.DrawLine(topLeft, botLeft);
-                }
-                //If the top right corner is behind an object, we draw the lines as the error color
-                if (!Physics.Raycast(new Ray(cameraPos, topRight)))
-                {
-                    Handles.Button(topRight, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
-                    Handles.DrawLine(topLeft, topRight);
-                    Handles.DrawLine(topRight, botRight);
-                }
-                //If the bottom left corner is behind an object, we draw the lines as the error color
-                if (!Physics.Raycast(new Ray(cameraPos, botLeft)))
-                {
-                    Handles.Button(botLeft, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
-                    Handles.DrawLine(botLeft, botRight);
-                    Handles.DrawLine(botLeft, topLeft);
-                }
-                //If the bottom right corner is behind an object, we draw the lines as the error color
-                if (!Physics.Raycast(new Ray(cameraPos, botRight)))
-                {
-                    Handles.Button(botRight, pointOrientation, this.spline.controlPointHandleSize, this.spline.controlPointHandleSize, Handles.DotCap);
-                    Handles.DrawLine(botRight, botLeft);
-                    Handles.DrawLine(topRight, botRight);
+                    mat.color = this.spline.boundingBoxColor;
                 }
 
-                Handles.color = this.spline.boundingBoxColor;*/
+                //Drawing the mesh along the spline
+                Graphics.DrawMesh(boundingBoxMesh, point, pointOrientation, mat, 0);
             }
         }
-
+        
         //If we press the F key, we need to override and focus the camera on the selected point
         if (Event.current.keyCode == KeyCode.F)
         {

@@ -43,8 +43,9 @@ public class BezierSpline : MonoBehaviour
     //Color for the time increment nodes
     public Color timeIncrementColor = Color.black;
 
-    //Color for the bounding box lines
-    public Color boundingBoxColor = Color.magenta;
+    //Color for the bounding box that is drawn
+    public Color boundingBoxColor = new Color(1, 0, 1, 1);
+    public Material boundingBoxMaterial;
 
     //The list of control points that make up this spline
     [HideInInspector]
