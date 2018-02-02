@@ -79,8 +79,8 @@ public class BezierSpline : MonoBehaviour
     [SerializeField]
     private Quaternion[] controlPointOrientations =
     {
-        new Quaternion(),
-        new Quaternion()
+        new Quaternion(0,1,0,0),
+        new Quaternion(0,1,0,0)
     };
 
     //Bool that determines if this spline loops back around to the start point
@@ -214,7 +214,7 @@ public class BezierSpline : MonoBehaviour
     //Accessor function to get the orientation at the given index
     public Quaternion GetPointOrientation(int index_)
     {
-        return this.controlPointOrientations[(index_ + 1) / 3];
+        return this.controlPointOrientations[(index_ + 1) / 3] * this.transform.rotation;
     }
 
 
@@ -229,7 +229,23 @@ public class BezierSpline : MonoBehaviour
 
         //Getting the forward direction of the control point along the spline
         Vector3 forward = this.GetDirection(progress);
-        Quaternion newOrientation = Quaternion.LookRotation(forward, newOrientation_ * Vector3.up);
+        //Getting the up direction of the control point along the spline
+        Vector3 up = newOrientation_ * Vector3.up;
+
+        //If the control point isn't the first one, we use the PREVIOUS control point
+        if (controlPointIndex > 0)
+        {
+            //Debug.Log("First forward: " + forward + ", Second: " + (this.points[(controlPointIndex)] - this.points[(controlPointIndex - 1)]));
+            //forward = Vector3.Cross(up, forward);
+        }
+        //If the control point index is 0, we need to use the NEXT control point
+        else
+        {
+            //Debug.Log("First forward: " + forward + ", Second: " + (this.points[(controlPointIndex + 1)] - this.points[(controlPointIndex)]));
+            //forward = Vector3.Cross(up, forward);
+        }
+
+        Quaternion newOrientation = Quaternion.LookRotation(forward, up);
 
         this.controlPointOrientations[controlPointIndex] = newOrientation;
     }
@@ -356,7 +372,7 @@ public class BezierSpline : MonoBehaviour
 
 
     //Function called externally from BezierSplineInspector.cs to get the orientation at the given percent
-    public Quaternion GetOrientation(float t_)
+    public Quaternion GetOrientationAtPercent(float t_)
     {
         //Float to hold the percent of the starting point of the curve we're going to find the point along
         float firstPointPercent;
