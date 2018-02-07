@@ -15,7 +15,7 @@ public class ActivateCombatUI : MonoBehaviour
 	private void Awake()
     {
         //If the game is single player, we only activate the p1 UI
-        if(GlobalData.singlePlayerMode)
+        if(GlobalData.globalReference.singlePlayerMode)
         {
             this.singlePlayerUIObj.SetActive(true);
             this.coOpUIObj.SetActive(false);

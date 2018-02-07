@@ -4,10 +4,8 @@ using UnityEngine;
 
 public class ShipRotationLogic : MonoBehaviour
 {
-    //The enum designating which player ship this component belongs to
-    public Players playerShipID = Players.P1;
     //The reference to our designated player ship
-    private PlayerShipController ourShip;
+    public PlayerShipController ourShip;
 
     [Space(8)]
 
@@ -47,27 +45,7 @@ public class ShipRotationLogic : MonoBehaviour
     public float yTrackerSPeed = 0.1f;
 
 
-
-
-	// Use this for initialization
-	private void Start ()
-    {
-	    //Getting the reference to our player ship based on the ID given
-        switch(this.playerShipID)
-        {
-            case Players.P1:
-                this.ourShip = PlayerShipController.p1ShipRef;
-                break;
-            case Players.P2:
-                this.ourShip = PlayerShipController.p2ShipRef;
-                break;
-            default:
-                this.ourShip = PlayerShipController.p1ShipRef;
-                break;
-        }
-	}
-	
-
+    
 	// Update is called once per frame
 	private void Update ()
     {

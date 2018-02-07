@@ -14,7 +14,7 @@ public class GlobalData : MonoBehaviour
     public Color P2HilightColor = new Color(0, 0.5f, 1, 1);
 
     //Bool that determines if the game mode is single player or co-op. True == 1 player, False == 2 player
-    public static bool singlePlayerMode = true;
+    public bool singlePlayerMode = false;
 
     //The prefab for the ship that's spawned for player 1
     public PlayerShipController player1Ship;
