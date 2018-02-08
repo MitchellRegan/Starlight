@@ -16,6 +16,9 @@ public class EnemyTurret : MonoBehaviour
     //Reference to the player that we're attacking
     private PlayerShipController targetPlayer;
 
+    //The distance that the target player must be within before this turret will attack
+    public float attackRange = 100;
+
     //The number of shots in a clip
     public int clipSize = 5;
     //The current amount of shots remaining
@@ -107,6 +110,12 @@ public class EnemyTurret : MonoBehaviour
                     this.targetPlayer = PlayerShipController.p2ShipRef;
                 }
             }
+        }
+
+        //If the target player isn't in the attack range, nothing happens
+        if(Vector3.Distance(this.transform.position, this.targetPlayer.transform.position) > this.attackRange)
+        {
+            return;
         }
 
         //Variable to hold the offset of the player position to target
@@ -248,7 +257,7 @@ public class EnemyTurret : MonoBehaviour
             targetPos += velocityOffset;
         }
         //If the ship is in a rail movement zone, we need to use the rail position
-        else if(this.targetPlayer.ourRailMovement.enabled)
+        else if(this.targetPlayer.ourRailMovement.enabled && this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.splineToFollow != null)
         {
             //Getting the reference to the spline that the target ship is moving on
             BezierSpline shipSpline = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.splineToFollow;

@@ -104,7 +104,7 @@ public class MoveAlongSplineRigidBody : MonoBehaviour
         if (this.rotateToFollowSpline)
         {
             this.transform.LookAt(this.transform.position + this.splineToFollow.GetDirection(this.currentTime / this.timeToComplete));
-            Vector3 splineUp = this.splineToFollow.GetOrientationAtPercent(this.currentTime / this.timeToComplete) * Vector3.up;
+            //Vector3 splineUp = this.splineToFollow.GetOrientationAtPercent(this.currentTime / this.timeToComplete) * Vector3.up;
             //this.transform.up = splineUp;
         }
 
