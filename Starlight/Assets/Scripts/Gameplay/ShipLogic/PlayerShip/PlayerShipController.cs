@@ -101,8 +101,15 @@ public class PlayerShipController : MonoBehaviour
                     this.ourController = ControllerInputManager.P1Controller;
                     this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
                 }
-                //If there's already a static reference for the p1 ship, we disable this object
-                else
+                //If there's already a static reference for the p1 ship and not one for the p2 ship
+                else if(p2ShipRef == null)
+                {
+                    this.playerController = Players.P2;
+                    p2ShipRef = this;
+                    this.ourController = ControllerInputManager.P2Controller;
+                    this.ourCustomInputs = CustomInputSettings.globalReference.p2Inputs;
+                }
+                //If there are already static references to both ships, we disable this object
                 {
                     this.gameObject.SetActive(false);
                 }
@@ -131,8 +138,15 @@ public class PlayerShipController : MonoBehaviour
                     this.ourController = ControllerInputManager.P1Controller;
                     this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
                 }
-                //If there's already a static reference for the p1 ship, we disable this object
-                else
+                //If there's already a static reference for the p1 ship and not one for the p2 ship
+                else if (p2ShipRef == null)
+                {
+                    this.playerController = Players.P2;
+                    p2ShipRef = this;
+                    this.ourController = ControllerInputManager.P2Controller;
+                    this.ourCustomInputs = CustomInputSettings.globalReference.p2Inputs;
+                }
+                //If there are already static references to both ships, we disable this object
                 {
                     this.gameObject.SetActive(false);
                 }
@@ -184,6 +198,87 @@ public class PlayerShipController : MonoBehaviour
             }
         }
 
+    }
+
+
+    //Function called from PlayerStartingPositin.Awake to set the player ship controller IDs
+    public void SetPlayerShipID(Players playerID_)
+    {
+        //Setting this ship's controller to the given ID
+        this.playerController = playerID_;
+
+        //Getting our controller input based on which player this is
+        switch (playerID_)
+        {
+            case Players.P1:
+                this.gameObject.SetActive(true);
+                p1ShipRef = this;
+                this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
+                this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
+                this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
+                break;
+
+            case Players.P2:
+                this.gameObject.SetActive(true);
+                p2ShipRef = this;
+                this.ourController = ControllerInputManager.P2Controller;
+                this.ourCustomInputs = CustomInputSettings.globalReference.p2Inputs;
+                this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P2;
+                this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P2;
+
+                //If this ship was set as the p1 ship reference, we remove it
+                if (p1ShipRef == this)
+                {
+                    p1ShipRef = null;
+                }
+                break;
+
+            default:
+                this.gameObject.SetActive(true);
+                p1ShipRef = this;
+                this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
+                this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
+                this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
+                break;
+        }
+
+        //Looping through all of our weapons, wings and engines to tell them what player ID we are
+        if (this.playerController == Players.P1)
+        {
+            this.mainWeapon.objectIDType = AttackerID.Player1;
+            this.secondaryWeapon.objectIDType = AttackerID.Player1;
+            this.shipCockpit.objectIDType = AttackerID.Player1;
+        }
+        else
+        {
+            this.mainWeapon.objectIDType = AttackerID.Player2;
+            this.secondaryWeapon.objectIDType = AttackerID.Player2;
+            this.shipCockpit.objectIDType = AttackerID.Player2;
+        }
+        foreach (ShipWingLogic wing in this.shipWings)
+        {
+            if (this.playerController == Players.P1)
+            {
+                wing.objectIDType = AttackerID.Player1;
+            }
+            else if (this.playerController == Players.P2)
+            {
+                wing.objectIDType = AttackerID.Player2;
+            }
+        }
+        foreach (ShipEngineLogic engine in this.shipEngines)
+        {
+            if (this.playerController == Players.P1)
+            {
+                engine.objectIDType = AttackerID.Player1;
+            }
+            else if (this.playerController == Players.P2)
+            {
+                engine.objectIDType = AttackerID.Player2;
+            }
+        }
     }
 
 
