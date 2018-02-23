@@ -552,6 +552,72 @@ public class BezierSpline : MonoBehaviour
     }
 
 
+    //Function called externally from BezierSplineInspector to add a new control point to our spline after the given existing point
+    public void AddControlPointBetweenPoints(int selectedPoint_)
+    {
+        //Creating a new array of points that we'll use for our points
+        Vector3[] newPoints = {};
+        Array.Resize(ref newPoints, this.ControlPointCount + 3);
+
+        //Creating a new array of control point modes
+        BezierControlPointMode[] newModes = { };
+        Array.Resize(ref newModes, this.modes.Length + 1);
+
+        //Creating a new arry of orientation rotations for control points
+        Quaternion[] newOrientations = { };
+        Array.Resize(ref newOrientations, this.controlPointOrientations.Length + 1);
+
+
+        //Looping through each point in our current list of curve points until we find the points to add between
+        int indexOffset = 0;
+        for (int p = 0; p < this.ControlPointCount; ++p)
+        {
+            //If we run into the index where we need to add the new point, we need to add in the new points
+            if(p == selectedPoint_ + 2)
+            {
+                //Finding the time along the curve that's between the selected control point and the one after it
+                float midpointTime = this.totalTimeDisplay / this.ControlPointCount;
+                midpointTime = (midpointTime / 2) + (midpointTime * selectedPoint_);
+
+                //Setting the position of the next control point
+                newPoints[p + 1] = this.GetPoint(midpointTime);
+                
+                //Setting the position of the handle behind the new control point
+                Vector3 backPos = this.GetDirection(midpointTime) - this.GetDirection(midpointTime - 0.01f);
+                backPos = backPos * this.addedPointDistance;
+                newPoints[p] = backPos + newPoints[p+1];
+
+                //Setting the position of the handle ahead of the new control point
+                Vector3 forwardPos = this.GetDirection(midpointTime + 0.01f) - this.GetDirection(midpointTime);
+                forwardPos = forwardPos * this.addedPointDistance;
+                newPoints[p + 2] = forwardPos + newPoints[p + 1];
+
+                //Creating the new control point alignment and rotation for the created point
+                newModes[(p % 3) + 1] = BezierControlPointMode.Aligned;
+                newOrientations[(p % 3) + 1] = new Quaternion();
+
+                //Adding to the offset for which point index we change
+                indexOffset = 3;
+            }
+
+            //Adding the current curve point to the new list of points
+            newPoints[p + indexOffset] = this.points[p];
+            
+            //If the current point is a control point, we add the orientation and mode to the new arrays
+            if(p % 3 == 0)
+            {
+                newModes[(p + indexOffset) % 3] = this.modes[p % 3];
+                newOrientations[(p + indexOffset) % 3] = this.controlPointOrientations[p % 3];
+            }
+        }
+
+        //Setting this spline's new control points, orientations, and modes
+        this.points = newPoints;
+        this.modes = newModes;
+        this.controlPointOrientations = newOrientations;
+    }
+
+
     //Function called externally from BezierSplineInspector to remove a control point from our spline curve
     public void RemoveControlPoint(int index_)
     {
