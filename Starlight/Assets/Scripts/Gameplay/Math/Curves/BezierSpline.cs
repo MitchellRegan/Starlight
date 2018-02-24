@@ -581,16 +581,16 @@ public class BezierSpline : MonoBehaviour
 
                 //Setting the position of the next control point
                 newPoints[p + 1] = this.transform.InverseTransformPoint(this.GetPoint(midpointTime));
-                
+
+                //Getting the difference between the control points on either side of the added point and normalizing the direction
+                Vector3 handleDirection = this.points[selectedPoint_ + 3] - this.points[selectedPoint_];
+                handleDirection = Vector3.Normalize(handleDirection);
+
                 //Setting the position of the handle behind the new control point
-                Vector3 backPos = this.GetDirection(midpointTime) - this.GetDirection(midpointTime - 0.01f);
-                backPos = Vector3.Normalize(backPos) * this.addedPointDistance;
-                newPoints[p] = backPos + newPoints[p+1];
+                newPoints[p] = newPoints[p + 1] - (handleDirection * this.addedPointDistance);
 
                 //Setting the position of the handle ahead of the new control point
-                Vector3 forwardPos = this.GetDirection(midpointTime + 0.01f) - this.GetDirection(midpointTime);
-                forwardPos = Vector3.Normalize(forwardPos) * this.addedPointDistance;
-                newPoints[p + 2] = forwardPos + newPoints[p + 1];
+                newPoints[p + 2] = newPoints[p + 1] + (handleDirection * this.addedPointDistance);
 
                 //Creating the new control point alignment and rotation for the created point
                 newModes[(p / 3) + 1] = BezierControlPointMode.Aligned;
