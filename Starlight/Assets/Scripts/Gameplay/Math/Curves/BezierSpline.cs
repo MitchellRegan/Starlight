@@ -498,13 +498,13 @@ public class BezierSpline : MonoBehaviour
                 if(timeTotal + this.timeToNextPoint[cpt] >= timeAtPercent)
                 {
                     //Finding the percent along this spline up to the control point before the time at percent
-                    float lineDistPercent = (cpt * 3f) / (this.points.Length * 1f);
+                    float lineDistPercent = (cpt * 3f) / ((this.points.Length - 1) * 1f);
 
                     //Finding the percent along the curve between the control points that the time at percent is between
                     float curveTimePercent = (timeAtPercent - timeTotal) / this.timeToNextPoint[cpt];
 
                     //Adding the percent lengths together to return
-                    curveTimePercent = curveTimePercent * (3f / (this.points.Length * 1f));
+                    curveTimePercent = curveTimePercent * (3f / ((this.points.Length - 1) * 1f));
                     return lineDistPercent + curveTimePercent;
                 }
                 //Otherwise we just add the current time to the total and move on
