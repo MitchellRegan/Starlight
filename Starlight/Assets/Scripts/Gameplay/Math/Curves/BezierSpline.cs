@@ -576,25 +576,29 @@ public class BezierSpline : MonoBehaviour
             if(p == selectedPoint_ + 2)
             {
                 //Finding the time along the curve that's between the selected control point and the one after it
-                float midpointTime = this.totalTimeDisplay / this.ControlPointCount;
-                midpointTime = (midpointTime / 2) + (midpointTime * selectedPoint_);
+                float midpointTime = (selectedPoint_ * 1f) / ((this.points.Length - 1) * 1f);
+                midpointTime += (3f / ((this.points.Length - 1) * 1f)) / 2;
 
                 //Setting the position of the next control point
-                newPoints[p + 1] = this.GetPoint(midpointTime);
+                newPoints[p + 1] = this.transform.InverseTransformPoint(this.GetPoint(midpointTime));
                 
                 //Setting the position of the handle behind the new control point
                 Vector3 backPos = this.GetDirection(midpointTime) - this.GetDirection(midpointTime - 0.01f);
-                backPos = backPos * this.addedPointDistance;
+                backPos = Vector3.Normalize(backPos) * this.addedPointDistance;
                 newPoints[p] = backPos + newPoints[p+1];
 
                 //Setting the position of the handle ahead of the new control point
                 Vector3 forwardPos = this.GetDirection(midpointTime + 0.01f) - this.GetDirection(midpointTime);
-                forwardPos = forwardPos * this.addedPointDistance;
+                forwardPos = Vector3.Normalize(forwardPos) * this.addedPointDistance;
                 newPoints[p + 2] = forwardPos + newPoints[p + 1];
 
                 //Creating the new control point alignment and rotation for the created point
-                newModes[(p % 3) + 1] = BezierControlPointMode.Aligned;
-                newOrientations[(p % 3) + 1] = new Quaternion();
+                newModes[(p / 3) + 1] = BezierControlPointMode.Aligned;
+                newOrientations[(p / 3) + 1] = new Quaternion();
+
+                //Enforcing the handle mode for the newly created handles
+                this.EnforceMode(p);
+                this.EnforceMode(p + 2);
 
                 //Adding to the offset for which point index we change
                 indexOffset = 3;
@@ -606,8 +610,8 @@ public class BezierSpline : MonoBehaviour
             //If the current point is a control point, we add the orientation and mode to the new arrays
             if(p % 3 == 0)
             {
-                newModes[(p + indexOffset) % 3] = this.modes[p % 3];
-                newOrientations[(p + indexOffset) % 3] = this.controlPointOrientations[p % 3];
+                newModes[(p + indexOffset) / 3] = this.modes[p / 3];
+                newOrientations[(p + indexOffset) / 3] = this.controlPointOrientations[p / 3];
             }
         }
 
