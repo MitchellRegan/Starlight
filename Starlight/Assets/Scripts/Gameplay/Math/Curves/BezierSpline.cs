@@ -129,7 +129,7 @@ public class BezierSpline : MonoBehaviour
             return totalTime;
         }
     }
-
+    
 
     //Accessor function to get the position of a control point at the given index
     public Vector3 GetControlPoint(int index_)
@@ -271,6 +271,33 @@ public class BezierSpline : MonoBehaviour
         Quaternion newOrientation = Quaternion.LookRotation(forward, up);
 
         this.controlPointOrientations[controlPointIndex] = newOrientation;
+    }
+
+
+    //Accessor function to get the time from the given control point index to the next control point
+    public float GetTimeAfterGivenPoint(int index_)
+    {
+        return this.timeToNextPoint[(index_ + 1) / 3];
+    }
+
+
+    //Accessor function to set the time from the given control point to the next control point
+    public void SetTimeAfterGivenPoint(int index_, float newTime_)
+    {
+        //Finding the control point at the given index so we can find out the direction it's facing
+        int controlPointIndex = (index_ + 1) / 3;
+
+        //If the index we're changing is the last index, we make sure the time is always 0
+        if (controlPointIndex == this.timeToNextPoint.Length - 1)
+        {
+            this.timeToNextPoint[this.timeToNextPoint.Length - 1] = 0;
+        }
+        //If the index we're changing isn't the last index, we set it to the given index
+        else
+        {
+            //Setting the new time to the absolute value so we don't get a negative amount
+            this.timeToNextPoint[controlPointIndex] = Mathf.Abs(newTime_);
+        }
     }
 
 
@@ -594,6 +621,10 @@ public class BezierSpline : MonoBehaviour
         Quaternion[] newOrientations = { };
         Array.Resize(ref newOrientations, this.controlPointOrientations.Length + 1);
 
+        //Creating a new array of times to the next control points
+        float[] newTimesToNextPoints = { };
+        Array.Resize(ref newTimesToNextPoints, this.timeToNextPoint.Length + 1);
+
 
         //Looping through each point in our current list of curve points until we find the points to add between
         int indexOffset = 0;
@@ -623,6 +654,9 @@ public class BezierSpline : MonoBehaviour
                 newModes[(p / 3) + 1] = BezierControlPointMode.Aligned;
                 newOrientations[(p / 3) + 1] = new Quaternion();
 
+                //Creating the new time to next point for the created control point
+                newTimesToNextPoints[(p / 3) + 1] = 1;
+
                 //Enforcing the handle mode for the newly created handles
                 this.EnforceMode(p);
                 this.EnforceMode(p + 2);
@@ -634,18 +668,20 @@ public class BezierSpline : MonoBehaviour
             //Adding the current curve point to the new list of points
             newPoints[p + indexOffset] = this.points[p];
             
-            //If the current point is a control point, we add the orientation and mode to the new arrays
+            //If the current point is a control point, we add the orientation, mode, and time to the new arrays
             if(p % 3 == 0)
             {
                 newModes[(p + indexOffset) / 3] = this.modes[p / 3];
                 newOrientations[(p + indexOffset) / 3] = this.controlPointOrientations[p / 3];
+                newTimesToNextPoints[(p + indexOffset) / 3] = this.timeToNextPoint[p / 3];
             }
         }
 
-        //Setting this spline's new control points, orientations, and modes
+        //Setting this spline's new control points, orientations, modes, and times
         this.points = newPoints;
         this.modes = newModes;
         this.controlPointOrientations = newOrientations;
+        this.timeToNextPoint = newTimesToNextPoints;
     }
 
 

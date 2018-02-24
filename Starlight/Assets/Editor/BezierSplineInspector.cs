@@ -220,6 +220,36 @@ public class BezierSplineInspector : Editor
             this.spline.controlPointHandleSize = newHandleSize;
         }
 
+        //Displaying the total time for the length of this spline
+        EditorGUILayout.LabelField("Total Spline Time: " + this.spline.TotalSplineTime);
+
+        //If we're selecting a control point, we display the time it takes to get to the next control point
+        if(!this.isSelectedPointRotation && (this.selectedIndex % 3) == 0)
+        {
+            //Making sure we're not selecting the last control point in the spline
+            if (this.selectedIndex / 3 != this.spline.ControlPointCount - 1)
+            {
+                //Checking for any changes with the selected time for the selected point
+                EditorGUI.BeginChangeCheck();
+                float timeToNextPoint = EditorGUILayout.FloatField("Time To Next Point", this.spline.GetTimeAfterGivenPoint(this.selectedIndex));
+                //If the time variable was changed
+                if (EditorGUI.EndChangeCheck())
+                {
+                    //Making sure the new value is above 0
+                    if (timeToNextPoint < 0)
+                    {
+                        timeToNextPoint = 0;
+                    }
+
+                    //We set the selected spline to dirty so that we can save or undo changes
+                    Undo.RecordObject(this.spline, "Change Loop Time");
+                    EditorUtility.SetDirty(this.spline);
+                    //Setting the time to the next control point after the selected point
+                    this.spline.SetTimeAfterGivenPoint(this.selectedIndex, timeToNextPoint);
+                }
+            }
+        }
+
         //Checking for any changes with the selected spline's "loop" variable
         EditorGUI.BeginChangeCheck();
         bool loop = EditorGUILayout.Toggle("Loop Spline", this.spline.Loop);
