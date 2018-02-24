@@ -105,13 +105,16 @@ public class BezierSplineInspector : Editor
         //If we draw time increments, we need to loop through each time increment for the selected spline
         if(showTimeIncrements)
         {
+            //Getting the total amount of time it takes to get to the end of the spline
+            float totalTime = this.spline.TotalSplineTime;
+
             Handles.color = this.spline.timeIncrementColor;
 
             //Starting the increment on the first step since we know where time 0 is
-            for(float t = this.spline.timeIncrementDisplay; t <= this.spline.totalTimeDisplay; t += this.spline.timeIncrementDisplay)
+            for(float t = this.spline.timeIncrementDisplay; t <= totalTime; t += this.spline.timeIncrementDisplay)
             {
                 //Getting the percent progress that this time increment is along the spline
-                float progress = t / this.spline.totalTimeDisplay;
+                float progress = t / totalTime;
                 //Getting the point in space relative to our transform handle
                 Vector3 point = this.spline.GetPoint(progress);
 
