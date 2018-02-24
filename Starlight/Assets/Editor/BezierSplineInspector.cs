@@ -115,6 +115,7 @@ public class BezierSplineInspector : Editor
             {
                 //Getting the percent progress that this time increment is along the spline
                 float progress = t / totalTime;
+                progress = this.spline.GetAdjustedPercentFromTime(progress);
                 //Getting the point in space relative to our transform handle
                 Vector3 point = this.spline.GetPoint(progress);
 

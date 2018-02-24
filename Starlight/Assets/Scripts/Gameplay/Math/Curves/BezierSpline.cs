@@ -471,6 +471,55 @@ public class BezierSpline : MonoBehaviour
     }
 
 
+    //Function called externally to get the adjusted percent using the different time values for each control point
+    public float GetAdjustedPercentFromTime(float t_)
+    {
+        //If the given percent is greater than 1, we cap it off and return 1 (100%)
+        if(t_ >= 1)
+        {
+            return 1;
+        }
+        //If the given percent is less than 0, we cap it off and return 0 (0%)
+        else if(t_ <= 0)
+        {
+            return 0;
+        }
+        //If the given percent is between 0 and 1, we need to find the percent based on the times between each control point
+        else
+        {
+            //Getting the time at the percentage we need to stop at
+            float timeAtPercent = this.TotalSplineTime * t_;
+
+            //Looping through each control point's time until we get to the time at percent
+            float timeTotal = 0;
+            for(int cpt = 0; cpt < this.timeToNextPoint.Length; ++cpt)
+            {
+                //If the current time total is greater than the time at percent, we know the percent to return is between these points
+                if(timeTotal + this.timeToNextPoint[cpt] >= timeAtPercent)
+                {
+                    //Finding the percent along this spline up to the control point before the time at percent
+                    float lineDistPercent = (cpt * 3f) / (this.points.Length * 1f);
+
+                    //Finding the percent along the curve between the control points that the time at percent is between
+                    float curveTimePercent = (timeAtPercent - timeTotal) / this.timeToNextPoint[cpt];
+
+                    //Adding the percent lengths together to return
+                    curveTimePercent = curveTimePercent * (3f / (this.points.Length * 1f));
+                    return lineDistPercent + curveTimePercent;
+                }
+                //Otherwise we just add the current time to the total and move on
+                else
+                {
+                    timeTotal += this.timeToNextPoint[cpt];
+                }
+            }
+
+            //If for SOME reason we make it this far, we return 1 because we've reached the end of the curve
+            return 1;
+        }
+    }
+
+
     //Function called from AddCurve, SetControlPoint, and SetControlPointMode to make sure the handles next to each control point are behaving correctly
     private void EnforceMode(int index_)
     {
