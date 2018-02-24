@@ -270,10 +270,10 @@ public class BezierSplineInspector : Editor
         }
 
         //Creating a GUI button to add a curve to our spline
-        if (GUILayout.Button("Add Curve"))
+        if (GUILayout.Button("Add Curve At End"))
         {
             //Sets the spline to dirty so that we can save changes
-            Undo.RecordObject(this.spline, "Add Curve");
+            Undo.RecordObject(this.spline, "Add Curve At End");
             //Adds new points to the end of our spline
             this.spline.AddCurve();
             EditorUtility.SetDirty(this.spline);
@@ -283,6 +283,21 @@ public class BezierSplineInspector : Editor
         //If we're selecting a control point and not a rotation point
         if(!this.isSelectedPointRotation && this.selectedIndex % 3 == 0)
         {
+            //If the selected control point isn't the last point
+            if(this.selectedIndex < this.spline.ControlPointCount - 1)
+            {
+                //Creating a GUI to add a new control point between this control point and the next
+                if (GUILayout.Button("Add Control Point After This"))
+                {
+                    //Sets the spline to dirty so that we can save changes
+                    Undo.RecordObject(this.spline, "Add Control Point");
+                    //Adds the new point between the selected control point and the next
+                    this.spline.AddControlPointBetweenPoints(this.selectedIndex);
+                    EditorUtility.SetDirty(this.spline);
+                    this.Repaint();
+                }
+            }
+            
             //Creating a GUI button to delete a selected control point
             if(GUILayout.Button("Delete Control Point"))
             {
