@@ -49,7 +49,7 @@ public class RailParentCollisionLogic : MonoBehaviour
 
                     //Enabling our spline move object and telling it to use our new region's designated spline
                     this.ourSplineMoveRB.enabled = true;
-                    this.ourSplineMoveRB.SetSplineToFollow(newRegion.railZoneSplineToFollow, newRegion.timeToFinishSpline);
+                    this.ourSplineMoveRB.SetSplineToFollow(newRegion.railZoneSplineToFollow);
 
                     //Setting the new direction for our rail movement
                     this.ourShipController.ourRailMovement.SetNewRailDirection(collider_);
