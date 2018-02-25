@@ -10,16 +10,9 @@ public class RegionZone : MonoBehaviour
     public RegionMovement movementType = RegionMovement.Rail;
 
     //Bools for which player this region effects
-    public bool effectPlayer1 = true;
-    public bool effectPlayer2 = true;
+    public bool affectPlayer1 = true;
+    public bool affectPlayer2 = true;
 
-    //The multiplier to forward thrust that player ships move at in this zone
-    [Range(0.1f, 2)]
-    public float thrustMultiplier = 1;
-
-    //UnityEvent called when the player hits this zone's collider
-    public UnityEvent onCollisionEvent;
-
-    //The next Region Zone that the player will interpolate to after leaving this one. If null, nothing happens
-    public RegionZone interpToRegion;
+    //If this is a rail zone, we need to designate which rail zone the player will follow
+    public BezierSpline railZoneSplineToFollow;
 }

@@ -20,11 +20,6 @@ public class CameraSpeedInterp : MonoBehaviour
     public float boostZDist = 8;
     //The local Z distance this camera will be when breaking
     public float breakZDist = 3.5f;
-    //The interp multiplier for changing between Z distances
-    [Range(0.01f, 0.99f)]
-    public float interpZDistSpeed = 0.9f;
-
-    [Space(8)]
 
     //The default field of view for the camera when we aren't boosting or breaking
     public float defaultFOV = 60;
@@ -32,13 +27,36 @@ public class CameraSpeedInterp : MonoBehaviour
     public float boostFOV = 80;
     //The field of view for the camera when we're breaking
     public float breakFOV = 40;
+
+    [Space(8)]
+
+    //The default Z distance this camera will be in co-op when we aren't boosting or breaking
+    public float defaultCoOpZDist = 5;
+    //The local Z distance this camera will be in co-op when boosting
+    public float coOpboostZDist = 8;
+    //The local Z distance this camera will be in co-op when breaking
+    public float coOpbreakZDist = 3.5f;
+
+    //The default field of view for the camera in co-op when we aren't boosting or breaking
+    public float defaultCoOpFOV = 30;
+    //The field of view for the camera in co-op when we're boosting
+    public float coOpboostFOV = 80;
+    //The field of view for the camera in co-op when we're breaking
+    public float coOpbreakFOV = 40;
+
+    [Space(8)]
+
+    //The interp multiplier for changing between Z distances
+    [Range(0.01f, 0.99f)]
+    public float interpZDistSpeed = 0.9f;
     //The interp multiplier for changing between FOV
     [Range(0.01f, 0.99f)]
-    public float interpFOVSpeed = 0.8f;
+    public float interpFOVSpeed = 0.05f;
 
 
-	// Use this for initialization
-	private void Start ()
+
+    // Use this for initialization
+    private void Start ()
     {
 		//Finding our player ship reference
         switch(this.playerToTrack)
@@ -80,23 +98,49 @@ public class CameraSpeedInterp : MonoBehaviour
         float targetZDist = 0;
         float targetFOV = 0;
 
-        //If the player is boosting
-        if (this.ourShip.isShipBoosting)
+        //If the game is in single player mode
+        if (GlobalData.globalReference.singlePlayerMode)
         {
-            targetZDist = this.boostZDist;
-            targetFOV = this.boostFOV;
+            //If the player is boosting
+            if (this.ourShip.isShipBoosting)
+            {
+                targetZDist = this.boostZDist;
+                targetFOV = this.boostFOV;
+            }
+            //If the player is breaking
+            else if (this.ourShip.isShipBreaking)
+            {
+                targetZDist = this.breakZDist;
+                targetFOV = this.breakFOV;
+            }
+            //If the player is neither boosting or breaking
+            else
+            {
+                targetZDist = this.defaultZDist;
+                targetFOV = this.defaultFOV;
+            }
         }
-        //If the player is breaking
-        else if (this.ourShip.isShipBreaking)
-        {
-            targetZDist = this.breakZDist;
-            targetFOV = this.breakFOV;
-        }
-        //If the player is neither boosting or breaking
+        //If the game is in co-op mode
         else
         {
-            targetZDist = this.defaultZDist;
-            targetFOV = this.defaultFOV;
+            //If the player is boosting
+            if (this.ourShip.isShipBoosting)
+            {
+                targetZDist = this.coOpboostZDist;
+                targetFOV = this.coOpboostFOV;
+            }
+            //If the player is breaking
+            else if (this.ourShip.isShipBreaking)
+            {
+                targetZDist = this.coOpbreakZDist;
+                targetFOV = this.coOpbreakFOV;
+            }
+            //If the player is neither boosting or breaking
+            else
+            {
+                targetZDist = this.defaultCoOpZDist;
+                targetFOV = this.defaultCoOpFOV;
+            }
         }
 
         //Setting our Z position to interp to the target Z distance

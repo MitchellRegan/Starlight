@@ -16,6 +16,9 @@ public class EnemyTurret : MonoBehaviour
     //Reference to the player that we're attacking
     private PlayerShipController targetPlayer;
 
+    //The distance that the target player must be within before this turret will attack
+    public float attackRange = 100;
+
     //The number of shots in a clip
     public int clipSize = 5;
     //The current amount of shots remaining
@@ -30,9 +33,6 @@ public class EnemyTurret : MonoBehaviour
     public float cooldownAfterClip = 2f;
     //The current amount of time we have to wait after our clip is empty
     private float currentCooldown = 0;
-
-    //Bool for if we lead the player movement or not
-    public bool leadPlayerMovement = false;
 
     //Class used to rotate different parts of this turret to face the target player
     [System.Serializable]
@@ -112,14 +112,15 @@ public class EnemyTurret : MonoBehaviour
             }
         }
 
-        //Variable to hold the player position to target
-        Vector3 posToShoot = this.targetPlayer.transform.position;
-
-        //If we lead the player, we need to take into consideration where they will be
-        if(this.leadPlayerMovement)
+        //If the target player isn't in the attack range, nothing happens
+        if(Vector3.Distance(this.transform.position, this.targetPlayer.transform.position) > this.attackRange)
         {
-            posToShoot = this.LeadShipPosition();
+            return;
         }
+
+        //Variable to hold the offset of the player position to target
+        Vector3 posToShoot = this.LeadShipPosition();
+
 
         //Looping through all of our rotation objects so they face our target player
         foreach(ObjToRotate objR in this.rotationObjects)
@@ -245,13 +246,41 @@ public class EnemyTurret : MonoBehaviour
         //Now that we know about how long it will take for the projectile to reach the player's CURRENT position,
         //We need to guess how far along they will be using their current velocity
 
-        //Getting the direction and magnitude that the velocity is facing
-        Vector3 velocityOffset = this.targetPlayer.ourRailMovement.railParentObj.velocity;
-        //Multiplying the velocity 
-        velocityOffset = velocityOffset * projectileTime;
+        //If the ship is in a free movement zone, we use their forward velocity
+        if (this.targetPlayer.ourFreeMovement.enabled)
+        {
+            //Getting the direction and magnitude that the velocity is facing
+            Vector3 velocityOffset = this.targetPlayer.ourRailMovement.railParentObj.ourRigidbody.velocity;
+            //Multiplying the velocity 
+            velocityOffset = velocityOffset * projectileTime;
+            //Adding the forward velocity offset to the target position
+            targetPos += velocityOffset;
+        }
+        //If the ship is in a rail movement zone, we need to use the rail position
+        else if(this.targetPlayer.ourRailMovement.enabled && this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.splineToFollow != null)
+        {
+            //Getting the reference to the spline that the target ship is moving on
+            BezierSpline shipSpline = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.splineToFollow;
 
-        //Returning our target pos plus the offset due to their velocity
-        return targetPos + velocityOffset;
+            //Getting the current amount of time that the ship has already traveled
+            float currentSplineTime = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.CurrentSplineTime;
+            //Getting the speed multiplier that the player is moving at
+            float speedMultiplier = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.speedMultiplier;
+            //Adding the projectile time to the current spline time so we get the position where the player will be
+            currentSplineTime += projectileTime * (1f / speedMultiplier);
+
+            //Getting the total time that the player will have to travel along the spline
+            float totalSplineTime = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.timeToComplete;
+
+            //Getting the position along the spline that the ship will be at when taking into account the projectile time
+            targetPos = shipSpline.GetPoint(currentSplineTime / totalSplineTime);
+
+            //Adding the offset that the player ship is from the rail parent
+            //targetPos
+        }
+
+        //Returning our target pos
+        return targetPos;
     }
 }
 

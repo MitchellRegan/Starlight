@@ -33,7 +33,7 @@ public class TEST_DamageShip : MonoBehaviour
 	    //If we press our damage cockpit button, we deal damage to the cockpit
         if(Input.GetKeyDown(this.damageCockpit))
         {
-            this.ourShip.shipCockpit.DealDamage(this.damageToDeal);
+            this.ourShip.shipCockpit.DealDamage(this.damageToDeal, false);
         }	
 
         //If we press our damage wings button, we deal damage to a random wing
@@ -42,7 +42,7 @@ public class TEST_DamageShip : MonoBehaviour
             //Getting a random wing index
             int wingIndex = Random.Range(0, this.ourShip.shipWings.Count);
             //Damaging the wing at the index
-            this.ourShip.shipWings[wingIndex].DealDamage(this.damageToDeal);
+            this.ourShip.shipWings[wingIndex].DealDamage(this.damageToDeal, false);
         }
 
         //If we press our damage engine button, we deal damage to a random engine
@@ -51,22 +51,22 @@ public class TEST_DamageShip : MonoBehaviour
             //Getting a random engine index
             int engineIndex = Random.Range(0, this.ourShip.shipEngines.Count);
             //Damaging the wing at the index
-            this.ourShip.shipEngines[engineIndex].DealDamage(this.damageToDeal);
+            this.ourShip.shipEngines[engineIndex].DealDamage(this.damageToDeal, false);
         }
 
         //If we press our damage everything button, we deal damage to everything on the ship
         if(Input.GetKeyDown(this.damageEverything))
         {
-            this.ourShip.shipCockpit.DealDamage(this.damageToDeal);
+            this.ourShip.shipCockpit.DealDamage(this.damageToDeal, false);
 
             foreach(ShipWingLogic wing in this.ourShip.shipWings)
             {
-                wing.DealDamage(this.damageToDeal);
+                wing.DealDamage(this.damageToDeal, false);
             }
 
             foreach(ShipEngineLogic engine in this.ourShip.shipEngines)
             {
-                engine.DealDamage(this.damageToDeal);
+                engine.DealDamage(this.damageToDeal, false);
             }
         }
 	}
