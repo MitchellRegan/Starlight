@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Image))]
 public class UIPlayerHilight : MonoBehaviour
@@ -19,7 +20,7 @@ public class UIPlayerHilight : MonoBehaviour
     private Selectable currentSelectable;
 
     //The amount of cooldown time between moving between different buttons
-    private float moveDelay = 0.1f;
+    private float moveDelay = 0.11f;
     //The current amount of time remaining for our move delay
     private float currentDelayTime = 0;
 
@@ -65,7 +66,7 @@ public class UIPlayerHilight : MonoBehaviour
         //Setting our currently selected hilight to our starting selectable
         this.ChangeHilight(this.startingSelectable);
     }
-	
+
 
 	// Update is called once per frame
 	private void Update ()
@@ -77,11 +78,40 @@ public class UIPlayerHilight : MonoBehaviour
             this.ClickSelected();
         }
 
+        //Bool to determine if the mouse is over a UI element that p1 can click
+        Button mouseOverButton = null;
+        if(this.playerInput == Players.P1)
+        {
+            //Creating a new var to hold the event data for the mouse pointer
+            PointerEventData pointerData = new PointerEventData(EventSystem.current);
+            pointerData.position = Input.mousePosition;
+            //Creating a list of results of objects hit when we raycast from the mouse
+            List<RaycastResult> rayResults = new List<RaycastResult>();
+
+            //Raycasting using the current pointer data to see what the mouse is over
+            EventSystem.current.RaycastAll(pointerData, rayResults);
+
+            //If the raycast hit anything, we check the first object hit
+            if(rayResults.Count > 0)
+            {
+                //If the first object that the mouse is over is a UI button, we set it as the mouse over button
+                if(rayResults[0].gameObject.GetComponent<Button>())
+                {
+                    mouseOverButton = rayResults[0].gameObject.GetComponent<Button>();
+                }
+            }
+        }
+
         //If our current delay time is above 0, we need to count it down
         if (this.currentDelayTime > 0)
         {
             this.currentDelayTime -= Time.fixedDeltaTime;
             return;
+        }
+        //If this takes player 1 input and the mouse is over a UI element
+        else if(mouseOverButton != null)
+        {
+            this.ChangeHilight(mouseOverButton);
         }
         //If we don't have to wait for the delay, we can take directional input
         else

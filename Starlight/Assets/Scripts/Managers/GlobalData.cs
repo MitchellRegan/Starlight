@@ -43,6 +43,13 @@ public class GlobalData : MonoBehaviour
     }
 
 
+    //Function called externally at the Main Menu scene to determine if the game is in single player or co-op mode
+    public void SetSinglePlayerMode(bool isSinglePlayer_)
+    {
+        this.singlePlayerMode = isSinglePlayer_;
+    }
+
+
     //Closes the application
     public void QuitGame()
     {
