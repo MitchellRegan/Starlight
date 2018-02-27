@@ -13,6 +13,10 @@ public class GlobalData : MonoBehaviour
     public Color P1HilightColor = new Color(1, 0f, 0f, 1);
     public Color P2HilightColor = new Color(0, 0.5f, 1, 1);
 
+    //Colors used for player ships
+    public PlayerColorSlots p1Colors;
+    public PlayerColorSlots p2Colors;
+
     //Bool that determines if the game mode is single player or co-op. True == 1 player, False == 2 player
     public bool singlePlayerMode = false;
 
@@ -55,4 +59,22 @@ public class GlobalData : MonoBehaviour
     {
         Application.Quit();
     }
+}
+
+
+//Class used in GlobalData.cs to store the different color slots for player ships
+[System.Serializable]
+public class PlayerColorSlots
+{
+    //Primary color
+    public Color slot1 = Color.red;
+    //Secondary color
+    public Color slot2 = Color.red;
+    //Tertiary colors
+    public Color slot3 = Color.red;
+    public Color slot4 = Color.red;
+    public Color slot5 = Color.red;
+
+    //Color used for optional decals
+    public Color decal = Color.black;
 }
