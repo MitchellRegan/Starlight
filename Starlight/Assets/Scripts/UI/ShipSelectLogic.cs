@@ -26,6 +26,11 @@ public class ShipSelectLogic : MonoBehaviour
     //The current delay time between switching ships
     private float currentDelayTime = 0;
 
+    //The size of the display ship
+    public Vector3 displayShipScale = new Vector3(1, 1, 1);
+    //The size of the ships when they first transition in
+    public Vector3 transitionShipScale = new Vector3(0.5f, 0.5f, 0.5f);
+
     //The direction that the ships are moving during a transition
     private bool transitioningLeft = true;
 
@@ -105,10 +110,14 @@ public class ShipSelectLogic : MonoBehaviour
         newShip.GetComponent<ShipEnergy>().enabled = false;
         newShip.GetComponent<ShipTiltAndRoll>().enabled = false;
         newShip.GetComponent<RailMovementFlight>().railParentObj.gameObject.SetActive(false);
+        newShip.GetComponent<ShipTiltAndRoll>().rollTrails.SetActive(false);
 
-        //Setting the display position of the display ship
+        //Setting the display position and rotation of the display ship
         newShip.transform.position = this.shipDisplayPos.transform.position;
+        newShip.transform.rotation = this.shipDisplayPos.transform.rotation;
+        newShip.transform.localScale = this.displayShipScale;
 
+        //Activating the displayed ship after the components are disabled so we don't get errors on Awake or Start
         newShip.gameObject.SetActive(true);
         this.displayedShip = newShip;
 
@@ -154,12 +163,12 @@ public class ShipSelectLogic : MonoBehaviour
                 //Getting the position for the transition ship to go offscreen
                 Vector3 newTransitionPos = this.shipDisplayPos.position - this.rightTransitionPos.position;
                 newTransitionPos *= percent;
-                newTransitionPos += this.shipDisplayPos.position;
+                newTransitionPos += this.rightTransitionPos.position;
 
                 //Getting the position for the displayed ship to come on screen
                 Vector3 newDisplayPos = this.leftTransitionPos.position - this.shipDisplayPos.position;
                 newDisplayPos *= percent;
-                newDisplayPos += this.leftTransitionPos.position;
+                newDisplayPos += this.shipDisplayPos.position;
 
                 //Setting the positions of the transition and display ships
                 this.transitionShip.transform.position = newTransitionPos;
@@ -171,21 +180,32 @@ public class ShipSelectLogic : MonoBehaviour
                 //Getting the position for the transition ship to go offscreen
                 Vector3 newTransitionPos = this.shipDisplayPos.position - this.leftTransitionPos.position;
                 newTransitionPos *= percent;
-                newTransitionPos += this.shipDisplayPos.position;
+                newTransitionPos += this.leftTransitionPos.position;
 
                 //Getting the position for the displayed ship to come on screen
                 Vector3 newDisplayPos = this.rightTransitionPos.position - this.shipDisplayPos.position;
                 newDisplayPos *= percent;
-                newDisplayPos += this.rightTransitionPos.position;
+                newDisplayPos += this.shipDisplayPos.position;
 
                 //Setting the positions of the transition and display ships
                 this.transitionShip.transform.position = newTransitionPos;
                 this.displayedShip.transform.position = newDisplayPos;
             }
 
-            //If the time is 0, we delete the transition ship object
+            //Finding the correct scale for the display ship
+            Vector3 newDisplayScale = (percent * (this.transitionShipScale - this.displayShipScale)) + this.displayShipScale;
+            //Finding the correct scale for the transition ship
+            Vector3 newTransitionScale = (percent * (this.displayShipScale - this.transitionShipScale)) + this.transitionShipScale;
+
+            //Setting the new ship scales
+            this.displayedShip.transform.localScale = newDisplayScale;
+            this.transitionShip.transform.localScale = newTransitionScale;
+
+            //If the time is 0, we delete the transition ship object and make sure the display ship is in the right position
             if(this.currentDelayTime <= 0)
             {
+                this.displayedShip.transform.position = this.shipDisplayPos.transform.position;
+                this.displayedShip.transform.localScale = this.displayShipScale;
                 Destroy(this.transitionShip);
             }
         }
@@ -199,11 +219,15 @@ public class ShipSelectLogic : MonoBehaviour
                 if ((this.player == Players.P1 && Input.GetKeyDown(KeyCode.Return)) || (this.player == Players.P1 && Input.GetKeyDown(KeyCode.Space)) ||
                     ControllerInputManager.P1Controller.CheckButtonPressed(ControllerButtons.A_Button))
                 {
-                    //Making it so we stop selecting ships
-                    this.isChangingShip = false;
+                    //Making sure the selected ship isn't locked
+                    if (!this.shipPrefabs[this.selectedShipIndex].locked)
+                    {
+                        //Making it so we stop selecting ships
+                        this.isChangingShip = false;
 
-                    //Invoking our confirm selection event
-                    this.confirmSelectEvent.Invoke();
+                        //Invoking our confirm selection event
+                        this.confirmSelectEvent.Invoke();
+                    }
                 }
                 //Checking for input to move left
                 else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A) || ControllerInputManager.P1Controller.CheckButtonDown(ControllerButtons.D_Pad_Left) ||
@@ -224,11 +248,15 @@ public class ShipSelectLogic : MonoBehaviour
                 //If the player hits the "select" button we need to invoke the unity event to go back to the options menu
                 if (ControllerInputManager.P2Controller.CheckButtonPressed(ControllerButtons.A_Button))
                 {
-                    //Making it so we stop selecting ships
-                    this.isChangingShip = false;
+                    //Making sure the selected ship isn't locked
+                    if (!this.shipPrefabs[this.selectedShipIndex].locked)
+                    {
+                        //Making it so we stop selecting ships
+                        this.isChangingShip = false;
 
-                    //Invoking our confirm selection event
-                    this.confirmSelectEvent.Invoke();
+                        //Invoking our confirm selection event
+                        this.confirmSelectEvent.Invoke();
+                    }
                 }
                 //Checking for input to move left
                 else if (ControllerInputManager.P2Controller.CheckButtonDown(ControllerButtons.D_Pad_Left) ||
@@ -255,7 +283,7 @@ public class ShipSelectLogic : MonoBehaviour
 
 
     //Function called from update to start the transition to the next ship
-    private void StartTransition(bool transitionLeft_)
+    public void StartTransition(bool transitionLeft_)
     {
         //Setting the delay time to prevent player input
         this.currentDelayTime = this.changeShipDelay;
@@ -311,6 +339,14 @@ public class ShipSelectLogic : MonoBehaviour
         newShip.GetComponent<ShipEnergy>().enabled = false;
         newShip.GetComponent<ShipTiltAndRoll>().enabled = false;
         newShip.GetComponent<RailMovementFlight>().railParentObj.gameObject.SetActive(false);
+        newShip.GetComponent<ShipTiltAndRoll>().rollTrails.SetActive(false);
+
+        //Setting the ship's rotation and scale to the correct value to begin the transition
+        newShip.transform.rotation = this.shipDisplayPos.transform.rotation;
+        newShip.transform.localScale = this.transitionShipScale;
+
+        //Enabling the game object after all of the correct components are disabled so we don't get errors on Awake or Start
+        newShip.gameObject.SetActive(true);
 
         //Setting the new ship as the displayed ship and the currently displayed ship as the transition ship
         this.transitionShip = this.displayedShip;
