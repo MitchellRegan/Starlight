@@ -53,9 +53,11 @@ public class UIPlayerHilight : MonoBehaviour
                 this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
                 break;
         }
-        
+
+        Canvas.ForceUpdateCanvases();
         //Setting our currently selected hilight to our starting selectable
         this.ChangeHilight(this.startingSelectable);
+        Canvas.ForceUpdateCanvases();
     }
 
 
@@ -64,7 +66,7 @@ public class UIPlayerHilight : MonoBehaviour
     {
         Canvas.ForceUpdateCanvases();
         //Setting our currently selected hilight to our starting selectable
-        this.ChangeHilight(this.startingSelectable);
+        //this.ChangeHilight(this.startingSelectable);
     }
 
 

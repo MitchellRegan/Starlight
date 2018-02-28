@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(RailMovementFlight))]
 [RequireComponent(typeof(HealthAndArmor))]
 [RequireComponent(typeof(ShipEnergy))]
+[RequireComponent(typeof(CustomShipTextures))]
 public class PlayerShipController : MonoBehaviour
 {
     //Enum to determine which player controls this ship
@@ -217,6 +218,7 @@ public class PlayerShipController : MonoBehaviour
                 this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
                 this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
                 this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
+                this.GetComponent<CustomShipTextures>().SetPlayerShipID(Players.P1);
                 break;
 
             case Players.P2:
@@ -226,6 +228,7 @@ public class PlayerShipController : MonoBehaviour
                 this.ourCustomInputs = CustomInputSettings.globalReference.p2Inputs;
                 this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P2;
                 this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P2;
+                this.GetComponent<CustomShipTextures>().SetPlayerShipID(Players.P2);
 
                 //If this ship was set as the p1 ship reference, we remove it
                 if (p1ShipRef == this)
@@ -241,6 +244,7 @@ public class PlayerShipController : MonoBehaviour
                 this.ourCustomInputs = CustomInputSettings.globalReference.p1Inputs;
                 this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
                 this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
+                this.GetComponent<CustomShipTextures>().SetPlayerShipID(Players.P1);
                 break;
         }
 

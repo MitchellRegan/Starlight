@@ -31,6 +31,10 @@ public class ShipSelectLogic : MonoBehaviour
     //The size of the ships when they first transition in
     public Vector3 transitionShipScale = new Vector3(0.5f, 0.5f, 0.5f);
 
+    //The speed that the stat sliders transition to the correct value
+    [Range(0.01f, 0.99f)]
+    public float sliderTransitionSpeed = 0.9f;
+
     //The direction that the ships are moving during a transition
     private bool transitioningLeft = true;
 
@@ -102,6 +106,9 @@ public class ShipSelectLogic : MonoBehaviour
         //Creating an instance of the prefab that we'll be selecting
         GameObject newShip = GameObject.Instantiate(this.shipPrefabs[this.selectedShipIndex].shipPrefab.gameObject);
 
+        //Applying the ship's textures for the model
+        newShip.GetComponent<CustomShipTextures>().SetPlayerShipID(this.player);
+
         //Disabling specific components on the spawned ship so it doesn't fly off...
         newShip.GetComponent<PlayerShipController>().enabled = false;
         newShip.GetComponent<CameraWeight>().enabled = false;
@@ -130,6 +137,23 @@ public class ShipSelectLogic : MonoBehaviour
         this.maneuverabilitySlider.value = this.shipPrefabs[this.selectedShipIndex].maneuvarability;
         this.damageSlider.value = this.shipPrefabs[this.selectedShipIndex].damage;
         this.attackSpeedSlider.value = this.shipPrefabs[this.selectedShipIndex].attackSpeed;
+    }
+
+
+    //Function called when this object is disabled
+    public void OnDisable()
+    {
+        //If our display ship isn't null, we destroy it
+        if(this.displayedShip != null)
+        {
+            Destroy(this.displayedShip);
+        }
+
+        //If our transition ship isn't null, we destroy it
+        if(this.transitionShip != null)
+        {
+            Destroy(this.transitionShip);
+        }
     }
 
 
@@ -201,12 +225,52 @@ public class ShipSelectLogic : MonoBehaviour
             this.displayedShip.transform.localScale = newDisplayScale;
             this.transitionShip.transform.localScale = newTransitionScale;
 
+
+            //If the current ship isn't locked, we interpolate all of the stat sliders to the correct values
+            if(!this.shipPrefabs[this.selectedShipIndex].locked)
+            {
+                this.healthSlider.value = (this.sliderTransitionSpeed * (this.shipPrefabs[this.selectedShipIndex].health - this.healthSlider.value)) + this.healthSlider.value;
+                this.armorSlider.value = (this.sliderTransitionSpeed * (this.shipPrefabs[this.selectedShipIndex].armor - this.armorSlider.value)) + this.armorSlider.value;
+                this.maneuverabilitySlider.value = (this.sliderTransitionSpeed * (this.shipPrefabs[this.selectedShipIndex].maneuvarability - this.maneuverabilitySlider.value)) + this.maneuverabilitySlider.value;
+                this.damageSlider.value = (this.sliderTransitionSpeed * (this.shipPrefabs[this.selectedShipIndex].damage - this.damageSlider.value)) + this.damageSlider.value;
+                this.attackSpeedSlider.value = (this.sliderTransitionSpeed * (this.shipPrefabs[this.selectedShipIndex].attackSpeed - this.attackSpeedSlider.value)) + this.attackSpeedSlider.value;
+            }
+            //If the current ship is locked, we interpolate all of the stat sliders to 0
+            else
+            {
+                this.healthSlider.value *= (1 - this.sliderTransitionSpeed);
+                this.armorSlider.value *= (1 - this.sliderTransitionSpeed);
+                this.maneuverabilitySlider.value *= (1 - this.sliderTransitionSpeed);
+                this.damageSlider.value *= (1 - this.sliderTransitionSpeed);
+                this.attackSpeedSlider.value *= (1 - this.sliderTransitionSpeed);
+            }
+
+
             //If the time is 0, we delete the transition ship object and make sure the display ship is in the right position
             if(this.currentDelayTime <= 0)
             {
                 this.displayedShip.transform.position = this.shipDisplayPos.transform.position;
                 this.displayedShip.transform.localScale = this.displayShipScale;
                 Destroy(this.transitionShip);
+
+                //If the currently selected ship is locked, we set all the slider values to 0
+                if (this.shipPrefabs[this.selectedShipIndex].locked)
+                {
+                    this.healthSlider.value = 0;
+                    this.armorSlider.value = 0;
+                    this.maneuverabilitySlider.value = 0;
+                    this.damageSlider.value = 0;
+                    this.attackSpeedSlider.value = 0;
+                }
+                //If the currently selected ship is unlocked, we make sure all the slider values are correct
+                else
+                {
+                    this.healthSlider.value = this.shipPrefabs[this.selectedShipIndex].health;
+                    this.armorSlider.value = this.shipPrefabs[this.selectedShipIndex].armor;
+                    this.maneuverabilitySlider.value = this.shipPrefabs[this.selectedShipIndex].maneuvarability;
+                    this.damageSlider.value = this.shipPrefabs[this.selectedShipIndex].damage;
+                    this.attackSpeedSlider.value = this.shipPrefabs[this.selectedShipIndex].attackSpeed;
+                }
             }
         }
         //Otherwise we check to see if the player is cycling the selected ship left or right
@@ -231,13 +295,13 @@ public class ShipSelectLogic : MonoBehaviour
                 }
                 //Checking for input to move left
                 else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A) || ControllerInputManager.P1Controller.CheckButtonDown(ControllerButtons.D_Pad_Left) ||
-                    ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Left_Stick_X) > 0.3f)
+                    ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Left_Stick_X) > 0.6f)
                 {
                     this.StartTransition(true);
                 }
                 //Checking for input to move right
                 else if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D) || ControllerInputManager.P1Controller.CheckButtonDown(ControllerButtons.D_Pad_Right) ||
-                    ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Left_Stick_X) < -0.3f)
+                    ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Left_Stick_X) < -0.6f)
                 {
                     this.StartTransition(false);
                 }
@@ -260,13 +324,13 @@ public class ShipSelectLogic : MonoBehaviour
                 }
                 //Checking for input to move left
                 else if (ControllerInputManager.P2Controller.CheckButtonDown(ControllerButtons.D_Pad_Left) ||
-                    ControllerInputManager.P2Controller.CheckStickValue(ControllerSticks.Left_Stick_X) > 0.3f)
+                    ControllerInputManager.P2Controller.CheckStickValue(ControllerSticks.Left_Stick_X) > 0.6f)
                 {
                     this.StartTransition(true);
                 }
                 //Checking for input to move right
                 else if (ControllerInputManager.P2Controller.CheckButtonDown(ControllerButtons.D_Pad_Right) ||
-                    ControllerInputManager.P2Controller.CheckStickValue(ControllerSticks.Left_Stick_X) < -0.3f)
+                    ControllerInputManager.P2Controller.CheckStickValue(ControllerSticks.Left_Stick_X) < -0.6f)
                 {
                     this.StartTransition(false);
                 }
@@ -285,11 +349,41 @@ public class ShipSelectLogic : MonoBehaviour
     //Function called from update to start the transition to the next ship
     public void StartTransition(bool transitionLeft_)
     {
+        //If we're already transitioning, nothing happens
+        if(this.currentDelayTime > 0)
+        {
+            return;
+        }
+
         //Setting the delay time to prevent player input
         this.currentDelayTime = this.changeShipDelay;
 
         //Setting the transition direction
         this.transitioningLeft = transitionLeft_;
+
+
+        //If we're transitioning left, we need to change our selected ship index down
+        if (this.transitioningLeft)
+        {
+            this.selectedShipIndex -= 1;
+
+            //If we go below index 0, we need to loop back around
+            if (this.selectedShipIndex < 0)
+            {
+                this.selectedShipIndex = this.shipPrefabs.Count - 1;
+            }
+        }
+        //If we're transitioning right, we need to change our selected ship index up
+        else
+        {
+            this.selectedShipIndex += 1;
+
+            //If we go above the last index, we need to loop back around
+            if (this.selectedShipIndex > this.shipPrefabs.Count - 1)
+            {
+                this.selectedShipIndex = 0;
+            }
+        }
 
         //If the currently selected ship is locked
         if (this.shipPrefabs[this.selectedShipIndex].locked)
@@ -297,15 +391,9 @@ public class ShipSelectLogic : MonoBehaviour
             //We display the locked screen icon
             this.lockedScreenObj.SetActive(true);
 
-            //Displaying the ship's name and hiding all of the other stats
+            //Displaying the ship's name and hiding the description
             this.shipNameText.text = this.shipPrefabs[this.selectedShipIndex].shipName;
             this.shipDescriptionText.text = "??????????";
-
-            this.healthSlider.value = 0;
-            this.armorSlider.value = 0;
-            this.maneuverabilitySlider.value = 0;
-            this.damageSlider.value = 0;
-            this.attackSpeedSlider.value = 0;
         }
         //If the currently selected ship is unlocked
         else
@@ -313,20 +401,17 @@ public class ShipSelectLogic : MonoBehaviour
             //We hide the locked screen icon
             this.lockedScreenObj.SetActive(false);
 
-            //Displaying the ship's name and all of the other stats
+            //Displaying the ship's name and the description
             this.shipNameText.text = this.shipPrefabs[this.selectedShipIndex].shipName;
             this.shipDescriptionText.text = this.shipPrefabs[this.selectedShipIndex].shipDescription;
-
-            this.healthSlider.value = this.shipPrefabs[this.selectedShipIndex].health;
-            this.armorSlider.value = this.shipPrefabs[this.selectedShipIndex].armor;
-            this.maneuverabilitySlider.value = this.shipPrefabs[this.selectedShipIndex].maneuvarability;
-            this.damageSlider.value = this.shipPrefabs[this.selectedShipIndex].damage;
-            this.attackSpeedSlider.value = this.shipPrefabs[this.selectedShipIndex].attackSpeed;
         }
         
 
         //Creating an instance of the prefab that we'll be selecting
         GameObject newShip = GameObject.Instantiate(this.shipPrefabs[this.selectedShipIndex].shipPrefab.gameObject);
+
+        //Applying the ship's textures for the model
+        newShip.GetComponent<CustomShipTextures>().SetPlayerShipID(this.player);
 
         //Disabling the player ship controller component
         newShip.GetComponent<PlayerShipController>().enabled = false;
@@ -352,32 +437,15 @@ public class ShipSelectLogic : MonoBehaviour
         this.transitionShip = this.displayedShip;
         this.displayedShip = newShip;
 
-
-        //If we're transitioning left, we need to change our selected ship index down
-        if (this.transitioningLeft)
+        //If we transition left, we set the new ship's position to the left position pos
+        if(this.transitioningLeft)
         {
-            this.selectedShipIndex -= 1;
-
-            //If we go below index 0, we need to loop back around
-            if(this.selectedShipIndex < 0)
-            {
-                this.selectedShipIndex = this.shipPrefabs.Count - 1;
-            }
-
             //Setting the new ship's position to the left display position
             newShip.transform.position = this.leftTransitionPos.position;
         }
-        //If we're transitioning right, we need to change our selected ship index up
+        //If we transition right, we set the new ship's position to the right position pos
         else
         {
-            this.selectedShipIndex += 1;
-
-            //If we go above the last index, we need to loop back around
-            if (this.selectedShipIndex > this.shipPrefabs.Count - 1)
-            {
-                this.selectedShipIndex = 0;
-            }
-
             //Setting the new ship's position to the right display position
             newShip.transform.position = this.rightTransitionPos.position;
         }

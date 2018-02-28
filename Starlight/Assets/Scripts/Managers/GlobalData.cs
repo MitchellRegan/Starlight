@@ -77,4 +77,7 @@ public class PlayerColorSlots
 
     //Color used for optional decals
     public Color decal = Color.black;
+
+    //The decal index for the alpha map of this player's ship
+    public int decalIndex = 0;
 }
