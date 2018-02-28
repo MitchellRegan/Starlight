@@ -15,6 +15,8 @@ public class ShipSelectLogic : MonoBehaviour
     //The list of ship prefabs that the player can select
     public List<SelectableShipInfo> shipPrefabs;
 
+    [Space(16)]
+
     //The index of the currently selected ship
     private int selectedShipIndex = 0;
 
@@ -73,6 +75,7 @@ public class ShipSelectLogic : MonoBehaviour
                 if(this.shipPrefabs[i].shipPrefab == GlobalData.globalReference.player1Ship)
                 {
                     this.selectedShipIndex = i;
+                    break;
                 }
             }
             //If we're checking the prefab for player 2
@@ -82,9 +85,42 @@ public class ShipSelectLogic : MonoBehaviour
                 if (this.shipPrefabs[i].shipPrefab == GlobalData.globalReference.player2Ship)
                 {
                     this.selectedShipIndex = i;
+                    break;
                 }
             }
         }
+
+        //We hide the locked screen icon
+        this.lockedScreenObj.SetActive(false);
+
+
+        //Creating an instance of the prefab that we'll be selecting
+        GameObject newShip = GameObject.Instantiate(this.shipPrefabs[this.selectedShipIndex].shipPrefab.gameObject);
+
+        //Disabling specific components on the spawned ship so it doesn't fly off...
+        newShip.GetComponent<PlayerShipController>().enabled = false;
+        newShip.GetComponent<CameraWeight>().enabled = false;
+        newShip.GetComponent<RailMovementFlight>().enabled = false;
+        newShip.GetComponent<FreeMovementFlight>().enabled = false;
+        newShip.GetComponent<ShipEnergy>().enabled = false;
+        newShip.GetComponent<ShipTiltAndRoll>().enabled = false;
+        newShip.GetComponent<RailMovementFlight>().railParentObj.gameObject.SetActive(false);
+
+        //Setting the display position of the display ship
+        newShip.transform.position = this.shipDisplayPos.transform.position;
+
+        newShip.gameObject.SetActive(true);
+        this.displayedShip = newShip;
+
+        //Displaying the ship's name and all of the other stats
+        this.shipNameText.text = this.shipPrefabs[this.selectedShipIndex].shipName;
+        this.shipDescriptionText.text = this.shipPrefabs[this.selectedShipIndex].shipDescription;
+
+        this.healthSlider.value = this.shipPrefabs[this.selectedShipIndex].health;
+        this.armorSlider.value = this.shipPrefabs[this.selectedShipIndex].armor;
+        this.maneuverabilitySlider.value = this.shipPrefabs[this.selectedShipIndex].maneuvarability;
+        this.damageSlider.value = this.shipPrefabs[this.selectedShipIndex].damage;
+        this.attackSpeedSlider.value = this.shipPrefabs[this.selectedShipIndex].attackSpeed;
     }
 
 
@@ -96,7 +132,6 @@ public class ShipSelectLogic : MonoBehaviour
         {
             return;
         }
-        
         
         //If we're changing the displayed ship
         if(this.currentDelayTime > 0)
@@ -147,6 +182,12 @@ public class ShipSelectLogic : MonoBehaviour
                 this.transitionShip.transform.position = newTransitionPos;
                 this.displayedShip.transform.position = newDisplayPos;
             }
+
+            //If the time is 0, we delete the transition ship object
+            if(this.currentDelayTime <= 0)
+            {
+                Destroy(this.transitionShip);
+            }
         }
         //Otherwise we check to see if the player is cycling the selected ship left or right
         else if(this.currentDelayTime <= 0)
@@ -168,13 +209,13 @@ public class ShipSelectLogic : MonoBehaviour
                 else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A) || ControllerInputManager.P1Controller.CheckButtonDown(ControllerButtons.D_Pad_Left) ||
                     ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Left_Stick_X) > 0.3f)
                 {
-
+                    this.StartTransition(true);
                 }
                 //Checking for input to move right
                 else if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D) || ControllerInputManager.P1Controller.CheckButtonDown(ControllerButtons.D_Pad_Right) ||
                     ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Left_Stick_X) < -0.3f)
                 {
-
+                    this.StartTransition(false);
                 }
             }
             //Getting the input for player 2
@@ -193,17 +234,24 @@ public class ShipSelectLogic : MonoBehaviour
                 else if (ControllerInputManager.P2Controller.CheckButtonDown(ControllerButtons.D_Pad_Left) ||
                     ControllerInputManager.P2Controller.CheckStickValue(ControllerSticks.Left_Stick_X) > 0.3f)
                 {
-
+                    this.StartTransition(true);
                 }
                 //Checking for input to move right
                 else if (ControllerInputManager.P2Controller.CheckButtonDown(ControllerButtons.D_Pad_Right) ||
                     ControllerInputManager.P2Controller.CheckStickValue(ControllerSticks.Left_Stick_X) < -0.3f)
                 {
-
+                    this.StartTransition(false);
                 }
             }
         }
 	}
+
+
+    //Function called externally to start the ship selection
+    public void StartShipSelection()
+    {
+        this.isChangingShip = true;
+    }
 
 
     //Function called from update to start the transition to the next ship
@@ -251,6 +299,18 @@ public class ShipSelectLogic : MonoBehaviour
 
         //Creating an instance of the prefab that we'll be selecting
         GameObject newShip = GameObject.Instantiate(this.shipPrefabs[this.selectedShipIndex].shipPrefab.gameObject);
+
+        //Disabling the player ship controller component
+        newShip.GetComponent<PlayerShipController>().enabled = false;
+
+        //Disabling specific components on the spawned ship so it doesn't fly off...
+        newShip.GetComponent<PlayerShipController>().enabled = false;
+        newShip.GetComponent<CameraWeight>().enabled = false;
+        newShip.GetComponent<RailMovementFlight>().enabled = false;
+        newShip.GetComponent<FreeMovementFlight>().enabled = false;
+        newShip.GetComponent<ShipEnergy>().enabled = false;
+        newShip.GetComponent<ShipTiltAndRoll>().enabled = false;
+        newShip.GetComponent<RailMovementFlight>().railParentObj.gameObject.SetActive(false);
 
         //Setting the new ship as the displayed ship and the currently displayed ship as the transition ship
         this.transitionShip = this.displayedShip;
