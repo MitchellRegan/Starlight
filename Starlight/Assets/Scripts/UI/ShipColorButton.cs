@@ -13,6 +13,10 @@ public class ShipColorButton : MonoBehaviour
     public enum ColorSlot { Color1, Color2, Color3, Color4, Color5, Decal };
     public ColorSlot slot = ColorSlot.Color1;
 
+    //The ship select logic component that we use to update the displayed ship
+    public ShipSelectLogic shipSelectRef;
+
+
 
     //Function called externally from UI button Unity Event to set this player's color slot
     public void SetPlayerColor()
@@ -61,5 +65,8 @@ public class ShipColorButton : MonoBehaviour
                 selectedSlots.decal = newColor;
                 break;
         }
+
+        //Updating the displayed ship's colors
+        this.shipSelectRef.UpdateDisplayShipColors();
     }
 }

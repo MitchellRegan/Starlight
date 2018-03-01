@@ -160,6 +160,31 @@ public class ShipSelectLogic : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
+        float rotationSpeed = 6f;
+
+        //If this UI is for player 1, we can have their controller rotate the ship
+        if(this.player == Players.P1)
+        {
+            //Rotating the display ship's Z rotation based on the p1 controller right stick x axis
+            this.displayedShip.transform.eulerAngles += new Vector3(0, 0, 
+                    rotationSpeed * ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Right_Stick_X));
+
+            //Rotating the display ship's X rotation based on the p1 controller right stick y axis
+            this.displayedShip.transform.eulerAngles += new Vector3(
+                    rotationSpeed * ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Right_Stick_Y), 0, 0);
+        }
+        //If this UI is for player 2, we can have their controller rotate the ship
+        else
+        {
+            //Rotating the display ship's Z rotation based on the p1 controller right stick x axis
+            this.displayedShip.transform.eulerAngles += new Vector3(0, 0,
+                    rotationSpeed * ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Right_Stick_X));
+
+            //Rotating the display ship's X rotation based on the p1 controller right stick y axis
+            this.displayedShip.transform.eulerAngles += new Vector3(
+                    rotationSpeed * ControllerInputManager.P1Controller.CheckStickValue(ControllerSticks.Right_Stick_Y), 0, 0);
+        }
+
 		//If the player isn't changing their ship, nothing happens
         if(!this.isChangingShip)
         {
@@ -346,6 +371,29 @@ public class ShipSelectLogic : MonoBehaviour
     }
 
 
+    //Function called externally to confirm ship selection
+    public void ConfirmShipSelection()
+    {
+        //If we're not currently changing ships, nothing happens
+        if(!this.isChangingShip)
+        {
+            return;
+        }
+
+        //If the currently selected ship is locked, nothing happens
+        if(this.shipPrefabs[this.selectedShipIndex].locked)
+        {
+            return;
+        }
+        
+        //Making it so we stop selecting ships
+        this.isChangingShip = false;
+
+        //Invoking our confirm selection event
+        this.confirmSelectEvent.Invoke();
+    }
+
+
     //Function called from update to start the transition to the next ship
     public void StartTransition(bool transitionLeft_)
     {
@@ -449,6 +497,20 @@ public class ShipSelectLogic : MonoBehaviour
             //Setting the new ship's position to the right display position
             newShip.transform.position = this.rightTransitionPos.position;
         }
+    }
+
+
+    //Function called from ShipColorButton.cs to tell this script to update texture color changes
+    public void UpdateDisplayShipColors()
+    {
+        this.displayedShip.GetComponent<CustomShipTextures>().ApplyShipTextures();
+    }
+
+
+    //Function called externally from UI buttons to cycle through ship decals
+    public void CycleShipDecals(bool nextDecal_)
+    {
+        this.displayedShip.GetComponent<CustomShipTextures>().ChangeDecal(nextDecal_);
     }
 }
 
