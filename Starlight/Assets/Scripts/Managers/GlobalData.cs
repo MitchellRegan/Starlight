@@ -13,6 +13,10 @@ public class GlobalData : MonoBehaviour
     public Color P1HilightColor = new Color(1, 0f, 0f, 1);
     public Color P2HilightColor = new Color(0, 0.5f, 1, 1);
 
+    //Colors used for player ships
+    public PlayerColorSlots p1Colors;
+    public PlayerColorSlots p2Colors;
+
     //Bool that determines if the game mode is single player or co-op. True == 1 player, False == 2 player
     public bool singlePlayerMode = false;
 
@@ -43,9 +47,44 @@ public class GlobalData : MonoBehaviour
     }
 
 
+    //Function called externally at the Main Menu scene to determine if the game is in single player or co-op mode
+    public void SetSinglePlayerMode(bool isSinglePlayer_)
+    {
+        this.singlePlayerMode = isSinglePlayer_;
+    }
+
+
+    //Function called externally through UI buttons and Unity Events to change the current scene
+    public void ChangeScene(string sceneName_)
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName_);
+    }
+
+
     //Closes the application
     public void QuitGame()
     {
         Application.Quit();
     }
+}
+
+
+//Class used in GlobalData.cs to store the different color slots for player ships
+[System.Serializable]
+public class PlayerColorSlots
+{
+    //Primary color
+    public Color slot1 = Color.red;
+    //Secondary color
+    public Color slot2 = Color.red;
+    //Tertiary colors
+    public Color slot3 = Color.red;
+    public Color slot4 = Color.red;
+    public Color slot5 = Color.red;
+
+    //Color used for optional decals
+    public Color decal = Color.black;
+
+    //The decal index for the alpha map of this player's ship
+    public int decalIndex = 0;
 }
