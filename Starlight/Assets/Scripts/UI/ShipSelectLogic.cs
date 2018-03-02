@@ -188,6 +188,7 @@ public class ShipSelectLogic : MonoBehaviour
 		//If the player isn't changing their ship, nothing happens
         if(!this.isChangingShip)
         {
+            this.displayedShip.transform.position = this.shipDisplayPos.transform.position;
             return;
         }
         

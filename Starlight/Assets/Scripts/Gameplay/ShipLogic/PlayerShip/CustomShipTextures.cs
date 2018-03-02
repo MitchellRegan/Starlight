@@ -5,9 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerShipController))]
 public class CustomShipTextures : MonoBehaviour
 {
-    //The size that the created ship textures will be
-    private int textureSize = 512;
-
     //The player index that this ship uses to assign textures
     public Players player = Players.P1;
 

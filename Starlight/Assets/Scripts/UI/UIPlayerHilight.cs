@@ -175,11 +175,18 @@ public class UIPlayerHilight : MonoBehaviour
         //Setting our currently selected highlight UI element to the new one
         this.currentSelectable = newSelect_;
 
-        //Setting our position to new UI element
-        this.GetComponent<RectTransform>().position = newSelect_.GetComponent<RectTransform>().position;
+        //Quick reference to this object's rect transform
+        RectTransform ourRect = this.GetComponent<RectTransform>();
+        //Quick reference to the new object's rect transform
+        RectTransform newRect = this.currentSelectable.GetComponent<RectTransform>();
+
         //Setting our scale to the same as the new UI element plus our size difference
-        this.GetComponent<RectTransform>().sizeDelta = new Vector2(newSelect_.GetComponent<RectTransform>().rect.width + this.sizeDiff.x,
-                                                                newSelect_.GetComponent<RectTransform>().rect.height + this.sizeDiff.y);
+        ourRect.sizeDelta = new Vector2(newRect.rect.width + this.sizeDiff.x, newRect.rect.height + this.sizeDiff.y);
+
+        ourRect.pivot = newRect.pivot;
+
+        //Setting our position to new UI element
+        ourRect.position = newSelect_.GetComponent<RectTransform>().position;
     }
 
 
