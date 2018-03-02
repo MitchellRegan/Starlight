@@ -54,6 +54,13 @@ public class GlobalData : MonoBehaviour
     }
 
 
+    //Function called externally through UI buttons and Unity Events to change the current scene
+    public void ChangeScene(string sceneName_)
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName_);
+    }
+
+
     //Closes the application
     public void QuitGame()
     {
