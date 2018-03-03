@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Image))]
 public class UIPlayerHilight : MonoBehaviour
@@ -19,7 +20,7 @@ public class UIPlayerHilight : MonoBehaviour
     private Selectable currentSelectable;
 
     //The amount of cooldown time between moving between different buttons
-    private float moveDelay = 0.1f;
+    private float moveDelay = 0.11f;
     //The current amount of time remaining for our move delay
     private float currentDelayTime = 0;
 
@@ -52,20 +53,45 @@ public class UIPlayerHilight : MonoBehaviour
                 this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
                 break;
         }
-        
+
+        Canvas.ForceUpdateCanvases();
         //Setting our currently selected hilight to our starting selectable
         this.ChangeHilight(this.startingSelectable);
+        Canvas.ForceUpdateCanvases();
     }
 
 
 	//Function called when this component is enabled
     private void OnEnable()
     {
+        //Getting the reference to the player input for this selected player
+        switch (this.playerInput)
+        {
+            case Players.P1:
+                this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p1Inputs;
+                this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
+                break;
+
+            case Players.P2:
+                this.ourController = ControllerInputManager.P2Controller;
+                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p2Inputs;
+                this.GetComponent<Image>().color = GlobalData.globalReference.P2HilightColor;
+                break;
+
+            default:
+                this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p1Inputs;
+                this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
+                break;
+        }
+
         Canvas.ForceUpdateCanvases();
         //Setting our currently selected hilight to our starting selectable
         this.ChangeHilight(this.startingSelectable);
+        Canvas.ForceUpdateCanvases();
     }
-	
+
 
 	// Update is called once per frame
 	private void Update ()
@@ -77,11 +103,40 @@ public class UIPlayerHilight : MonoBehaviour
             this.ClickSelected();
         }
 
+        //Bool to determine if the mouse is over a UI element that p1 can click
+        Button mouseOverButton = null;
+        if(this.playerInput == Players.P1)
+        {
+            //Creating a new var to hold the event data for the mouse pointer
+            PointerEventData pointerData = new PointerEventData(EventSystem.current);
+            pointerData.position = Input.mousePosition;
+            //Creating a list of results of objects hit when we raycast from the mouse
+            List<RaycastResult> rayResults = new List<RaycastResult>();
+
+            //Raycasting using the current pointer data to see what the mouse is over
+            EventSystem.current.RaycastAll(pointerData, rayResults);
+
+            //If the raycast hit anything, we check the first object hit
+            if(rayResults.Count > 0)
+            {
+                //If the first object that the mouse is over is a UI button, we set it as the mouse over button
+                if(rayResults[0].gameObject.GetComponent<Button>())
+                {
+                    mouseOverButton = rayResults[0].gameObject.GetComponent<Button>();
+                }
+            }
+        }
+
         //If our current delay time is above 0, we need to count it down
         if (this.currentDelayTime > 0)
         {
             this.currentDelayTime -= Time.fixedDeltaTime;
             return;
+        }
+        //If this takes player 1 input and the mouse is over a UI element
+        else if(mouseOverButton != null)
+        {
+            this.ChangeHilight(mouseOverButton);
         }
         //If we don't have to wait for the delay, we can take directional input
         else
@@ -143,11 +198,18 @@ public class UIPlayerHilight : MonoBehaviour
         //Setting our currently selected highlight UI element to the new one
         this.currentSelectable = newSelect_;
 
-        //Setting our position to new UI element
-        this.GetComponent<RectTransform>().position = newSelect_.GetComponent<RectTransform>().position;
+        //Quick reference to this object's rect transform
+        RectTransform ourRect = this.GetComponent<RectTransform>();
+        //Quick reference to the new object's rect transform
+        RectTransform newRect = this.currentSelectable.GetComponent<RectTransform>();
+
         //Setting our scale to the same as the new UI element plus our size difference
-        this.GetComponent<RectTransform>().sizeDelta = new Vector2(newSelect_.GetComponent<RectTransform>().rect.width + this.sizeDiff.x,
-                                                                newSelect_.GetComponent<RectTransform>().rect.height + this.sizeDiff.y);
+        ourRect.sizeDelta = new Vector2(newRect.rect.width + this.sizeDiff.x, newRect.rect.height + this.sizeDiff.y);
+
+        ourRect.pivot = newRect.pivot;
+
+        //Setting our position to new UI element
+        ourRect.position = newSelect_.GetComponent<RectTransform>().position;
     }
 
 
