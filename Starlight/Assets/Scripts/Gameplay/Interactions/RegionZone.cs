@@ -15,7 +15,4 @@ public class RegionZone : MonoBehaviour
 
     //If this is a rail zone, we need to designate which rail zone the player will follow
     public BezierSpline railZoneSplineToFollow;
-
-    //The amount of time that it takes to complete this rail zone
-    public float timeToFinishSpline = 10;
 }

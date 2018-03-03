@@ -100,24 +100,27 @@ public class MoveAlongSplineRigidBody : MonoBehaviour
             }
         }
 
+        //Getting the adjusted percent along the spline based on the different times between control points
+        float adjustedTimePercent = this.splineToFollow.GetAdjustedPercentFromTime(this.currentTime / this.timeToComplete);
+
         //If we rotate to face the direction of the spline path
         if (this.rotateToFollowSpline)
         {
-            this.transform.LookAt(this.transform.position + this.splineToFollow.GetDirection(this.currentTime / this.timeToComplete));
+            this.transform.LookAt(this.transform.position + this.splineToFollow.GetDirection(adjustedTimePercent));
             //Vector3 splineUp = this.splineToFollow.GetOrientationAtPercent(this.currentTime / this.timeToComplete) * Vector3.up;
             //this.transform.up = splineUp;
         }
 
         //Setting our transform to the correct percent along the spline based on the time completed
-        this.ourRigidBody.MovePosition(this.splineToFollow.GetPoint(this.currentTime / this.timeToComplete));
+        this.ourRigidBody.MovePosition(this.splineToFollow.GetPoint(adjustedTimePercent));
     }
 
 
     //Function called externally to change the spline that this object follows
-    public void SetSplineToFollow(BezierSpline newSpline_, float timeToComplete_)
+    public void SetSplineToFollow(BezierSpline newSpline_)
     {
         this.splineToFollow = newSpline_;
-        this.timeToComplete = timeToComplete_;
+        this.timeToComplete = newSpline_.TotalSplineTime;
         this.currentTime = 0;
     }
 }

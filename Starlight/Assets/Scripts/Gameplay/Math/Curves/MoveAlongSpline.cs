@@ -90,10 +90,10 @@ public class MoveAlongSpline : MonoBehaviour
 
 
     //Function called externally to change the spline that this object follows
-    public void ChangeSplineToFollow(BezierSpline newSpline_, float timeToComplete_)
+    public void ChangeSplineToFollow(BezierSpline newSpline_)
     {
         this.splineToFollow = newSpline_;
-        this.timeToComplete = timeToComplete_;
+        this.timeToComplete = newSpline_.TotalSplineTime;
         this.currentTime = 0;
     }
 }

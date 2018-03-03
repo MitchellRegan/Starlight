@@ -105,13 +105,17 @@ public class BezierSplineInspector : Editor
         //If we draw time increments, we need to loop through each time increment for the selected spline
         if(showTimeIncrements)
         {
+            //Getting the total amount of time it takes to get to the end of the spline
+            float totalTime = this.spline.TotalSplineTime;
+
             Handles.color = this.spline.timeIncrementColor;
 
             //Starting the increment on the first step since we know where time 0 is
-            for(float t = this.spline.timeIncrementDisplay; t <= this.spline.totalTimeDisplay; t += this.spline.timeIncrementDisplay)
+            for(float t = this.spline.timeIncrementDisplay; t <= totalTime; t += this.spline.timeIncrementDisplay)
             {
                 //Getting the percent progress that this time increment is along the spline
-                float progress = t / this.spline.totalTimeDisplay;
+                float progress = t / totalTime;
+                progress = this.spline.GetAdjustedPercentFromTime(progress);
                 //Getting the point in space relative to our transform handle
                 Vector3 point = this.spline.GetPoint(progress);
 
@@ -217,6 +221,36 @@ public class BezierSplineInspector : Editor
             this.spline.controlPointHandleSize = newHandleSize;
         }
 
+        //Displaying the total time for the length of this spline
+        EditorGUILayout.LabelField("Total Spline Time: " + this.spline.TotalSplineTime);
+
+        //If we're selecting a control point, we display the time it takes to get to the next control point
+        if(!this.isSelectedPointRotation && (this.selectedIndex % 3) == 0)
+        {
+            //Making sure we're not selecting the last control point in the spline
+            if (this.selectedIndex / 3 != this.spline.ControlPointCount - 1)
+            {
+                //Checking for any changes with the selected time for the selected point
+                EditorGUI.BeginChangeCheck();
+                float timeToNextPoint = EditorGUILayout.FloatField("Time To Next Point", this.spline.GetTimeAfterGivenPoint(this.selectedIndex));
+                //If the time variable was changed
+                if (EditorGUI.EndChangeCheck())
+                {
+                    //Making sure the new value is above 0
+                    if (timeToNextPoint < 0)
+                    {
+                        timeToNextPoint = 0;
+                    }
+
+                    //We set the selected spline to dirty so that we can save or undo changes
+                    Undo.RecordObject(this.spline, "Change Loop Time");
+                    EditorUtility.SetDirty(this.spline);
+                    //Setting the time to the next control point after the selected point
+                    this.spline.SetTimeAfterGivenPoint(this.selectedIndex, timeToNextPoint);
+                }
+            }
+        }
+
         //Checking for any changes with the selected spline's "loop" variable
         EditorGUI.BeginChangeCheck();
         bool loop = EditorGUILayout.Toggle("Loop Spline", this.spline.Loop);
@@ -270,10 +304,10 @@ public class BezierSplineInspector : Editor
         }
 
         //Creating a GUI button to add a curve to our spline
-        if (GUILayout.Button("Add Curve"))
+        if (GUILayout.Button("Add Curve At End"))
         {
             //Sets the spline to dirty so that we can save changes
-            Undo.RecordObject(this.spline, "Add Curve");
+            Undo.RecordObject(this.spline, "Add Curve At End");
             //Adds new points to the end of our spline
             this.spline.AddCurve();
             EditorUtility.SetDirty(this.spline);
@@ -283,6 +317,21 @@ public class BezierSplineInspector : Editor
         //If we're selecting a control point and not a rotation point
         if(!this.isSelectedPointRotation && this.selectedIndex % 3 == 0)
         {
+            //If the selected control point isn't the last point
+            if(this.selectedIndex < this.spline.ControlPointCount - 1)
+            {
+                //Creating a GUI to add a new control point between this control point and the next
+                if (GUILayout.Button("Add Control Point After This"))
+                {
+                    //Sets the spline to dirty so that we can save changes
+                    Undo.RecordObject(this.spline, "Add Control Point");
+                    //Adds the new point between the selected control point and the next
+                    this.spline.AddControlPointBetweenPoints(this.selectedIndex);
+                    EditorUtility.SetDirty(this.spline);
+                    this.Repaint();
+                }
+            }
+            
             //Creating a GUI button to delete a selected control point
             if(GUILayout.Button("Delete Control Point"))
             {
