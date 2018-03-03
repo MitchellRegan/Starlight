@@ -74,7 +74,6 @@ public class UIPlayerHilight : MonoBehaviour
                 break;
 
             case Players.P2:
-                Debug.Log("Using p2 input");
                 this.ourController = ControllerInputManager.P2Controller;
                 this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p2Inputs;
                 this.GetComponent<Image>().color = GlobalData.globalReference.P2HilightColor;
