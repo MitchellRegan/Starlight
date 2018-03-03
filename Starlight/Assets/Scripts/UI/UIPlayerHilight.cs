@@ -64,9 +64,32 @@ public class UIPlayerHilight : MonoBehaviour
 	//Function called when this component is enabled
     private void OnEnable()
     {
+        //Getting the reference to the player input for this selected player
+        switch (this.playerInput)
+        {
+            case Players.P1:
+                this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p1Inputs;
+                this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
+                break;
+
+            case Players.P2:
+                this.ourController = ControllerInputManager.P2Controller;
+                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p2Inputs;
+                this.GetComponent<Image>().color = GlobalData.globalReference.P2HilightColor;
+                break;
+
+            default:
+                this.ourController = ControllerInputManager.P1Controller;
+                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p1Inputs;
+                this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
+                break;
+        }
+
         Canvas.ForceUpdateCanvases();
         //Setting our currently selected hilight to our starting selectable
-        //this.ChangeHilight(this.startingSelectable);
+        this.ChangeHilight(this.startingSelectable);
+        Canvas.ForceUpdateCanvases();
     }
 
 
