@@ -35,8 +35,6 @@ public class BezierSplineInspector : Editor
 
     //The index of the currently selected control point of our spline
     private int selectedIndex = -1;
-    //Bool that determines if we're selecting a normal point on the spline or a rotation point
-    private bool isSelectedPointRotation = false;
 
 
 
@@ -140,7 +138,7 @@ public class BezierSplineInspector : Editor
                 //Getting the point in space relative to our transform handle
                 Vector3 point = (this.spline.GetPoint(progress));
                 //Getting the rotation orientation at the given point
-                Quaternion pointOrientation = this.spline.GetOrientationAtPercent(progress);
+                float pointOrientation = this.spline.GetOrientationAtPercent(progress);
 
                 //Shorter variables for the x and y values of the bounding box
                 float x = this.spline.boundingBoxDisplay.x / 2;
@@ -179,7 +177,7 @@ public class BezierSplineInspector : Editor
                 }
 
                 //Drawing the mesh along the spline
-                Graphics.DrawMesh(boundingBoxMesh, point, pointOrientation, mat, 0);
+                Graphics.DrawMesh(boundingBoxMesh, point, this.spline.GetQuaternionAtPercent(progress), mat, 0);
             }
         }
         
@@ -224,8 +222,8 @@ public class BezierSplineInspector : Editor
         //Displaying the total time for the length of this spline
         EditorGUILayout.LabelField("Total Spline Time: " + this.spline.TotalSplineTime);
 
-        //If we're selecting a control point, we display the time it takes to get to the next control point
-        if(!this.isSelectedPointRotation && (this.selectedIndex % 3) == 0)
+        //If we're selecting a control point, we display the time it takes to get to the next control point and the orientation
+        if((this.selectedIndex % 3) == 0)
         {
             //Making sure we're not selecting the last control point in the spline
             if (this.selectedIndex / 3 != this.spline.ControlPointCount - 1)
@@ -249,6 +247,19 @@ public class BezierSplineInspector : Editor
                     this.spline.SetTimeAfterGivenPoint(this.selectedIndex, timeToNextPoint);
                 }
             }
+
+            //Creating a float input to change the orientation at this control point
+            EditorGUI.BeginChangeCheck();
+            float orientation = EditorGUILayout.FloatField("Orientation", this.spline.GetPointOrientation(this.selectedIndex));
+            //If the orientation variable was changed
+            if(EditorGUI.EndChangeCheck())
+            {
+                this.spline.SetPointOrientation(this.selectedIndex, orientation);
+
+                //Setting the selected spline to dirty so we can save or undo changes
+                Undo.RecordObject(this.spline, "Change Orientation");
+                EditorUtility.SetDirty(this.spline);
+            }
         }
 
         //Checking for any changes with the selected spline's "loop" variable
@@ -266,7 +277,7 @@ public class BezierSplineInspector : Editor
         }
 
         //If we have a valid selected point index, we can allow the user to edit the selected handle's position with text
-        if(this.selectedIndex >= 0 && this.selectedIndex < this.spline.ControlPointCount && !this.isSelectedPointRotation)
+        if(this.selectedIndex >= 0 && this.selectedIndex < this.spline.ControlPointCount)
         {
             this.DrawSelectedPointInspector();
         }
@@ -303,6 +314,12 @@ public class BezierSplineInspector : Editor
             this.Repaint();
         }
 
+        //Creating a UI button to reset all control point orientations to 0
+        if (GUILayout.Button("Reset All Orientations"))
+        {
+            this.spline.ResetOrientation();
+        }
+
         //Creating a GUI button to add a curve to our spline
         if (GUILayout.Button("Add Curve At End"))
         {
@@ -314,8 +331,8 @@ public class BezierSplineInspector : Editor
             this.Repaint();
         }
         
-        //If we're selecting a control point and not a rotation point
-        if(!this.isSelectedPointRotation && this.selectedIndex % 3 == 0)
+        //If we're selecting a control point
+        if(this.selectedIndex % 3 == 0)
         {
             //If the selected control point isn't the last point
             if(this.selectedIndex < this.spline.ControlPointCount - 1)
@@ -398,12 +415,11 @@ public class BezierSplineInspector : Editor
             if(Handles.Button(point, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
             {
                 this.selectedIndex = index_;
-                this.isSelectedPointRotation = false;
                 this.Repaint();
             }
 
-            //If the selected point index is the one we're clicking and we're not selecting a rotation point, we can move it
-            if (this.selectedIndex == index_ && !this.isSelectedPointRotation)
+            //If the selected point index is the one we're clicking, we can move it
+            if (this.selectedIndex == index_)
             {
                 //Checking to see if we're trying to move the handle for the given point
                 EditorGUI.BeginChangeCheck();
@@ -428,63 +444,59 @@ public class BezierSplineInspector : Editor
     //Function called from OnSceneGUI to display the rotation for the given control point
     private Quaternion ShowPointOrientation(int index_)
     {
+        //Getting the percent along the spline that the given point is
+        float percent = (1f * index_) / (1f * (this.spline.ControlPointCount - 1));
+        //Debug.Log("Percent before: " + percent + ", After: " + this.spline.GetAdjustedPercentFromTime(percent));
+        //percent = this.spline.GetAdjustedPercentFromTime(percent);
+
         //Getting the rotation orientation for the point at the given index
-        Quaternion pointOrientation = this.spline.GetPointOrientation(index_);
+        Quaternion pointOrientation = this.spline.GetQuaternionAtPercent(percent);
 
         //If we show this spline's rotation handles
         if(showRotationHandles)
         {
-            //Setting our control point handle's color to the handle line color
-            Handles.color = this.spline.rotationLineColor;
-            
-            //Getting the rotation handle point to toggle the rotation
-            Vector3 point = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
-            point += pointOrientation * new Vector3(0, this.spline.rotationHandleRadius, 0);
+            //pointOrientation = this.handleTransform.rotation * pointOrientation;
 
-            float size = HandleUtility.GetHandleSize(point);
+            //Getting the position of this control point
+            Vector3 controlPoint = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
+
+            Handles.color = Color.blue;
+            //Getting the point in the forward direction from this control point
+            Vector3 forwardPoint = pointOrientation * new Vector3(0, 0, this.spline.rotationHandleRadius);
+            forwardPoint += controlPoint;
+            Handles.DrawLine(forwardPoint, controlPoint);
+
+            Handles.color = Color.red;
+            //Getting the point in the forward direction from this control point
+            Vector3 rightPoint = pointOrientation * new Vector3(this.spline.rotationHandleRadius, 0, 0);
+            rightPoint += controlPoint;
+            Handles.DrawLine(rightPoint, controlPoint);
+
+            Handles.color = Color.green;
+            //Getting the point in the up direction from this control point
+            Vector3 upPoint = pointOrientation * new Vector3(0, this.spline.rotationHandleRadius, 0);
+            upPoint += controlPoint;
+            Handles.DrawLine(upPoint, controlPoint);
+
+            float size = HandleUtility.GetHandleSize(upPoint);
 
             //Creating a handle button to designate the selected point index
             float handleSize = this.spline.controlPointHandleSize;
-            Handles.DrawLine(point, this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_)));
-            if (Handles.Button(point, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
+            if (Handles.Button(upPoint, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
             {
                 this.selectedIndex = index_;
-                this.isSelectedPointRotation = true;
                 this.Repaint();
             }
 
-            //If the selected point index is the one we're clicking and we're clicking a rotation point, we can move it
-            if (this.selectedIndex == index_ && this.isSelectedPointRotation)
-            {
-                //Getting the forward direction of the control point along the spline
-                Vector3 forward = pointOrientation * Vector3.forward;
-                //Getting the Up direction of the control point based on this up rotation point
-                Vector3 up = pointOrientation * Vector3.up;
-
-                //The center point of the disk in local space
-                Vector3 localCenterPoint = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
-
-                Quaternion localRot = pointOrientation * this.handleTransform.rotation;
-
-                //Checking to see if we're trying to move the handle for the given point
-                EditorGUI.BeginChangeCheck();
-                //Quaternion rotationChange = Handles.DoRotationHandle(pointOrientation, localCenterPoint);
-                Quaternion rotationChange = Handles.Disc(localRot, localCenterPoint, forward, this.spline.rotationHandleRadius, false, 0);
-
-                //If we're done changing the point handle, we apply the change to the curve's point
-                if (EditorGUI.EndChangeCheck())
-                {
-                    //Sets the spline to dirty so that we can save changes
-                    Undo.RecordObject(this.spline, "Rotate Point");
-                    EditorUtility.SetDirty(this.spline);
-                    this.spline.SetPointOrientation(index_, rotationChange);
-                }
-            }
+            //Setting our control point handle's color to the handle line color
+            Handles.color = this.spline.rotationLineColor;
+            //Drawing a disk around the control point to show the up direction
+            Handles.DrawWireArc(controlPoint, pointOrientation * Vector3.forward, pointOrientation * Vector3.up, 360, this.spline.rotationHandleRadius);
         }
 
         return pointOrientation;
     }
-    
+
 
     //Function called from OnInspectorGUI that lets us edit the selected control point's position with text
     private void DrawSelectedPointInspector()

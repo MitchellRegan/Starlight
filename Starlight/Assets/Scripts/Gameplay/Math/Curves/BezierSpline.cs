@@ -8,7 +8,7 @@ public class BezierSpline : MonoBehaviour
     //The width that this spline renders
     public float splineWidth = 5;
     //The radius of the rotation handle when shown
-    public float rotationHandleRadius = 3;
+    public float rotationHandleRadius = 30;
     //The size of the control point handles when shown
     public float controlPointHandleSize = 0.06f;
 
@@ -76,10 +76,10 @@ public class BezierSpline : MonoBehaviour
     //An array of points that determine the Up direction for objects traveling along this spline
     [HideInInspector]
     [SerializeField]
-    private Quaternion[] controlPointOrientations =
+    private float[] controlPointOrientations =
     {
-        new Quaternion(0,1,0,0),
-        new Quaternion(0,1,0,0)
+        0,
+        0
     };
 
     //An array of floats that determine the amount of time from each control point to the next
@@ -235,42 +235,25 @@ public class BezierSpline : MonoBehaviour
 
 
     //Accessor function to get the orientation at the given index
-    public Quaternion GetPointOrientation(int index_)
+    public float GetPointOrientation(int index_)
     {
-        return this.controlPointOrientations[(index_ + 1) / 3] * this.transform.rotation;
+        return this.controlPointOrientations[(index_ + 1) / 3];
     }
 
 
     //Accessor function to set the orientation at the given index
-    public void SetPointOrientation(int index_, Quaternion newOrientation_)
+    public void SetPointOrientation(int index_, float newOrientation_)
     {
-        //Finding the control point at the given index so we can find out the direction it's facing
+        //Making sure the given index is within the correct bounds
+        if(index_ < 0 || index_ >= this.points.Length)
+        {
+            return;
+        }
+
+        //Finding the control point at the given index and setting it to the given orientation
+
         int controlPointIndex = (index_ + 1) / 3;
-
-        //Getting the % progress that this control point is along the spline
-        float progress = (float)controlPointIndex / (float)(this.points.Length - 1);
-
-        //Getting the forward direction of the control point along the spline
-        Vector3 forward = this.GetDirection(progress);
-        //Getting the up direction of the control point along the spline
-        Vector3 up = newOrientation_ * Vector3.up;
-
-        //If the control point isn't the first one, we use the PREVIOUS control point
-        if (controlPointIndex > 0)
-        {
-            //Debug.Log("First forward: " + forward + ", Second: " + (this.points[(controlPointIndex)] - this.points[(controlPointIndex - 1)]));
-            //forward = Vector3.Cross(up, forward);
-        }
-        //If the control point index is 0, we need to use the NEXT control point
-        else
-        {
-            //Debug.Log("First forward: " + forward + ", Second: " + (this.points[(controlPointIndex + 1)] - this.points[(controlPointIndex)]));
-            //forward = Vector3.Cross(up, forward);
-        }
-
-        Quaternion newOrientation = Quaternion.LookRotation(forward, up);
-
-        this.controlPointOrientations[controlPointIndex] = newOrientation;
+        this.controlPointOrientations[controlPointIndex] = newOrientation_;
     }
 
 
@@ -422,7 +405,7 @@ public class BezierSpline : MonoBehaviour
 
 
     //Function called externally from BezierSplineInspector.cs to get the orientation at the given percent
-    public Quaternion GetOrientationAtPercent(float t_)
+    public float GetOrientationAtPercent(float t_)
     {
         //Float to hold the percent of the starting point of the curve we're going to find the point along
         float firstPointPercent;
@@ -430,8 +413,8 @@ public class BezierSpline : MonoBehaviour
         float secondPointPercent;
 
         //Getting the orientations for each of the control points on the curve
-        Quaternion firstOrientation;
-        Quaternion secondOrientation;
+        float firstOrientation;
+        float secondOrientation;
 
         //If the percent along the spline is above 100%, we find the starting point of the last curve
         if (t_ >= 1f)
@@ -464,10 +447,43 @@ public class BezierSpline : MonoBehaviour
         }
 
         //Getting the percent that the given point is between these two rotations
-        float orientationPercent = (t_ - firstPointPercent) / (secondPointPercent - firstPointPercent);
+        float orientationPercent = t_;
+        
+        //Making sure the orientations are between 0 and 360
+        firstOrientation = firstOrientation % 360;
+        if(firstOrientation < 0)
+        {
+            firstOrientation += 360;
+        }
+        secondOrientation = secondOrientation % 360;
+        if(secondOrientation < 0)
+        {
+            secondOrientation += 360;
+        }
 
-        //Getting the Quaternion orientation between the two points at the orientation percent
-        return Quaternion.Lerp(firstOrientation, secondOrientation, orientationPercent);
+        return ((secondOrientation - firstOrientation) * orientationPercent) + firstOrientation;
+    }
+
+
+    //Function called externally to get the quaternion orientation at the given percent
+    public Quaternion GetQuaternionAtPercent(float t_)
+    {
+        //Creating an empty game object so we can use its transform component
+        GameObject testObj = new GameObject();
+        //Setting the empty object to the correct position along the spline and facing the direction of movement
+        testObj.transform.position = this.GetPoint(t_);
+
+        //testObj.transform.position = this.transform.InverseTransformPoint(this.GetPoint(t_));
+        testObj.transform.LookAt(testObj.transform.position + this.GetDirection(t_));
+        //Adjusting the orientation to correct the Z axis
+        testObj.transform.rotation = Quaternion.Euler(testObj.transform.eulerAngles.x, testObj.transform.eulerAngles.y,
+                                                        this.GetOrientationAtPercent(t_));
+        //Creating a quaternion to hold the empty object's rotation so we can delete the object
+        Quaternion returnRot = testObj.transform.rotation;
+        testObj.name = "" + t_;
+        //Destroying the empty object and returning the rotation
+        DestroyImmediate(testObj);
+        return returnRot;
     }
 
 
@@ -634,7 +650,7 @@ public class BezierSpline : MonoBehaviour
         //Adding a new orientation for the added point
         Array.Resize(ref this.controlPointOrientations, this.controlPointOrientations.Length + 1);
         //Setting the orientation for the added point to face the forward direction we were just using
-        this.controlPointOrientations[this.controlPointOrientations.Length - 1] = Quaternion.LookRotation(this.GetControlPoint(this.points.Length - 1) - this.GetControlPoint(this.points.Length - 2));
+        this.controlPointOrientations[this.controlPointOrientations.Length - 1] = this.controlPointOrientations[this.controlPointOrientations.Length - 2];
 
         //Adding a new time to the next control point
         Array.Resize(ref this.timeToNextPoint, this.timeToNextPoint.Length + 1);
@@ -667,7 +683,7 @@ public class BezierSpline : MonoBehaviour
         Array.Resize(ref newModes, this.modes.Length + 1);
 
         //Creating a new arry of orientation rotations for control points
-        Quaternion[] newOrientations = { };
+        float[] newOrientations = { };
         Array.Resize(ref newOrientations, this.controlPointOrientations.Length + 1);
 
         //Creating a new array of times to the next control points
@@ -701,7 +717,7 @@ public class BezierSpline : MonoBehaviour
 
                 //Creating the new control point alignment and rotation for the created point
                 newModes[(p / 3) + 1] = BezierControlPointMode.Aligned;
-                newOrientations[(p / 3) + 1] = new Quaternion();
+                newOrientations[(p / 3) + 1] = 0;
 
                 //Creating the new time to next point for the created control point
                 newTimesToNextPoints[(p / 3) + 1] = 1;
@@ -771,12 +787,12 @@ public class BezierSpline : MonoBehaviour
             this.modes = newModesArray;
 
             //Creating a new array of up direction points that will not have the removed point
-            Quaternion[] newOrientationArray = { };
+            float[] newOrientationArray = { };
             Array.Resize(ref newOrientationArray, this.controlPointOrientations.Length - 1);
             //Looping through our current array of up direction points and copying all but the first one
             for (int u = 0; u < newOrientationArray.Length; ++u)
             {
-                Quaternion newUpDirection = this.controlPointOrientations[u + 1];
+                float newUpDirection = this.controlPointOrientations[u + 1];
                 newOrientationArray[u] = newUpDirection;
             }
             //Setting our up direction points array to the new, shorter array
@@ -859,7 +875,7 @@ public class BezierSpline : MonoBehaviour
             this.modes = newModesArray;
 
             //Creating a new array of up direction points that will not have the removed point
-            Quaternion[] newOrientationArray = { };
+            float[] newOrientationArray = { };
             Array.Resize(ref newOrientationArray, this.controlPointOrientations.Length - 1);
             //Looping through our current array of up direction points and copying all but the removed one
             int upRotOffset = 0;
@@ -902,5 +918,20 @@ public class BezierSpline : MonoBehaviour
             //Setting our time to next points array to the new, shorter array
             this.timeToNextPoint = newTimeToNextPoint;
         }
+    }
+
+
+    //Function called externally from BezierSplineInspector.cs to reset all point orientations to 0
+    public void ResetOrientation()
+    {
+        float[] newOrient = new float[] { };
+        Array.Resize(ref newOrient, this.modes.Length);
+
+        for(int i = 0; i < newOrient.Length; ++i)
+        {
+            newOrient[i] = 0;
+        }
+
+        this.controlPointOrientations = newOrient;
     }
 }
