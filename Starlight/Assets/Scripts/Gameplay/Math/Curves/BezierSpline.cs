@@ -451,12 +451,12 @@ public class BezierSpline : MonoBehaviour
         
         //Making sure the orientations are between 0 and 360
         firstOrientation = firstOrientation % 360;
-        if(firstOrientation < 0)
+        if(firstOrientation <= 0)
         {
             firstOrientation += 360;
         }
         secondOrientation = secondOrientation % 360;
-        if(secondOrientation < 0)
+        if(secondOrientation <= 0)
         {
             secondOrientation += 360;
         }

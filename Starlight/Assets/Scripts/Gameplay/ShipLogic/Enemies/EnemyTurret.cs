@@ -123,7 +123,7 @@ public class EnemyTurret : MonoBehaviour
 
 
         //Looping through all of our rotation objects so they face our target player
-        foreach(ObjToRotate objR in this.rotationObjects)
+        foreach (ObjToRotate objR in this.rotationObjects)
         {
             //If we rotate all of the axis, then we can rotate using quaternions
             if(objR.rotateX && objR.rotateY && objR.rotateZ)
@@ -140,8 +140,7 @@ public class EnemyTurret : MonoBehaviour
                 if(objR.rotateX)
                 {
                     //Getting the quaternion rotation to only move the X rotation to face the player position
-                    //Vector3 xLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, 0, 0);
-                    Vector3 xLookPos = new Vector3(0, posToShoot.y - objR.objToRotate.position.y, posToShoot.z - objR.objToRotate.position.z);
+                    Vector3 xLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, posToShoot.y - objR.objToRotate.position.y, posToShoot.z - objR.objToRotate.position.z);
                     Quaternion newXRot = Quaternion.LookRotation(xLookPos);
                     //Rotating the X direction to face the new rotation given our speed
                     objR.objToRotate.rotation = Quaternion.Lerp(objR.objToRotate.rotation, newXRot, objR.rotationSpeed);
@@ -157,8 +156,7 @@ public class EnemyTurret : MonoBehaviour
                 if(objR.rotateY)
                 {
                     //Getting the quaternion rotation to only move the Y rotation to face the player position
-                    //Vector3 yLookPos = new Vector3(0, posToShoot.y - objR.objToRotate.position.y, 0);
-                    Vector3 yLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, 0, posToShoot.z - objR.objToRotate.position.z);
+                    Vector3 yLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, posToShoot.y - objR.objToRotate.position.y, posToShoot.z - objR.objToRotate.position.z);
                     Quaternion newYRot = Quaternion.LookRotation(yLookPos);
                     //Rotating the Y direction to face the new rotation given our speed
                     objR.objToRotate.rotation = Quaternion.Lerp(objR.objToRotate.rotation, newYRot, objR.rotationSpeed);
@@ -174,8 +172,7 @@ public class EnemyTurret : MonoBehaviour
                 if(objR.rotateZ)
                 {
                     //Getting the quaternion rotation to only move the Z rotation to face the player position
-                    //Vector3 zLookPos = new Vector3(0, 0, posToShoot.z - objR.objToRotate.position.z);
-                    Vector3 zLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, posToShoot.y - objR.objToRotate.position.y, 0);
+                    Vector3 zLookPos = new Vector3(posToShoot.x - objR.objToRotate.position.x, posToShoot.y - objR.objToRotate.position.y, posToShoot.z - objR.objToRotate.position.z);
                     Quaternion newZRot = Quaternion.LookRotation(zLookPos);
                     //Rotating the X direction to face the new rotation given our speed
                     objR.objToRotate.rotation = Quaternion.Lerp(objR.objToRotate.rotation, newZRot, objR.rotationSpeed);
@@ -264,19 +261,33 @@ public class EnemyTurret : MonoBehaviour
 
             //Getting the current amount of time that the ship has already traveled
             float currentSplineTime = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.CurrentSplineTime;
-            //Getting the speed multiplier that the player is moving at
-            float speedMultiplier = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.speedMultiplier;
-            //Adding the projectile time to the current spline time so we get the position where the player will be
-            currentSplineTime += projectileTime * (1f / speedMultiplier);
-
             //Getting the total time that the player will have to travel along the spline
             float totalSplineTime = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.timeToComplete;
 
-            //Getting the position along the spline that the ship will be at when taking into account the projectile time
-            targetPos = shipSpline.GetPoint(currentSplineTime / totalSplineTime);
+            //Getting the speed multiplier that the player is moving at
+            float speedMultiplier = this.targetPlayer.ourRailMovement.railParentObj.ourSplineMoveRB.speedMultiplier;
+            
 
-            //Adding the offset that the player ship is from the rail parent
-            //targetPos
+            //Getting the adjusted percent along the spline that the player is currently at
+            float adjustedCurrentPercent = currentSplineTime / totalSplineTime;
+            adjustedCurrentPercent = shipSpline.GetAdjustedPercentFromTime(adjustedCurrentPercent);
+
+            //Getting the adjusted percent along the spline that the player is going to be at
+            float adjustedTargetPercent = projectileTime * (speedMultiplier);
+            adjustedTargetPercent += currentSplineTime;
+            adjustedTargetPercent = adjustedTargetPercent / totalSplineTime;
+            adjustedTargetPercent = shipSpline.GetAdjustedPercentFromTime(adjustedTargetPercent);
+
+            //Getting the position along the spline that the ship will be at when taking into account the projectile time
+            targetPos = shipSpline.GetPoint(adjustedTargetPercent);
+
+            //Finding the offset that the player ship is from the rail center
+            Vector3 currentOffset = this.targetPlayer.transform.InverseTransformPoint(shipSpline.GetPoint(adjustedCurrentPercent));
+
+            currentOffset = new Vector3(-currentOffset.x, -currentOffset.y, -currentOffset.z);
+
+            //Adding the offset that the player ship is from the target position
+            targetPos += shipSpline.GetQuaternionAtPercent(adjustedTargetPercent) * currentOffset;
         }
 
         //Returning our target pos

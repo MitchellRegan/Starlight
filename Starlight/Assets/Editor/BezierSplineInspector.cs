@@ -138,7 +138,7 @@ public class BezierSplineInspector : Editor
                 //Getting the point in space relative to our transform handle
                 Vector3 point = (this.spline.GetPoint(progress));
                 //Getting the rotation orientation at the given point
-                float pointOrientation = this.spline.GetOrientationAtPercent(progress);
+                Quaternion pointOrientation = this.spline.GetQuaternionAtPercent(progress);
 
                 //Shorter variables for the x and y values of the bounding box
                 float x = this.spline.boundingBoxDisplay.x / 2;
@@ -177,6 +177,7 @@ public class BezierSplineInspector : Editor
                 }
 
                 //Drawing the mesh along the spline
+                progress = this.spline.GetAdjustedPercentFromTime(progress);
                 Graphics.DrawMesh(boundingBoxMesh, point, this.spline.GetQuaternionAtPercent(progress), mat, 0);
             }
         }
@@ -455,8 +456,6 @@ public class BezierSplineInspector : Editor
         //If we show this spline's rotation handles
         if(showRotationHandles)
         {
-            //pointOrientation = this.handleTransform.rotation * pointOrientation;
-
             //Getting the position of this control point
             Vector3 controlPoint = this.handleTransform.TransformPoint(this.spline.GetControlPoint(index_));
 
@@ -480,6 +479,9 @@ public class BezierSplineInspector : Editor
 
             float size = HandleUtility.GetHandleSize(upPoint);
 
+            //Setting our control point handle's color to the handle line color
+            Handles.color = this.spline.rotationLineColor;
+
             //Creating a handle button to designate the selected point index
             float handleSize = this.spline.controlPointHandleSize;
             if (Handles.Button(upPoint, this.handleRotation, size * handleSize, size * handleSize, Handles.DotCap))
@@ -488,8 +490,6 @@ public class BezierSplineInspector : Editor
                 this.Repaint();
             }
 
-            //Setting our control point handle's color to the handle line color
-            Handles.color = this.spline.rotationLineColor;
             //Drawing a disk around the control point to show the up direction
             Handles.DrawWireArc(controlPoint, pointOrientation * Vector3.forward, pointOrientation * Vector3.up, 360, this.spline.rotationHandleRadius);
         }
