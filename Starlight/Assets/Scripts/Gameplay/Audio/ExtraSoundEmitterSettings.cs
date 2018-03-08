@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class ExtraSoundEmitterSettings : MonoBehaviour
 {
     //Reference to this object's Audio Source component
     [HideInInspector]
     public AudioSource ownerAudio;
+
+    //The default volume set for our audio source component
+    private float defaultVol = 1;
 
     //Type of sound this emitter plays
     public enum SoundType { Music, Dialogue, SFX}
@@ -20,6 +24,8 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
     //Function called when this object is created
     private void Awake()
     {
+        this.ownerAudio = gameObject.GetComponent<AudioSource>();
+        this.defaultVol = this.ownerAudio.volume;
         this.soundChangeListener = new DelegateEvent<EVTData>(SettingsChanged);
     }
 
@@ -41,7 +47,6 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
     // Use this for initialization
     private void Start()
     {
-        this.ownerAudio = gameObject.GetComponent<AudioSource>();
         this.SettingsChanged(new EVTData());
     }
 
@@ -98,6 +103,6 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
         }
 
         //Sets this owner's sound emitter volume based on the settings
-        this.ownerAudio.volume = emitterTypeVol;
+        this.ownerAudio.volume = emitterTypeVol * this.defaultVol;
     }
 }
