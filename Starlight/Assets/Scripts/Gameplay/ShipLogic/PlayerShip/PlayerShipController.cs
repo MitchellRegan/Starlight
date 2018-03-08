@@ -66,10 +66,27 @@ public class PlayerShipController : MonoBehaviour
     //The list of all engine objects that are attached to this ship
     public List<ShipEngineLogic> shipEngines;
 
+    //The audio emitter for the engine sound effect
+    public ExtraSoundEmitterSettings engineSoundEmitter;
+
     //The amount of energy used each frame to boost
     public float boostEnergyCost = 2;
     //The amount of energy used each frame to break
     public float breakEnergyCost = 1.5f;
+
+    [Space(8)]
+
+    //The default pitch for the engine sound emitter
+    private float defaultPitch = 1f;
+    //The pitch for the engine sound emitter while boosting
+    [Range(0f, 3f)]
+    public float boostSoundPitch = 1.5f;
+    //The pitch for the engine sound emitter while breaking
+    [Range(0f, 3f)]
+    public float breakSoundPitch = 0.5f;
+    //The speed that this ship interpolates the sound pitch
+    [Range(0.01f, 0.99f)]
+    public float pitchInterpSpeed = 0.8f;
 
     //Bools that let other scripts know if we're currently boosting or breaking
     [HideInInspector]
@@ -199,6 +216,8 @@ public class PlayerShipController : MonoBehaviour
             }
         }
 
+        //Getting the default pitch for the engine sound effect
+        this.defaultPitch = this.engineSoundEmitter.ownerAudio.pitch;
     }
 
 
@@ -371,6 +390,9 @@ public class PlayerShipController : MonoBehaviour
         
         //Updating our ship's health
         this.UpdateHealth();
+
+        //Updating our ship engine's sound pitch
+        this.UpdateEngineSoundPitch();
 	}
 
 
@@ -415,6 +437,27 @@ public class PlayerShipController : MonoBehaviour
         //Setting our shield's current and max values
         this.ourHealth.maxShield = maxShieldsSum;
         this.ourHealth.currentShields = currentShieldsSum;
+    }
+
+
+    //Function called from Update to interpolate our engine sound emitter pitch based on our speed
+    private void UpdateEngineSoundPitch()
+    {
+        //If we're boosting, we interpolate to the boost pitch
+        if(this.isShipBoosting && !this.isShipBreaking)
+        {
+            this.engineSoundEmitter.ownerAudio.pitch += (this.boostSoundPitch - this.engineSoundEmitter.ownerAudio.pitch) * this.pitchInterpSpeed;
+        }
+        //If we're breaking, we interpolate to the break pitch
+        else if(this.isShipBreaking && !this.isShipBoosting)
+        {
+            this.engineSoundEmitter.ownerAudio.pitch += (this.breakSoundPitch - this.engineSoundEmitter.ownerAudio.pitch) * this.pitchInterpSpeed;
+        }
+        //If we're neither boosting or breaking, we interpolate to the default pitch
+        else
+        {
+            this.engineSoundEmitter.ownerAudio.pitch += (this.defaultPitch - this.engineSoundEmitter.ownerAudio.pitch) * this.pitchInterpSpeed;
+        }
     }
 
 
