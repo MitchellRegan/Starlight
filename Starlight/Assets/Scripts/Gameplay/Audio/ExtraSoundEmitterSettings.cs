@@ -9,6 +9,9 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
     [HideInInspector]
     public AudioSource ownerAudio;
 
+    //The default volume set for our audio source component
+    private float defaultVol = 1;
+
     //Type of sound this emitter plays
     public enum SoundType { Music, Dialogue, SFX}
     public SoundType soundEmitterType = SoundType.SFX;
@@ -22,6 +25,7 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
     private void Awake()
     {
         this.ownerAudio = gameObject.GetComponent<AudioSource>();
+        this.defaultVol = this.ownerAudio.volume;
         this.soundChangeListener = new DelegateEvent<EVTData>(SettingsChanged);
     }
 
@@ -99,6 +103,6 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
         }
 
         //Sets this owner's sound emitter volume based on the settings
-        this.ownerAudio.volume = emitterTypeVol;
+        this.ownerAudio.volume = emitterTypeVol * this.defaultVol;
     }
 }
