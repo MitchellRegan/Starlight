@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class ExtraSoundEmitterSettings : MonoBehaviour
 {
     //Reference to this object's Audio Source component
@@ -20,6 +21,7 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
     //Function called when this object is created
     private void Awake()
     {
+        this.ownerAudio = gameObject.GetComponent<AudioSource>();
         this.soundChangeListener = new DelegateEvent<EVTData>(SettingsChanged);
     }
 
@@ -41,7 +43,6 @@ public class ExtraSoundEmitterSettings : MonoBehaviour
     // Use this for initialization
     private void Start()
     {
-        this.ownerAudio = gameObject.GetComponent<AudioSource>();
         this.SettingsChanged(new EVTData());
     }
 

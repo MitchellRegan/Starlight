@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Image))]
+[RequireComponent(typeof(ExtraSoundEmitterSettings))]
 public class UIPlayerHilight : MonoBehaviour
 {
     //Enum to determine which player we take input from
@@ -27,40 +28,23 @@ public class UIPlayerHilight : MonoBehaviour
     //The size that we scale up the UI element so that it's bigger than the one its behind
     private Vector2 sizeDiff = new Vector2(10,10);
 
+    //Reference to this object's audio sound emitter component to play sound effects
+    private ExtraSoundEmitterSettings ourAudio;
+
+    //The audio effect played when the selection is changed
+    public AudioClip selectionChangeSound;
+    //The pitch that the selection change sound is set to
+    [Range(0f, 5f)]
+    public float selectionChangePitch = 1f;
+
+    //The audio effect played when the player selects the hilighted button
+    public AudioClip selectionConfirmSound;
+    //The pitch that the selection confirm sound is set to
+    [Range(0f, 5f)]
+    public float selectionConfirmPitch = 1f;
 
 
-    //Function called on initialize
-    private void Start()
-    {
-        //Getting the reference to the player input for this selected player
-        switch(this.playerInput)
-        {
-            case Players.P1:
-                this.ourController = ControllerInputManager.P1Controller;
-                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p1Inputs;
-                this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
-                break;
-
-            case Players.P2:
-                this.ourController = ControllerInputManager.P2Controller;
-                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p2Inputs;
-                this.GetComponent<Image>().color = GlobalData.globalReference.P2HilightColor;
-                break;
-
-            default:
-                this.ourController = ControllerInputManager.P1Controller;
-                this.ourCustomInputs = GlobalData.globalReference.GetComponent<CustomInputSettings>().p1Inputs;
-                this.GetComponent<Image>().color = GlobalData.globalReference.P1HilightColor;
-                break;
-        }
-
-        Canvas.ForceUpdateCanvases();
-        //Setting our currently selected hilight to our starting selectable
-        this.ChangeHilight(this.startingSelectable);
-        Canvas.ForceUpdateCanvases();
-    }
-
-
+    
 	//Function called when this component is enabled
     private void OnEnable()
     {
@@ -86,10 +70,18 @@ public class UIPlayerHilight : MonoBehaviour
                 break;
         }
 
+        //Getting the reference to this object's extra sound emitter settings component
+        this.ourAudio = this.GetComponent<ExtraSoundEmitterSettings>();
+
         Canvas.ForceUpdateCanvases();
         //Setting our currently selected hilight to our starting selectable
         this.ChangeHilight(this.startingSelectable);
         Canvas.ForceUpdateCanvases();
+
+        //Telling our sound emitter to play the selection confirm sound
+        this.ourAudio.ownerAudio.pitch = this.selectionConfirmPitch;
+        this.ourAudio.ownerAudio.clip = this.selectionConfirmSound;
+        this.ourAudio.ownerAudio.Play();
     }
 
 
@@ -192,6 +184,12 @@ public class UIPlayerHilight : MonoBehaviour
     //Function called from Update to change our hilighted selectable
     private void ChangeHilight(Selectable newSelect_)
     {
+        //If the hilight we're switching to is the one we already have selected, nothing happens
+        if(newSelect_ == this.currentSelectable)
+        {
+            return;
+        }
+
         //Setting the delay time so we don't move through the menu too fast
         this.currentDelayTime = this.moveDelay;
 
@@ -210,6 +208,11 @@ public class UIPlayerHilight : MonoBehaviour
 
         //Setting our position to new UI element
         ourRect.position = newSelect_.GetComponent<RectTransform>().position;
+
+        //Telling our sound emitter to play the selection change sound
+        this.ourAudio.ownerAudio.pitch = this.selectionChangePitch;
+        this.ourAudio.ownerAudio.clip = this.selectionChangeSound;
+        this.ourAudio.ownerAudio.Play();
     }
 
 
@@ -233,5 +236,10 @@ public class UIPlayerHilight : MonoBehaviour
         {
             this.currentSelectable.GetComponent<Dropdown>().Show();
         }
+
+        //Telling our sound emitter to play the selection confirm sound
+        this.ourAudio.ownerAudio.pitch = this.selectionConfirmPitch;
+        this.ourAudio.ownerAudio.clip = this.selectionConfirmSound;
+        this.ourAudio.ownerAudio.Play();
     }
 }
