@@ -44,6 +44,9 @@ public class ShipTiltAndRoll : MonoBehaviour
     //Trail objects to enable when we're rolling
     public GameObject rollTrails;
 
+    //The audio source that emits sound when we dodge roll
+    public ExtraSoundEmitterSettings dodgeSoundEmitter;
+
     
 
 	// Use this for initialization
@@ -327,5 +330,8 @@ public class ShipTiltAndRoll : MonoBehaviour
         {
             this.rollTrails.SetActive(true);
         }
+
+        //Telling our sound emitter to play the sound
+        this.dodgeSoundEmitter.ownerAudio.Play();
     }
 }
