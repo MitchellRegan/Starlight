@@ -106,6 +106,8 @@ public class RailMovementFlight : MonoBehaviour
         this.railParentObj.transform.rotation = this.transform.rotation;
         //Parenting our ship to be parented to our rail parent object
         this.transform.SetParent(this.railParentObj.transform);
+        //Setting our rotation to 0 so the rotation isn't off
+        this.transform.localEulerAngles = new Vector3();
     }
 
 

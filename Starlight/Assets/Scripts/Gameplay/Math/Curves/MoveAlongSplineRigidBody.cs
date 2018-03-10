@@ -110,7 +110,8 @@ public class MoveAlongSplineRigidBody : MonoBehaviour
             this.transform.LookAt(this.transform.position + this.splineToFollow.GetDirection(adjustedTimePercent));
             //Vector3 splineUp = this.splineToFollow.GetOrientationAtPercent(this.currentTime / this.timeToComplete) * Vector3.up;
             //this.transform.up = splineUp;
-            this.transform.rotation = Quaternion.Euler(this.transform.eulerAngles.x, this.transform.eulerAngles.y, this.splineToFollow.GetOrientationAtPercent(adjustedTimePercent));
+            this.transform.rotation = Quaternion.Euler(this.transform.eulerAngles.x, this.transform.eulerAngles.y, 
+                                                    this.splineToFollow.GetOrientationAtPercent(adjustedTimePercent));
         }
 
         //Setting our transform to the correct percent along the spline based on the time completed
