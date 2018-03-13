@@ -119,6 +119,7 @@ public class ShipSelectLogic : MonoBehaviour
         newShip.GetComponent<RailMovementFlight>().railParentObj.gameObject.SetActive(false);
         newShip.GetComponent<ShipTiltAndRoll>().rollTrails.SetActive(false);
         newShip.GetComponent<PlayerShipController>().engineSoundEmitter.gameObject.SetActive(false);
+        newShip.GetComponent<PlayerShipController>().shipShield.gameObject.SetActive(false);
 
         //Setting the display position and rotation of the display ship
         newShip.transform.position = this.shipDisplayPos.transform.position;

@@ -43,7 +43,10 @@ public class ShieldPickup : MonoBehaviour
             if (hitArmor.objectIDType == AttackerID.Player1)
             {
                 //Telling the player 1 ship to restore shields by our amount to restore
-                PlayerShipController.p1ShipRef.ourHealth.RestoreShields(this.shieldToRestore);
+                PlayerShipController.p1ShipRef.shipShield.RestoreShields(this.shieldToRestore);
+
+                //Disabling our collider component
+                this.GetComponent<Collider>().enabled = false;
 
                 //Setting the player ship to follow
                 this.playerShipTransform = PlayerShipController.p1ShipRef.transform;
@@ -56,12 +59,21 @@ public class ShieldPickup : MonoBehaviour
 
                 //Telling our sound emitter to play the pickup sound
                 this.GetComponent<ExtraSoundEmitterSettings>().ownerAudio.Play();
+
+                //If the player ship's shield collider is disabled, we enable it again
+                if (!PlayerShipController.p1ShipRef.shipShield.gameObject.activeInHierarchy)
+                {
+                    PlayerShipController.p1ShipRef.shipShield.gameObject.SetActive(true);
+                }
             }
             //If the hit object is for player 2 ship
             else if(hitArmor.objectIDType == AttackerID.Player2)
             {
                 //Telling the player 2 ship to restore shields by our amount to restore
-                PlayerShipController.p2ShipRef.ourHealth.RestoreShields(this.shieldToRestore);
+                PlayerShipController.p2ShipRef.shipShield.RestoreShields(this.shieldToRestore);
+
+                //Disabling our collider component
+                this.GetComponent<Collider>().enabled = false;
 
                 //Setting the player ship to follow
                 this.playerShipTransform = PlayerShipController.p2ShipRef.transform;
@@ -74,6 +86,12 @@ public class ShieldPickup : MonoBehaviour
 
                 //Telling our sound emitter to play the pickup sound
                 this.GetComponent<ExtraSoundEmitterSettings>().ownerAudio.Play();
+
+                //If the player ship's shield collider is disabled, we enable it again
+                if (!PlayerShipController.p2ShipRef.shipShield.gameObject.activeInHierarchy)
+                {
+                    PlayerShipController.p2ShipRef.shipShield.gameObject.SetActive(true);
+                }
             }
             //If an enemy hits this component nothing happens
         }
