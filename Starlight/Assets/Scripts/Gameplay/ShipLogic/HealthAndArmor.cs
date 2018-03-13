@@ -141,7 +141,7 @@ public class HealthAndArmor : MonoBehaviour
         {
             return;
         }
-
+        
         //Adding the amount to our current shields
         this.currentShields += amountToRestore_;
 

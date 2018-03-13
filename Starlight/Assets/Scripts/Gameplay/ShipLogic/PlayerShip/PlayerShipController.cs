@@ -53,6 +53,11 @@ public class PlayerShipController : MonoBehaviour
 
     [Space(8)]
 
+    //The health object for our shield
+    public HealthAndArmor shipShield;
+
+    [Space(8)]
+
     //The health object for our cockpit
     public HealthAndArmor shipCockpit;
 
@@ -238,6 +243,7 @@ public class PlayerShipController : MonoBehaviour
                 this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
                 this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
                 this.GetComponent<CustomShipTextures>().SetPlayerShipID(Players.P1);
+                this.shipShield.objectIDType = AttackerID.Player1;
                 break;
 
             case Players.P2:
@@ -248,6 +254,7 @@ public class PlayerShipController : MonoBehaviour
                 this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P2;
                 this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P2;
                 this.GetComponent<CustomShipTextures>().SetPlayerShipID(Players.P2);
+                this.shipShield.objectIDType = AttackerID.Player2;
 
                 //If this ship was set as the p1 ship reference, we remove it
                 if (p1ShipRef == this)
@@ -264,6 +271,7 @@ public class PlayerShipController : MonoBehaviour
                 this.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
                 this.ourRailMovement.railParentObj.GetComponent<CameraWeight>().playerThatCanFollow = Players.P1;
                 this.GetComponent<CustomShipTextures>().SetPlayerShipID(Players.P1);
+                this.shipShield.objectIDType = AttackerID.Player1;
                 break;
         }
 
@@ -402,41 +410,74 @@ public class PlayerShipController : MonoBehaviour
         //Int to hold the sum of all damage taken from each ship component
         int damageTakenSum = 0;
 
-        //Ints to hold the sum of all armor and max amount of armor for each ship component
-        int currentShieldsSum = 0;
-        int maxShieldsSum = 0;
+        //If our shield has taken health damage, that means it's no longer up so excess damage is dealt to the ship
+        if(this.shipShield.currentHealth < this.shipShield.maxHealth)
+        {
+            //Disabling the ship shield
+            this.shipShield.gameObject.SetActive(false);
+
+            //Adding the damage to our sum
+            damageTakenSum += (this.shipShield.maxHealth - this.shipShield.currentHealth);
+
+            //Setting the shield's health back to max to max
+            this.shipShield.currentHealth = this.shipShield.maxHealth;
+        }
 
         //Looping through each ship wing
         foreach(ShipWingLogic wing in this.shipWings)
         {
+            //If our shield is still up, this wing is invulnerable
+            if(this.shipShield.currentShields > 0)
+            {
+                wing.gameObject.SetActive(false);
+            }
+            //Otherwise, this wing is vulnerable
+            else
+            {
+                wing.gameObject.SetActive(true);
+            }
+
             //Adding the amount of damage to our sum
             damageTakenSum += wing.maxHealth - wing.currentHealth;
-            //Adding the current shield and max shield to our sums
-            currentShieldsSum += wing.currentShields;
-            maxShieldsSum += wing.maxShield;
         }
 
         //Looping through each ship engine
         foreach(ShipEngineLogic engine in this.shipEngines)
         {
+            //If our shield is still up, this engine is invulnerable
+            if (this.shipShield.currentShields > 0)
+            {
+                engine.gameObject.SetActive(false);
+            }
+            //Otherwise, this engine is vulnerable
+            else
+            {
+                engine.gameObject.SetActive(true);
+            }
+
             //Adding the amount of damage to our sum
             damageTakenSum += engine.maxHealth - engine.currentHealth;
-            //Adding the current shield and max shield to our sums
-            currentShieldsSum += engine.currentShields;
-            maxShieldsSum += engine.maxShield;
+        }
+
+        //If our shield is still up, the cockpit is invulnerable
+        if(this.shipShield.currentShields > 0)
+        {
+            this.shipCockpit.gameObject.SetActive(false);
+        }
+        //Otherwise, this engine is vulnerable
+        else
+        {
+            this.shipCockpit.gameObject.SetActive(true);
         }
 
         //Adding the amount of damage to the cockpit to our sum
-        damageTakenSum += shipCockpit.maxHealth - shipCockpit.currentHealth;
-        //Adding the current shield and max shield to our sums
-        currentShieldsSum += shipCockpit.currentShields;
-        maxShieldsSum += shipCockpit.maxShield;
+        damageTakenSum += this.shipCockpit.maxHealth - this.shipCockpit.currentHealth;
         
         //Setting our health value minus the total damage taken
         this.ourHealth.currentHealth = this.ourHealth.maxHealth - damageTakenSum;
         //Setting our shield's current and max values
-        this.ourHealth.maxShield = maxShieldsSum;
-        this.ourHealth.currentShields = currentShieldsSum;
+        this.ourHealth.maxShield = this.shipShield.maxShield;
+        this.ourHealth.currentShields = this.shipShield.currentShields;
     }
 
 
