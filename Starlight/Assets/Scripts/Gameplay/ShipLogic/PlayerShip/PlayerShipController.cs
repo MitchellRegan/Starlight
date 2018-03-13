@@ -53,6 +53,11 @@ public class PlayerShipController : MonoBehaviour
 
     [Space(8)]
 
+    //The health object for our shield
+    public HealthAndArmor shipShield;
+
+    [Space(8)]
+
     //The health object for our cockpit
     public HealthAndArmor shipCockpit;
 

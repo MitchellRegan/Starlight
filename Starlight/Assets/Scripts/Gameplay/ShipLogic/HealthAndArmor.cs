@@ -62,6 +62,17 @@ public class HealthAndArmor : MonoBehaviour
 
     [Space(8)]
 
+    //The audio sound for when shields recharge
+    public AudioClip shieldRechargeSound;
+    //The volume for when shields recharge
+    [Range(0, 1)]
+    public float shieldRechargeVolume = 1;
+    //The pitch for when shields recharge
+    [Range(0, 3)]
+    public float shieldRechargePitch = 1;
+
+    [Space(8)]
+
     //The audio sound for taking health damage
     public AudioClip healthDamageSound;
     //The volume for taking health damage
@@ -141,6 +152,9 @@ public class HealthAndArmor : MonoBehaviour
         {
             return;
         }
+
+        //Playing the sound effect for recharging the shields
+        this.PlaySoundEffects(this.shieldRechargeSound, this.shieldRechargeVolume, this.shieldRechargePitch);
 
         //Adding the amount to our current shields
         this.currentShields += amountToRestore_;
